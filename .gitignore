@@ -1,0 +1,43 @@
+# ======================
+# Node.js
+# ======================
+node_modules/
+dist/
+build/
+coverage/
+logs/
+*.log
+
+# ======================
+# Environment files
+# ======================
+.env
+.env.*
+!.env.example
+
+# ======================
+# PlatformIO
+# ======================
+.pio/
+.vscode/
+*.bin
+*.elf
+
+# ======================
+# OS files
+# ======================
+.DS_Store
+Thumbs.db
+
+# ======================
+# Certificates
+# ======================
+*.key
+*.pem
+*.crt
+
+# ======================
+# Misc
+# ======================
+npm-debug.log*
+yarn-debug.log*
