@@ -5,7 +5,15 @@ const SUBSCRIBE_TOPIC = 'devices/+/telemetry';
 
 let client = null;
 
-function initMqtt() {
+/**
+ * Initialize the MQTT client.
+ *
+ * @param {{ telemetryService?: { ingest: Function } }} [deps={}]
+ *   Optional dependency injection. Pass `{ telemetryService }` from index.js
+ *   so the MQTT bridge can persist telemetry without a circular require.
+ */
+function initMqtt(deps) {
+  const { telemetryService } = deps || {};
   const { url, options } = createMqttConfig();
 
   if (!url) {
@@ -30,7 +38,7 @@ function initMqtt() {
   // un objeto estructurado { deviceId, data, receivedAt }
   function extractDeviceId(topic) {
     // Esperamos topics como: devices/<deviceId>/telemetry
-    const m = /^devices\/([^\/]+)\/telemetry$/.exec(topic);
+    const m = /^devices\/([^/]+)\/telemetry$/.exec(topic);
     return m ? m[1] : null;
   }
 
@@ -70,6 +78,20 @@ function initMqtt() {
       // Log original and structured form for clarity
       console.log('[MQTT] received', topic, '->', payloadStr);
       console.log('[MQTT] parsed ->', JSON.stringify(structured));
+
+      // Persist telemetry via injected service (if available and deviceId resolved)
+      if (telemetryService && deviceId) {
+        // tenantId is null here — telemetryService.ingest() resolves it from the device record
+        telemetryService
+          .ingest(null, deviceId, data, new Date(structured.receivedAt))
+          .catch((err) => {
+            console.error(
+              '[MQTT] telemetry persist error for device',
+              deviceId,
+              err && err.message ? err.message : err
+            );
+          });
+      }
     } catch (err) {
       // Catch-all to prevent any unexpected error from bubbling
       console.error('MQTT: error handling message:', err && err.message ? err.message : err);

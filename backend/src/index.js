@@ -1,21 +1,19 @@
 // Punto de entrada del backend
 require('dotenv').config();
-const express = require('express');
+
+const createApp = require('./app');
 const { initMqtt } = require('./mqtt/mqttClient');
+const telemetryService = require('./modules/telemetry/telemetry.service');
 
 const PORT = process.env.PORT || 3000;
 
-const app = express();
-app.use(express.json());
+const app = createApp();
 
-app.get('/', (req, res) => {
-  res.send('ioTech backend — healthy');
-});
+// Inicializar MQTT con telemetryService inyectado para persistencia
+const mqttClient = initMqtt({ telemetryService });
 
-// Inicializar MQTT (suscripción y logger)
-const mqttClient = initMqtt();
-
-app.get('/health', (req, res) => {
+// Exponer estado de conexión MQTT en el health endpoint (override del genérico en app.js)
+app.get('/health/mqtt', (req, res) => {
   res.json({ ok: true, mqttConnected: !!(mqttClient && mqttClient.connected) });
 });
 
