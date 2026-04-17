@@ -281,6 +281,19 @@ router.delete('/:id', async (req, res, next) => {
 });
 
 /**
+ * POST /api/devices/:id/command
+ * Send a command to a device via MQTT.
+ */
+router.post('/:id/command', validate(schemas.command), async (req, res, next) => {
+  try {
+    const result = await devicesService.sendCommand(req.tenantId, req.params.id, req.body);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * @openapi
  * /api/devices/{id}/authenticate:
  *   post:

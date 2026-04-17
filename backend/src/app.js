@@ -14,6 +14,7 @@ const clientsRoutes = require('./modules/clients/clients.routes');
 const telemetryRoutes = require('./modules/telemetry/telemetry.routes');
 const provisioningRoutes = require('./modules/provisioning/provisioning.routes');
 const firmwareRoutes = require('./modules/firmware/firmware.routes');
+const dashboardsRoutes = require('./modules/dashboards/dashboards.routes');
 const mqttAuthGuardRouter = require('./shared/middleware/mqttAuthGuard');
 
 /**
@@ -43,6 +44,7 @@ function createApp() {
   app.use('/api/telemetry', telemetryRoutes);
   app.use('/api/provisioning', provisioningRoutes);
   app.use('/api/firmware', firmwareRoutes);
+  app.use('/api/dashboards', dashboardsRoutes);
   app.use('/internal/mqtt', mqttAuthGuardRouter);
 
   // ── Swagger / OpenAPI docs (no auth required) ────────────────────────────

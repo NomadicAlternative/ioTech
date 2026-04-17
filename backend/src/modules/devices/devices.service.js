@@ -5,6 +5,7 @@ const devicesModel = require('./devices.model');
 const db = require('../../shared/db/knex');
 const { NotFoundError, UnauthorizedError, ConflictError } = require('../../shared/errors');
 const logger = require('../../shared/logger');
+const { getClient: getMqttClient } = require('../../mqtt/mqttClient');
 
 /**
  * Business logic for the devices module.
@@ -138,4 +139,28 @@ async function claimDevice(tenantId, claimToken) {
   return updated;
 }
 
-module.exports = { list, getById, create, update, remove, authenticate, claimDevice };
+module.exports = { list, getById, create, update, remove, authenticate, claimDevice, sendCommand };
+
+/**
+ * Send a command to a device via MQTT.
+ * Validates device exists and belongs to tenant, then publishes to MQTT.
+ * @param {string} tenantId
+ * @param {string} deviceId
+ * @param {{ action: string, payload?: object }} command
+ * @returns {Promise<{ ok: true, topic: string }>}
+ */
+async function sendCommand(tenantId, deviceId, command) {
+  await getById(tenantId, deviceId); // ensures device exists and belongs to tenant
+
+  const topic = `devices/${deviceId}/command`;
+  const mqttClient = getMqttClient();
+
+  if (mqttClient) {
+    mqttClient.publish(topic, JSON.stringify(command), { qos: 1 });
+    logger.info(`[devices.service] Published command to ${topic}: action=${command.action}`);
+  } else {
+    logger.warn(`[devices.service] MQTT client not available — command for ${deviceId} not sent`);
+  }
+
+  return { ok: true, topic };
+}

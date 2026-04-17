@@ -1,0 +1,210 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Plus, LayoutDashboard, Edit, Trash2, Clock } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { useDashboardStore } from './dashboardStore'
+
+export function DashboardListPage() {
+  const navigate = useNavigate()
+  const { dashboards, fetchDashboards, createDashboard, deleteDashboard } = useDashboardStore()
+
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newDesc, setNewDesc] = useState('')
+  const [creating, setCreating] = useState(false)
+
+  useEffect(() => {
+    setLoading(true)
+    fetchDashboards()
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [fetchDashboards])
+
+  const handleCreate = async () => {
+    if (!newName.trim()) return
+    setCreating(true)
+    try {
+      const dashboard = await createDashboard(newName.trim(), newDesc.trim())
+      setCreateOpen(false)
+      setNewName('')
+      setNewDesc('')
+      navigate(`/app/dashboards/${dashboard.id}/edit`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create dashboard')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm('Delete this dashboard?')) return
+    await deleteDashboard(id).catch(() => {/* ignore */})
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Dashboards</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Monitor and control your IoT devices
+          </p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Dashboard
+        </Button>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div className="rounded-md bg-destructive/10 text-destructive px-4 py-3 text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* Loading */}
+      {loading && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader className="space-y-2">
+                <div className="h-5 bg-muted rounded w-3/4" />
+                <div className="h-4 bg-muted rounded w-1/2" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-4 bg-muted rounded w-1/3" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Dashboard grid */}
+      {!loading && dashboards.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+          <LayoutDashboard className="h-16 w-16 text-muted-foreground/40" />
+          <div>
+            <p className="text-lg font-medium">No dashboards yet</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Create your first dashboard to start visualizing your data.
+            </p>
+          </div>
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Dashboard
+          </Button>
+        </div>
+      )}
+
+      {!loading && dashboards.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {dashboards.map((dashboard) => (
+            <Card
+              key={dashboard.id}
+              className="cursor-pointer hover:shadow-md transition-shadow group"
+              onClick={() => navigate(`/app/dashboards/${dashboard.id}`)}
+            >
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="text-base truncate">{dashboard.name}</CardTitle>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        navigate(`/app/dashboards/${dashboard.id}/edit`)
+                      }}
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      onClick={(e) => handleDelete(dashboard.id, e)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+                {dashboard.description && (
+                  <CardDescription className="text-xs line-clamp-2">
+                    {dashboard.description}
+                  </CardDescription>
+                )}
+              </CardHeader>
+              <CardContent className="flex items-center justify-between pt-0">
+                <Badge variant="secondary" className="text-xs">
+                  {dashboard.widgetCount ?? 0} widgets
+                </Badge>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  {new Date(dashboard.updatedAt).toLocaleDateString()}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Create dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Dashboard</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <Label>Name *</Label>
+              <Input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="e.g. Home Automation"
+                onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Description</Label>
+              <Input
+                value={newDesc}
+                onChange={(e) => setNewDesc(e.target.value)}
+                placeholder="Optional description"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreate} disabled={!newName.trim() || creating}>
+              {creating ? 'Creating…' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
