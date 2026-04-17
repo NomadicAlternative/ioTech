@@ -2,7 +2,7 @@
 
 const { v4: uuidv4 } = require('uuid');
 const clientsModel = require('./clients.model');
-const { NotFoundError, ValidationError } = require('../../shared/errors');
+const { NotFoundError } = require('../../shared/errors');
 const logger = require('../../shared/logger');
 
 /**
@@ -12,8 +12,12 @@ const logger = require('../../shared/logger');
  * TODO: Requires `clients` table migration (see clients.model.js for schema).
  */
 
-async function list(tenantId) {
-  return clientsModel.findAll(tenantId);
+async function list(tenantId, pagination = {}) {
+  const [data, total] = await Promise.all([
+    clientsModel.findAll(tenantId, pagination),
+    clientsModel.count(tenantId),
+  ]);
+  return { data, total };
 }
 
 async function getById(tenantId, id) {
@@ -23,8 +27,6 @@ async function getById(tenantId, id) {
 }
 
 async function create(tenantId, data) {
-  if (!data.name) throw new ValidationError('Client name is required');
-
   const client = await clientsModel.insert({
     id: uuidv4(),
     tenant_id: tenantId,

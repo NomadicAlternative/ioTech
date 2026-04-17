@@ -7,8 +7,18 @@ const db = require('../../shared/db/knex');
  * Installers ARE tenants — this module manages tenant profile data in the `tenants` table.
  */
 
-async function findAll() {
-  return db('tenants').orderBy('created_at', 'desc');
+async function findAll(pagination = {}) {
+  const { page = 1, limit = 20, sortBy = null, sortDir = 'asc' } = pagination;
+  const offset = (page - 1) * limit;
+  const orderCol = sortBy || 'created_at';
+  const orderDir = sortBy ? sortDir : 'desc';
+
+  return db('tenants').orderBy(orderCol, orderDir).limit(limit).offset(offset);
+}
+
+async function count() {
+  const rows = await db('tenants').count('id');
+  return parseInt(rows[0].count, 10);
 }
 
 async function findById(id) {
@@ -23,4 +33,4 @@ async function update(id, data) {
   return installer;
 }
 
-module.exports = { findAll, findById, update };
+module.exports = { findAll, findById, update, count };

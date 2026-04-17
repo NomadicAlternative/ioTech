@@ -9,18 +9,36 @@ const { withTenant } = require('../../shared/db/tenant-knex');
  */
 
 /**
- * Retrieve all devices for a tenant.
- * Uses withTenant() so PostgreSQL RLS policy (tenant_id = app.tenant_id) is enforced
- * as a second layer of defence alongside the explicit where({ tenant_id }).
+ * Retrieve all devices for a tenant, with optional pagination.
  * @param {string} tenantId
+ * @param {{ page?: number, limit?: number, sortBy?: string|null, sortDir?: string }} [pagination]
  * @returns {Promise<object[]>}
  */
-async function findAll(tenantId) {
+async function findAll(tenantId, pagination = {}) {
+  const { page = 1, limit = 20, sortBy = null, sortDir = 'asc' } = pagination;
+  const offset = (page - 1) * limit;
+  const orderCol = sortBy || 'created_at';
+  const orderDir = sortBy ? sortDir : 'desc';
+
   return withTenant(tenantId, (trx) =>
     trx('devices')
       .where({ tenant_id: tenantId })
-      .orderBy('created_at', 'desc')
+      .orderBy(orderCol, orderDir)
+      .limit(limit)
+      .offset(offset)
   );
+}
+
+/**
+ * Count all devices for a tenant.
+ * @param {string} tenantId
+ * @returns {Promise<number>}
+ */
+async function count(tenantId) {
+  const rows = await withTenant(tenantId, (trx) =>
+    trx('devices').where({ tenant_id: tenantId }).count('id')
+  );
+  return parseInt(rows[0].count, 10);
 }
 
 /**
@@ -79,4 +97,4 @@ async function remove(id) {
   return db('devices').where({ id }).delete();
 }
 
-module.exports = { findAll, findById, findByToken, insert, update, remove };
+module.exports = { findAll, findById, findByToken, insert, update, remove, count };

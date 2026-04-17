@@ -1,6 +1,9 @@
 'use strict';
 
 const express = require('express');
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+const swaggerConfig = require('./config/swagger');
 const errorHandler = require('./shared/middleware/errorHandler');
 
 const authRoutes = require('./modules/auth/auth.routes');
@@ -35,6 +38,12 @@ function createApp() {
   app.use('/api/installers', installersRoutes);
   app.use('/api/clients', clientsRoutes);
   app.use('/api/telemetry', telemetryRoutes);
+
+  // ── Swagger / OpenAPI docs (no auth required) ────────────────────────────
+  const swaggerSpec = swaggerJsdoc(swaggerConfig);
+  // Serve raw OpenAPI JSON BEFORE swagger-ui-express intercepts the path
+  app.get('/api-docs/swagger.json', (req, res) => res.json(swaggerSpec));
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
   // ── Centralized error handler (must be last) ──────────────────────────────
   app.use(errorHandler);

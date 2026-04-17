@@ -33,6 +33,7 @@ function errorHandler(err, req, res, next) {
         code: err.code,
         message: err.message,
         status: err.statusCode,
+        ...(err.details && { details: err.details }),
       },
     });
   }

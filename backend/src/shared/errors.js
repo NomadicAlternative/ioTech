@@ -33,8 +33,9 @@ class NotFoundError extends AppError {
 
 /** 400 — Request validation failed */
 class ValidationError extends AppError {
-  constructor(message = 'Validation failed') {
+  constructor(message = 'Validation failed', details = []) {
     super(message, 400, 'VALIDATION_ERROR');
+    this.details = details;
   }
 }
 

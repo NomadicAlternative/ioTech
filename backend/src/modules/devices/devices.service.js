@@ -3,7 +3,7 @@
 const { v4: uuidv4 } = require('uuid');
 const devicesModel = require('./devices.model');
 const db = require('../../shared/db/knex');
-const { NotFoundError, ValidationError, UnauthorizedError } = require('../../shared/errors');
+const { NotFoundError, UnauthorizedError } = require('../../shared/errors');
 const logger = require('../../shared/logger');
 
 /**
@@ -12,12 +12,17 @@ const logger = require('../../shared/logger');
  */
 
 /**
- * List all devices for a tenant.
+ * List all devices for a tenant, with pagination.
  * @param {string} tenantId
- * @returns {Promise<object[]>}
+ * @param {{ page: number, limit: number, sortBy: string|null, sortDir: string }} [pagination]
+ * @returns {Promise<{ data: object[], total: number }>}
  */
-async function list(tenantId) {
-  return devicesModel.findAll(tenantId);
+async function list(tenantId, pagination = {}) {
+  const [data, total] = await Promise.all([
+    devicesModel.findAll(tenantId, pagination),
+    devicesModel.count(tenantId),
+  ]);
+  return { data, total };
 }
 
 /**
@@ -39,8 +44,6 @@ async function getById(tenantId, id) {
  * @returns {Promise<object>}
  */
 async function create(tenantId, data) {
-  if (!data.name) throw new ValidationError('Device name is required');
-
   const device = await devicesModel.insert({
     id: uuidv4(),
     tenant_id: tenantId,

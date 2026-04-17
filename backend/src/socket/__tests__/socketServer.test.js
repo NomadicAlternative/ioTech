@@ -29,8 +29,6 @@ const { initSocket, getSocketService } = require('../socketServer');
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function makeIo() {
-  const rooms = {};
-
   // Fluent chain: io.to(room1).to(room2).emit(event, payload)
   const chain = {
     to: jest.fn().mockReturnThis(),
@@ -47,7 +45,7 @@ function makeIo() {
   return io;
 }
 
-function makeSocket(tenantId = 't1', deviceId = null) {
+function makeSocket(tenantId = 't1', _deviceId = null) {
   const socket = {
     data: { userId: 'u1', tenantId },
     join: jest.fn(),

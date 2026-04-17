@@ -26,10 +26,26 @@ const { withTenant } = require('../../shared/db/tenant-knex');
  * Once the migration is created and run, remove this TODO block.
  */
 
-async function findAll(tenantId) {
+async function findAll(tenantId, pagination = {}) {
+  const { page = 1, limit = 20, sortBy = null, sortDir = 'asc' } = pagination;
+  const offset = (page - 1) * limit;
+  const orderCol = sortBy || 'created_at';
+  const orderDir = sortBy ? sortDir : 'desc';
+
   return withTenant(tenantId, (trx) =>
-    trx('clients').where({ tenant_id: tenantId }).orderBy('created_at', 'desc')
+    trx('clients')
+      .where({ tenant_id: tenantId })
+      .orderBy(orderCol, orderDir)
+      .limit(limit)
+      .offset(offset)
   );
+}
+
+async function count(tenantId) {
+  const rows = await withTenant(tenantId, (trx) =>
+    trx('clients').where({ tenant_id: tenantId }).count('id')
+  );
+  return parseInt(rows[0].count, 10);
 }
 
 async function findById(tenantId, id) {
@@ -56,4 +72,4 @@ async function remove(id) {
   return db('clients').where({ id }).delete();
 }
 
-module.exports = { findAll, findById, insert, update, remove };
+module.exports = { findAll, findById, insert, update, remove, count };

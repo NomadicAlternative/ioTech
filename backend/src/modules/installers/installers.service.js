@@ -11,10 +11,15 @@ const logger = require('../../shared/logger');
 
 /**
  * List all installers (admin only — enforced at route level).
- * @returns {Promise<object[]>}
+ * @param {{ page: number, limit: number, sortBy: string|null, sortDir: string }} [pagination]
+ * @returns {Promise<{ data: object[], total: number }>}
  */
-async function list() {
-  return installersModel.findAll();
+async function list(pagination = {}) {
+  const [data, total] = await Promise.all([
+    installersModel.findAll(pagination),
+    installersModel.count(),
+  ]);
+  return { data, total };
 }
 
 /**
