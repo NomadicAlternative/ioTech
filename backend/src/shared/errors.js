@@ -59,6 +59,13 @@ class ConflictError extends AppError {
   }
 }
 
+/** 422 — Unprocessable entity (semantic validation failure, e.g. datastream schema errors) */
+class UnprocessableEntityError extends AppError {
+  constructor(message = 'Unprocessable entity') {
+    super(message, 422, 'UNPROCESSABLE_ENTITY');
+  }
+}
+
 module.exports = {
   AppError,
   NotFoundError,
@@ -66,4 +73,5 @@ module.exports = {
   UnauthorizedError,
   ForbiddenError,
   ConflictError,
+  UnprocessableEntityError,
 };
