@@ -20,4 +20,8 @@ const authenticate = Joi.object({
   device_token: Joi.string().required(),
 });
 
-module.exports = { create, update, authenticate };
+const claim = Joi.object({
+  claim_token: Joi.string().min(1).required(),
+});
+
+module.exports = { create, update, authenticate, claim };

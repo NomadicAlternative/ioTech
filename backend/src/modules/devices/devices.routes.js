@@ -190,6 +190,15 @@ router.get('/', paginate(), async (req, res, next) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
+router.post('/claim', validate(schemas.claim), async (req, res, next) => {
+  try {
+    const device = await devicesService.claimDevice(req.tenantId, req.body.claim_token);
+    res.json({ data: device });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/:id', async (req, res, next) => {
   try {
     const device = await devicesService.getById(req.tenantId, req.params.id);

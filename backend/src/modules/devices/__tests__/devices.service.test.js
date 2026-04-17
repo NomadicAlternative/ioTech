@@ -169,11 +169,11 @@ describe('devicesService.create()', () => {
     expect(token1).not.toBe(token2);
   });
 
-  it('sets status to "inactive" on creation', async () => {
+  it('sets status to "unclaimed" on creation', async () => {
     await devicesService.create(TENANT_ID, { name: 'Dormant Sensor' });
 
     const insertedData = devicesModel.insert.mock.calls[0][0];
-    expect(insertedData.status).toBe('inactive');
+    expect(insertedData.status).toBe('unclaimed');
   });
 
   it('sets tenant_id on the inserted record', async () => {
@@ -195,7 +195,7 @@ describe('devicesService.create()', () => {
     expect(result).toMatchObject({
       name: 'Result Sensor',
       tenant_id: TENANT_ID,
-      status: 'inactive',
+      status: 'unclaimed',
     });
   });
 });

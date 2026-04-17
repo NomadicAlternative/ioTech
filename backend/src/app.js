@@ -12,6 +12,9 @@ const deviceTemplatesRoutes = require('./modules/device-templates/device-templat
 const installersRoutes = require('./modules/installers/installers.routes');
 const clientsRoutes = require('./modules/clients/clients.routes');
 const telemetryRoutes = require('./modules/telemetry/telemetry.routes');
+const provisioningRoutes = require('./modules/provisioning/provisioning.routes');
+const firmwareRoutes = require('./modules/firmware/firmware.routes');
+const mqttAuthGuardRouter = require('./shared/middleware/mqttAuthGuard');
 
 /**
  * Express app factory.
@@ -38,6 +41,9 @@ function createApp() {
   app.use('/api/installers', installersRoutes);
   app.use('/api/clients', clientsRoutes);
   app.use('/api/telemetry', telemetryRoutes);
+  app.use('/api/provisioning', provisioningRoutes);
+  app.use('/api/firmware', firmwareRoutes);
+  app.use('/internal/mqtt', mqttAuthGuardRouter);
 
   // ── Swagger / OpenAPI docs (no auth required) ────────────────────────────
   const swaggerSpec = swaggerJsdoc(swaggerConfig);

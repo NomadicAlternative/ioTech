@@ -3,7 +3,7 @@
 const { v4: uuidv4 } = require('uuid');
 const devicesModel = require('./devices.model');
 const db = require('../../shared/db/knex');
-const { NotFoundError, UnauthorizedError } = require('../../shared/errors');
+const { NotFoundError, UnauthorizedError, ConflictError } = require('../../shared/errors');
 const logger = require('../../shared/logger');
 
 /**
@@ -51,7 +51,7 @@ async function create(tenantId, data) {
     client_id: data.clientId || null,
     device_token: uuidv4(), // auto-generated secure token
     name: data.name,
-    status: 'inactive',
+    status: 'unclaimed',
     metadata: data.metadata || {},
     created_at: new Date(),
     updated_at: new Date(),
@@ -114,4 +114,28 @@ async function authenticate(deviceId, deviceToken) {
   return { ok: true, device: found };
 }
 
-module.exports = { list, getById, create, update, remove, authenticate };
+/**
+ * Claim an unclaimed device using its claim_token.
+ * Sets status='claimed', claimed_at, and assigns tenant_id.
+ * @param {string} tenantId   - The tenant claiming the device
+ * @param {string} claimToken - The claim token from the device
+ * @returns {Promise<object>} Updated device record
+ */
+async function claimDevice(tenantId, claimToken) {
+  const device = await devicesModel.findByClaimToken(claimToken);
+  if (!device) throw new NotFoundError(`No device found with claim_token: ${claimToken}`);
+  if (device.status !== 'unclaimed') {
+    throw new ConflictError('device_already_claimed');
+  }
+
+  const updated = await devicesModel.update(device.id, {
+    status: 'claimed',
+    tenant_id: tenantId,
+    claimed_at: new Date(),
+  });
+
+  logger.info(`[devices.service] Device ${device.id} claimed by tenant ${tenantId}`);
+  return updated;
+}
+
+module.exports = { list, getById, create, update, remove, authenticate, claimDevice };
