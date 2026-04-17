@@ -53,7 +53,7 @@ jest.mock('../../../shared/logger', () => ({
 }));
 
 const devicesService = require('../devices.service');
-const { NotFoundError, UnauthorizedError, ValidationError } = require('../../../shared/errors');
+const { NotFoundError, UnauthorizedError } = require('../../../shared/errors');
 
 // ─── Wire up mock references (must run after require, before tests) ───────────
 beforeAll(() => {
@@ -183,9 +183,10 @@ describe('devicesService.create()', () => {
     expect(insertedData.tenant_id).toBe(TENANT_ID);
   });
 
-  it('throws ValidationError when device name is missing', async () => {
-    await expect(devicesService.create(TENANT_ID, {})).rejects.toThrow(ValidationError);
-    expect(devicesModel.insert).not.toHaveBeenCalled();
+  it('passes through to model even when name is undefined (validation is at route layer)', async () => {
+    // Validation moved to validate() middleware at route layer — service no longer guards
+    await devicesService.create(TENANT_ID, {});
+    expect(devicesModel.insert).toHaveBeenCalled();
   });
 
   it('returns the inserted device record', async () => {
@@ -202,13 +203,15 @@ describe('devicesService.create()', () => {
 // ─── list() ───────────────────────────────────────────────────────────────────
 
 describe('devicesService.list()', () => {
-  it('delegates to devicesModel.findAll with the tenantId', async () => {
+  it('delegates to devicesModel.findAll and count with tenantId, returns { data, total }', async () => {
     devicesModel.findAll.mockResolvedValue([makeDevice()]);
+    devicesModel.count.mockResolvedValue(1);
 
-    const result = await devicesService.list(TENANT_ID);
+    const result = await devicesService.list(TENANT_ID, { page: 1, limit: 20, sortBy: null, sortDir: 'asc' });
 
-    expect(devicesModel.findAll).toHaveBeenCalledWith(TENANT_ID);
-    expect(result).toHaveLength(1);
+    expect(devicesModel.findAll).toHaveBeenCalledWith(TENANT_ID, expect.objectContaining({ page: 1, limit: 20 }));
+    expect(devicesModel.count).toHaveBeenCalledWith(TENANT_ID);
+    expect(result).toEqual({ data: [expect.objectContaining({ id: DEVICE_ID })], total: 1 });
   });
 });
 

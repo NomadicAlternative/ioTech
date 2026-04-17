@@ -282,15 +282,17 @@ describe('telemetryService.query()', () => {
     // Default: device exists for this tenant
     mockFirst.mockResolvedValue(makeDevice());
     telemetryModel.findByDevice.mockResolvedValue([makeTelemetryRow()]);
+    telemetryModel.count.mockResolvedValue(1);
   });
 
-  it('returns telemetry data for a valid device within the tenant', async () => {
+  it('returns { data, total } for a valid device within the tenant', async () => {
     const result = await telemetryService.query(TENANT_ID, DEVICE_ID);
 
     expect(mockDb).toHaveBeenCalledWith('devices');
     expect(telemetryModel.findByDevice).toHaveBeenCalledWith(TENANT_ID, DEVICE_ID, {});
-    expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({ device_id: DEVICE_ID });
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]).toMatchObject({ device_id: DEVICE_ID });
+    expect(result.total).toBe(1);
   });
 
   it('throws NotFoundError when device does not belong to the tenant', async () => {

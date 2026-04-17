@@ -2,7 +2,7 @@
 
 const { v4: uuidv4 } = require('uuid');
 const templatesModel = require('./device-templates.model');
-const { NotFoundError, ValidationError, UnprocessableEntityError } = require('../../shared/errors');
+const { NotFoundError, UnprocessableEntityError } = require('../../shared/errors');
 const logger = require('../../shared/logger');
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -53,9 +53,12 @@ function validateDatastreams(datastreams) {
 
 // ─── Service functions ────────────────────────────────────────────────────────
 
-async function list(tenantId) {
-  const templates = await templatesModel.findAll(tenantId);
-  return templates.map(omitSchema);
+async function list(tenantId, pagination = {}) {
+  const [rawData, total] = await Promise.all([
+    templatesModel.findAll(tenantId, pagination),
+    templatesModel.count(tenantId),
+  ]);
+  return { data: rawData.map(omitSchema), total };
 }
 
 async function getById(tenantId, id) {
@@ -65,8 +68,6 @@ async function getById(tenantId, id) {
 }
 
 async function create(tenantId, data) {
-  if (!data.name) throw new ValidationError('Template name is required');
-
   const datastreams = data.datastreams || [];
   validateDatastreams(datastreams);
 

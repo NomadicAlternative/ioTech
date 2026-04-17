@@ -8,10 +8,26 @@ const { withTenant } = require('../../shared/db/tenant-knex');
  * Tenant-scoped queries use withTenant() for RLS enforcement.
  */
 
-async function findAll(tenantId) {
+async function findAll(tenantId, pagination = {}) {
+  const { page = 1, limit = 20, sortBy = null, sortDir = 'asc' } = pagination;
+  const offset = (page - 1) * limit;
+  const orderCol = sortBy || 'created_at';
+  const orderDir = sortBy ? sortDir : 'desc';
+
   return withTenant(tenantId, (trx) =>
-    trx('device_templates').where({ tenant_id: tenantId }).orderBy('created_at', 'desc')
+    trx('device_templates')
+      .where({ tenant_id: tenantId })
+      .orderBy(orderCol, orderDir)
+      .limit(limit)
+      .offset(offset)
   );
+}
+
+async function count(tenantId) {
+  const rows = await withTenant(tenantId, (trx) =>
+    trx('device_templates').where({ tenant_id: tenantId }).count('id')
+  );
+  return parseInt(rows[0].count, 10);
 }
 
 async function findById(tenantId, id) {
@@ -38,4 +54,4 @@ async function remove(id) {
   return db('device_templates').where({ id }).delete();
 }
 
-module.exports = { findAll, findById, insert, update, remove };
+module.exports = { findAll, findById, insert, update, remove, count };

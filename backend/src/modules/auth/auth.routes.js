@@ -2,14 +2,70 @@
 
 const { Router } = require('express');
 const authService = require('./auth.service');
+const validate = require('../../shared/middleware/validate');
+const schemas = require('./auth.schemas');
 
 const router = Router();
 
 /**
- * POST /api/auth/register
- * Body: { tenantId, email, password, role? }
+ * @openapi
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - tenantId
+ *               - email
+ *               - password
+ *             properties:
+ *               tenantId:
+ *                 type: string
+ *                 format: uuid
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *               role:
+ *                 type: string
+ *                 enum: [admin, installer]
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id: { type: string, format: uuid }
+ *                     email: { type: string }
+ *                     role: { type: string }
+ *                     tenantId: { type: string, format: uuid }
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ *       409:
+ *         description: Email already registered
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-router.post('/register', async (req, res, next) => {
+router.post('/register', validate(schemas.register), async (req, res, next) => {
   try {
     const result = await authService.register(req.body);
     res.status(201).json(result);
@@ -19,10 +75,55 @@ router.post('/register', async (req, res, next) => {
 });
 
 /**
- * POST /api/auth/login
- * Body: { tenantId, email, password }
+ * @openapi
+ * /api/auth/login:
+ *   post:
+ *     summary: Login and obtain JWT tokens
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - tenantId
+ *               - email
+ *               - password
+ *             properties:
+ *               tenantId:
+ *                 type: string
+ *                 format: uuid
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken: { type: string }
+ *                 refreshToken: { type: string }
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ *       401:
+ *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-router.post('/login', async (req, res, next) => {
+router.post('/login', validate(schemas.login), async (req, res, next) => {
   try {
     const { tenantId, email, password } = req.body;
     const result = await authService.login(tenantId, email, password);
@@ -33,10 +134,46 @@ router.post('/login', async (req, res, next) => {
 });
 
 /**
- * POST /api/auth/refresh
- * Body: { refreshToken }
+ * @openapi
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Refresh access token using a refresh token
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: New access token issued
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken: { type: string }
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ *       401:
+ *         description: Invalid or expired refresh token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-router.post('/refresh', async (req, res, next) => {
+router.post('/refresh', validate(schemas.refresh), async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
     const result = await authService.refreshToken(refreshToken);
@@ -47,8 +184,30 @@ router.post('/refresh', async (req, res, next) => {
 });
 
 /**
- * POST /api/auth/logout
- * Body: { refreshToken }
+ * @openapi
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout and revoke the refresh token
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       204:
+ *         description: Logged out successfully
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 router.post('/logout', async (req, res, next) => {
   try {

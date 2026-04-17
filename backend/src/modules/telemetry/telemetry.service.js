@@ -37,7 +37,7 @@ const JS_TYPE_MAP = {
  * @param {string} deviceId      — for logging context
  * @returns {{ valid: boolean, key?: string, reason?: string }}
  */
-function validatePayloadAgainstDatastreams(payload, datastreams, deviceId) {
+function validatePayloadAgainstDatastreams(payload, datastreams, _deviceId) {
   // Build a lookup map of ingestible datastreams (input + config only)
   const ingestibleMap = {};
   for (const ds of datastreams) {
@@ -135,8 +135,8 @@ async function ingest(tenantId, deviceId, data, receivedAt) {
  *
  * @param {string} tenantId
  * @param {string} deviceId
- * @param {{ from?: string, to?: string, limit?: number }} opts
- * @returns {Promise<object[]>}
+ * @param {{ from?: string, to?: string, limit?: number, page?: number, sortDir?: string }} opts
+ * @returns {Promise<{ data: object[], total: number }>}
  */
 async function query(tenantId, deviceId, opts = {}) {
   if (!deviceId) throw new ValidationError('deviceId is required');
@@ -145,7 +145,12 @@ async function query(tenantId, deviceId, opts = {}) {
   const device = await db('devices').where({ id: deviceId, tenant_id: tenantId }).first();
   if (!device) throw new NotFoundError(`Device not found: ${deviceId}`);
 
-  return telemetryModel.findByDevice(tenantId, deviceId, opts);
+  const [data, total] = await Promise.all([
+    telemetryModel.findByDevice(tenantId, deviceId, opts),
+    telemetryModel.count(tenantId, deviceId, { from: opts.from, to: opts.to }),
+  ]);
+
+  return { data, total };
 }
 
 module.exports = { ingest, query, validatePayloadAgainstDatastreams };
