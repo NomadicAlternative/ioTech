@@ -67,7 +67,20 @@ ioTech/
         clients/                  # CRUD + paginated list
         installers/               # list, get, update + paginated
         telemetry/                # query endpoint + MQTT ingestion
+        firmware/                 # firmware version CRUD
+        provisioning/             # WiFi provisioning endpoint
+        dashboards/               # dashboard CRUD + layout (Phase 5)
     package.json
+  frontend/                       # React 19 + Vite + Tailwind 4 (Phase 5)
+    src/
+      features/
+        auth/                     # login, auth store, route guards
+        dashboard/                # dashboard CRUD, grid, layout
+        widgets/                  # widget registry, renderer, 9 MVP widgets
+      lib/
+        api.js                    # Axios instance + JWT interceptor
+        socket.js                 # SocketProvider + telemetry store
+      components/                 # Shadcn/ui shared components
   .env.example
   .agent/
     context.md                    # This file
@@ -103,34 +116,63 @@ ioTech/
 - Swagger/OpenAPI 3.0 docs at `/api-docs` (no auth required)
 - 142 tests, 0 ESLint errors
 
-### Phase 4a — Device Backend Foundation (NEXT — SDD planning complete)
-Split from original Phase 4. Backend-only APIs that future ESP32 SDK will consume.
-SDD artifacts in engram (project: iotech):
-- Exploration: #155 (sdd/phase4-device-sdk/explore)
-- Proposal: #156 (sdd/phase4a-device-backend/proposal)
-- Spec: #157 (sdd/phase4a-device-backend/spec) — 8 requirements, 21 scenarios
-- Design: #158 (sdd/phase4a-device-backend/design) — 7 architecture decisions
-- Tasks: #159 (sdd/phase4a-device-backend/tasks) — 31 tasks in 7 phases
-
-Scope:
+### Phase 4a — Device Backend Foundation (COMPLETE)
 - Device claiming flow (token-based, atomic UPDATE...RETURNING)
 - WiFi provisioning endpoint (unauthenticated, rate-limited)
 - MQTT device auth via EMQX HTTP callback
 - Heartbeat + online/offline tracking + Socket.io events
 - OTA firmware metadata CRUD + MQTT notify
-- Device simulator CLI (tools/device-simulator.js)
 
-### Phase 4b — ESP32 SDK (FUTURE)
+### Phase 4b — ESP32 Firmware (COMPLETE)
 - Captive portal for WiFi config
-- C/Arduino SDK consuming Phase 4a APIs
-- Secure token storage in flash
+- C/ESP-IDF SDK consuming Phase 4a APIs
+- Secure token storage in NVS flash
 - OTA update client
+- State machine for device lifecycle
+
+### Phase 5 — Dashboard Web (NEXT — SDD planning complete, ready for apply)
+Full SDD cycle done. Artifacts in engram (project: iotech):
+- Explore: sdd/dashboard/explore
+- Widget catalog: sdd/dashboard/widget-catalog — 43 widgets in 3 waves
+- Proposal: sdd/dashboard/proposal
+- Spec: sdd/dashboard/spec — 36 requirements, 39 scenarios
+- Design: sdd/dashboard/design — 9 architecture decisions (AD-DASH-001–009)
+- Tasks: sdd/dashboard/tasks — 41 tasks in 6 phases
+- State: sdd/dashboard/state
+
+Stack: React 19 + Vite + Tailwind 4 + Shadcn/ui + Zustand 5 + react-grid-layout + Recharts + Socket.io client + React Router 7 + Axios
+Location: frontend/ (new directory at project root)
+
+Key architecture decisions:
+- Feature-based layout (features/auth, features/dashboard, features/widgets)
+- Static widget registry Record<WidgetType, WidgetDefinition>
+- Access token in memory, refresh token httpOnly cookie
+- Layout as JSONB in dashboards table (full replace with debounce)
+- Telemetry store flat key "deviceId:datastreamKey" — O(1) lookup
+- New endpoint POST /devices/:id/command for Toggle/Button
+- RLS on dashboards + dashboard_clients with withTenant()
+
+MVP Widgets (9): Gauge, Number Display, Line Chart, Status Indicator, Toggle Switch, Button, Stat Card, Progress Bar, Map
+Wave 2 (7): Multi-line Chart, Slider, Floor Plan, Timeline, Alert Badge, Thermostat, Tank Level
+Wave 3 (5): Camera Feed, GPS Tracker, Serial Monitor, Custom HTML, Weather Station
+
+Blynk-style widget config: tap widget → config panel with name, device selector, datastream selector, type-specific settings. All persisted in layout JSON.
+
+Implementation: 41 tasks in 6 phases (~10-15 sessions):
+1. Backend: DB, migrations, API dashboards, RLS, command endpoint (10 tasks)
+2. Backend TDD: tests CRUD, RLS, layout, commands (5 tasks)
+3. Frontend scaffold: Vite, stores, auth, routing (6 tasks)
+4. Dashboard UI: grid, widgets, config panel, real-time (8 tasks)
+5. Frontend TDD: stores, widgets, Socket.io (9 tasks)
+6. QA, conventions, cleanup (3 tasks)
+
+Branch: feat/dashboard
 
 ### Future Phases
-- Phase 5: Dashboard web (React, widget system, real-time via WebSocket)
 - Phase 6: Automation & rules engine (if temp > X then action Y)
 - Phase 7: Production hardening (EMQX broker auth, rate limiting, CI/CD)
 - Phase 8: Mobile app for installers
+- Dashboard Admin: payments, permissions, subscription management (separate product)
 
 ## API Overview
 
@@ -162,7 +204,18 @@ All errors return `{ error: { code, message, status, details? } }`.
 | GET | /api/installers | Yes | List installers (paginated) |
 | GET | /api/installers/:id | Yes | Get installer |
 | PUT | /api/installers/:id | Yes | Update installer |
+| POST | /api/devices/:id/claim | No | Claim device with token |
+| POST | /api/devices/:id/command | Yes | Send command to device via MQTT |
 | GET | /api/devices/:deviceId/telemetry | Yes | Query telemetry (paginated) |
+| POST | /api/provisioning | No | WiFi provisioning endpoint |
+| GET | /api/firmware | Yes | List firmware versions |
+| POST | /api/firmware | Yes | Create firmware version |
+| GET | /api/dashboards | Yes | List dashboards (paginated) |
+| POST | /api/dashboards | Yes | Create dashboard |
+| GET | /api/dashboards/:id | Yes | Get dashboard with layout |
+| PUT | /api/dashboards/:id | Yes | Update dashboard |
+| DELETE | /api/dashboards/:id | Yes | Delete dashboard |
+| PUT | /api/dashboards/:id/layout | Yes | Update dashboard layout JSON |
 | GET | /api-docs | No | Swagger UI |
 
 ## Rules
