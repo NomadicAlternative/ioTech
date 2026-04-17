@@ -130,15 +130,8 @@ ioTech/
 - OTA update client
 - State machine for device lifecycle
 
-### Phase 5 — Dashboard Web (NEXT — SDD planning complete, ready for apply)
-Full SDD cycle done. Artifacts in engram (project: iotech):
-- Explore: sdd/dashboard/explore
-- Widget catalog: sdd/dashboard/widget-catalog — 43 widgets in 3 waves
-- Proposal: sdd/dashboard/proposal
-- Spec: sdd/dashboard/spec — 36 requirements, 39 scenarios
-- Design: sdd/dashboard/design — 9 architecture decisions (AD-DASH-001–009)
-- Tasks: sdd/dashboard/tasks — 41 tasks in 6 phases
-- State: sdd/dashboard/state
+### Phase 5 — Dashboard Web (IN PROGRESS — Phase 1-5 of 6 complete, branch: feat/dashboard)
+Full SDD cycle done. Artifacts in engram (project: iotech): explore, widget-catalog, proposal, spec (36 reqs, 39 scenarios), design (9 ADs), tasks (41 tasks).
 
 Stack: React 19 + Vite + Tailwind 4 + Shadcn/ui + Zustand 5 + react-grid-layout + Recharts + Socket.io client + React Router 7 + Axios
 Location: frontend/ (new directory at project root)
@@ -147,7 +140,7 @@ Key architecture decisions:
 - Feature-based layout (features/auth, features/dashboard, features/widgets)
 - Static widget registry Record<WidgetType, WidgetDefinition>
 - Access token in memory, refresh token httpOnly cookie
-- Layout as JSONB in dashboards table (full replace with debounce)
+- Layout as JSONB in dashboards table (full replace with debounce 1500ms)
 - Telemetry store flat key "deviceId:datastreamKey" — O(1) lookup
 - New endpoint POST /devices/:id/command for Toggle/Button
 - RLS on dashboards + dashboard_clients with withTenant()
@@ -158,14 +151,15 @@ Wave 3 (5): Camera Feed, GPS Tracker, Serial Monitor, Custom HTML, Weather Stati
 
 Blynk-style widget config: tap widget → config panel with name, device selector, datastream selector, type-specific settings. All persisted in layout JSON.
 
-Implementation: 41 tasks in 6 phases (~10-15 sessions):
-1. Backend: DB, migrations, API dashboards, RLS, command endpoint (10 tasks)
-2. Backend TDD: tests CRUD, RLS, layout, commands (5 tasks)
-3. Frontend scaffold: Vite, stores, auth, routing (6 tasks)
-4. Dashboard UI: grid, widgets, config panel, real-time (8 tasks)
-5. Frontend TDD: stores, widgets, Socket.io (9 tasks)
-6. QA, conventions, cleanup (3 tasks)
+Implementation progress (41 tasks in 6 phases):
+1. ✅ Backend: DB, migrations, API dashboards, RLS, command endpoint (10 tasks)
+2. ✅ Backend TDD: 75 new tests — model, service, integration, migration, command (5 tasks)
+3. ✅ Frontend scaffold: Vite, stores, auth, routing, Axios interceptor (6 tasks)
+4. ✅ Dashboard UI: grid, 9 widgets, config panel, Socket.io, auto-save, sharing (8 tasks)
+5. ✅ Frontend TDD: ~95 new tests — stores, registry, config panel, CRUD, commands, Socket.io, access, sharing, extensibility (9 tasks)
+6. 🔲 QA, conventions, cleanup (3 tasks) — NEXT
 
+Total new tests: ~170 (75 backend + 95 frontend)
 Branch: feat/dashboard
 
 ### Future Phases
