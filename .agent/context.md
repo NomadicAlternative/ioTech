@@ -103,11 +103,28 @@ ioTech/
 - Swagger/OpenAPI 3.0 docs at `/api-docs` (no auth required)
 - 142 tests, 0 ESLint errors
 
-### Phase 4 — Device SDK + WiFi Provisioning (NEXT)
-- ESP32 SDK (C/Arduino) for device-to-backend connectivity
-- WiFi Provisioning via captive portal (installer configures device without code)
-- Device claiming flow (installer claims device for a client)
-- OTA firmware updates foundation
+### Phase 4a — Device Backend Foundation (NEXT — SDD planning complete)
+Split from original Phase 4. Backend-only APIs that future ESP32 SDK will consume.
+SDD artifacts in engram (project: iotech):
+- Exploration: #155 (sdd/phase4-device-sdk/explore)
+- Proposal: #156 (sdd/phase4a-device-backend/proposal)
+- Spec: #157 (sdd/phase4a-device-backend/spec) — 8 requirements, 21 scenarios
+- Design: #158 (sdd/phase4a-device-backend/design) — 7 architecture decisions
+- Tasks: #159 (sdd/phase4a-device-backend/tasks) — 31 tasks in 7 phases
+
+Scope:
+- Device claiming flow (token-based, atomic UPDATE...RETURNING)
+- WiFi provisioning endpoint (unauthenticated, rate-limited)
+- MQTT device auth via EMQX HTTP callback
+- Heartbeat + online/offline tracking + Socket.io events
+- OTA firmware metadata CRUD + MQTT notify
+- Device simulator CLI (tools/device-simulator.js)
+
+### Phase 4b — ESP32 SDK (FUTURE)
+- Captive portal for WiFi config
+- C/Arduino SDK consuming Phase 4a APIs
+- Secure token storage in flash
+- OTA update client
 
 ### Future Phases
 - Phase 5: Dashboard web (React, widget system, real-time via WebSocket)
