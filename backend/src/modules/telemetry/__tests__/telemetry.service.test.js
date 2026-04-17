@@ -154,6 +154,124 @@ describe('telemetryService.ingest()', () => {
   });
 });
 
+// ─── ingest() — datastream validation ────────────────────────────────────────
+
+describe('telemetryService.ingest() — datastream validation', () => {
+  const logger = require('../../../shared/logger');
+
+  function makeTemplate(datastreamOverrides = []) {
+    return {
+      id: 'tmpl-uuid-1',
+      tenant_id: TENANT_ID,
+      name: 'Sensor Template',
+      datastreams: datastreamOverrides,
+    };
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    chainableMock.where.mockReturnThis();
+    chainableMock.update.mockResolvedValue(1);
+    telemetryModel.insert.mockResolvedValue(makeTelemetryRow());
+  });
+
+  it('accepts valid payload that matches template datastreams (number type)', async () => {
+    const device = makeDevice({ template_id: 'tmpl-uuid-1' });
+    const template = makeTemplate([
+      { key: 'temperature', name: 'Temperature', type: 'number', direction: 'input' },
+    ]);
+
+    // First call → device, second call → template
+    mockFirst.mockResolvedValueOnce(device).mockResolvedValueOnce(template);
+
+    const result = await telemetryService.ingest(TENANT_ID, DEVICE_ID, { temperature: 25.3 });
+
+    expect(result).not.toBeNull();
+    expect(telemetryModel.insert).toHaveBeenCalled();
+  });
+
+  it('drops payload and logs warning on type mismatch (number key received string)', async () => {
+    const device = makeDevice({ template_id: 'tmpl-uuid-1' });
+    const template = makeTemplate([
+      { key: 'temperature', name: 'Temperature', type: 'number', direction: 'input' },
+    ]);
+
+    mockFirst.mockResolvedValueOnce(device).mockResolvedValueOnce(template);
+
+    const result = await telemetryService.ingest(TENANT_ID, DEVICE_ID, { temperature: 'hot' });
+
+    expect(result).toBeNull();
+    expect(telemetryModel.insert).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('telemetry.type_mismatch'),
+      expect.objectContaining({ device_id: DEVICE_ID, key: 'temperature' })
+    );
+  });
+
+  it('ignores unknown keys silently — does NOT drop the message', async () => {
+    const device = makeDevice({ template_id: 'tmpl-uuid-1' });
+    const template = makeTemplate([
+      { key: 'temperature', name: 'Temperature', type: 'number', direction: 'input' },
+    ]);
+
+    mockFirst.mockResolvedValueOnce(device).mockResolvedValueOnce(template);
+
+    // 'rssi' is not in the template datastreams → should be ignored
+    const result = await telemetryService.ingest(TENANT_ID, DEVICE_ID, {
+      temperature: 22.0,
+      rssi: -70,
+    });
+
+    expect(result).not.toBeNull();
+    expect(telemetryModel.insert).toHaveBeenCalled();
+  });
+
+  it('ignores output direction keys — treats them as unknown (not validated)', async () => {
+    const device = makeDevice({ template_id: 'tmpl-uuid-1' });
+    const template = makeTemplate([
+      { key: 'temperature', name: 'Temperature', type: 'number', direction: 'input' },
+      { key: 'setpoint', name: 'Setpoint', type: 'number', direction: 'output' },
+    ]);
+
+    mockFirst.mockResolvedValueOnce(device).mockResolvedValueOnce(template);
+
+    // setpoint is output direction — ignore type check, accept message
+    const result = await telemetryService.ingest(TENANT_ID, DEVICE_ID, {
+      temperature: 22.0,
+      setpoint: 'wrong_type_but_output_direction',
+    });
+
+    expect(result).not.toBeNull();
+    expect(telemetryModel.insert).toHaveBeenCalled();
+  });
+
+  it('skips validation and logs warning when template has no datastreams (legacy)', async () => {
+    const device = makeDevice({ template_id: 'tmpl-uuid-1' });
+    const template = makeTemplate([]); // empty datastreams array
+
+    mockFirst.mockResolvedValueOnce(device).mockResolvedValueOnce(template);
+
+    const result = await telemetryService.ingest(TENANT_ID, DEVICE_ID, { anything: 'here' });
+
+    expect(result).not.toBeNull();
+    expect(telemetryModel.insert).toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('unvalidated'),
+      expect.objectContaining({ device_id: DEVICE_ID })
+    );
+  });
+
+  it('skips validation when device has no template_id', async () => {
+    const device = makeDevice({ template_id: null });
+    mockFirst.mockResolvedValueOnce(device);
+
+    const result = await telemetryService.ingest(TENANT_ID, DEVICE_ID, { anything: 'here' });
+
+    expect(result).not.toBeNull();
+    expect(telemetryModel.insert).toHaveBeenCalled();
+  });
+});
+
 // ─── query() ─────────────────────────────────────────────────────────────────
 
 describe('telemetryService.query()', () => {
