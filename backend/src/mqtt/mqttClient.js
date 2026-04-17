@@ -8,12 +8,12 @@ let client = null;
 /**
  * Initialize the MQTT client.
  *
- * @param {{ telemetryService?: { ingest: Function } }} [deps={}]
- *   Optional dependency injection. Pass `{ telemetryService }` from index.js
- *   so the MQTT bridge can persist telemetry without a circular require.
+ * @param {{ telemetryService?: { ingest: Function }, socketService?: { emitTelemetry: Function } }} [deps={}]
+ *   Optional dependency injection. Pass `{ telemetryService, socketService }` from index.js
+ *   so the MQTT bridge can persist telemetry and emit real-time events without circular requires.
  */
 function initMqtt(deps) {
-  const { telemetryService } = deps || {};
+  const { telemetryService, socketService } = deps || {};
   const { url, options } = createMqttConfig();
 
   if (!url) {
@@ -84,6 +84,18 @@ function initMqtt(deps) {
         // tenantId is null here — telemetryService.ingest() resolves it from the device record
         telemetryService
           .ingest(null, deviceId, data, new Date(structured.receivedAt))
+          .then((row) => {
+            // Emit real-time telemetry event after successful persistence
+            if (socketService && row) {
+              socketService.emitTelemetry(
+                row.tenant_id,
+                deviceId,
+                data,
+                row.received_at,
+                row.id
+              );
+            }
+          })
           .catch((err) => {
             console.error(
               '[MQTT] telemetry persist error for device',
