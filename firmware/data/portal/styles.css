@@ -1,0 +1,113 @@
+/* ioTech Captive Portal Styles */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f4f8;
+  color: #2d3748;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  width: 100%;
+  max-width: 420px;
+  margin: 1rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2b6cb0;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  color: #718096;
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 0.4rem;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="url"] {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+  outline: none;
+}
+
+input:focus {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 0.75rem;
+  background: #2b6cb0;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 0.5rem;
+}
+
+.btn-primary:hover {
+  background: #2c5282;
+}
+
+.btn-primary:active {
+  background: #1a365d;
+}
+
+.error {
+  background: #fff5f5;
+  border: 1px solid #fc8181;
+  border-radius: 6px;
+  padding: 0.75rem;
+  color: #c53030;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: #a0aec0;
+  font-size: 0.75rem;
+}

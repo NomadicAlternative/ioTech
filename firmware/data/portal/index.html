@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ioTech Device Setup</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>ioTech</h1>
+      <p class="subtitle">Device Setup</p>
+    </header>
+
+    <main>
+      <form id="provision-form" method="POST" action="/provision">
+        <div class="form-group">
+          <label for="ssid">WiFi Network (SSID)</label>
+          <input type="text"
+                 id="ssid"
+                 name="ssid"
+                 placeholder="Your WiFi network name"
+                 required
+                 autocomplete="off" />
+        </div>
+
+        <div class="form-group">
+          <label for="password">WiFi Password</label>
+          <input type="password"
+                 id="password"
+                 name="password"
+                 placeholder="Leave blank for open networks"
+                 autocomplete="current-password" />
+        </div>
+
+        <div class="form-group">
+          <label for="claim_token">Claim Token</label>
+          <input type="text"
+                 id="claim_token"
+                 name="claim_token"
+                 placeholder="Token from your ioTech account"
+                 required
+                 autocomplete="off" />
+        </div>
+
+        <div class="form-group">
+          <label for="backend_url">Backend URL</label>
+          <input type="url"
+                 id="backend_url"
+                 name="backend_url"
+                 placeholder="https://api.iotech.example.com"
+                 required />
+        </div>
+
+        <div id="error-msg" class="error" style="display:none;"></div>
+
+        <button type="submit" class="btn-primary">Connect Device</button>
+      </form>
+    </main>
+
+    <footer>
+      <p>ioTech Firmware &mdash; WiFi Provisioning</p>
+    </footer>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

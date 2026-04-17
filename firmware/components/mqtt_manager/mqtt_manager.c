@@ -1,0 +1,229 @@
+#include <string.h>
+#include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/timers.h"
+#include "esp_log.h"
+#include "mqtt_client.h"
+#include "esp_tls.h"
+
+#include "mqtt_manager.h"
+#include "nvs_storage.h"
+#include "state_machine.h"
+
+static const char *TAG = "mqtt_manager";
+
+/* CA cert for broker TLS */
+extern const char isrg_root_x1_pem_start[] asm("_binary_isrg_root_x1_pem_start");
+extern const char isrg_root_x1_pem_end[]   asm("_binary_isrg_root_x1_pem_end");
+
+/* -----------------------------------------------------------------------
+ * Internal state
+ * --------------------------------------------------------------------- */
+static esp_mqtt_client_handle_t s_client     = NULL;
+static mqtt_ota_cb_t             s_ota_cb    = NULL;
+static device_config_t           s_cfg       = {0};
+static TaskHandle_t              s_heartbeat_task = NULL;
+
+/* Exponential backoff: 2s → 4s → 8s → ... cap 120s */
+static uint32_t s_reconnect_delay_ms = 2000;
+#define MQTT_RECONNECT_MAX_MS 120000
+
+/* -----------------------------------------------------------------------
+ * Heartbeat task: publishes "online" status every 60s
+ * --------------------------------------------------------------------- */
+static void heartbeat_task(void *arg)
+{
+    for (;;) {
+        vTaskDelay(pdMS_TO_TICKS(60000));
+        mqtt_publish_status("online");
+    }
+}
+
+/* -----------------------------------------------------------------------
+ * MQTT event handler
+ * --------------------------------------------------------------------- */
+static void mqtt_event_handler(void *handler_args,
+                                esp_event_base_t base,
+                                int32_t event_id,
+                                void *event_data)
+{
+    esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t)event_data;
+
+    switch ((esp_mqtt_event_id_t)event_id) {
+    case MQTT_EVENT_CONNECTED:
+        ESP_LOGI(TAG, "MQTT connected");
+        s_reconnect_delay_ms = 2000;  /* reset backoff on success */
+
+        /* Subscribe to OTA notify topic */
+        {
+            char topic[256];
+            snprintf(topic, sizeof(topic),
+                     "org/%s/device/%s/ota/notify",
+                     s_cfg.tenant_id, s_cfg.device_id);
+            esp_mqtt_client_subscribe(s_client, topic, 1);
+        }
+
+        /* Subscribe to config topic for OTA poll interval updates */
+        {
+            char topic[256];
+            snprintf(topic, sizeof(topic),
+                     "org/%s/device/%s/config",
+                     s_cfg.tenant_id, s_cfg.device_id);
+            esp_mqtt_client_subscribe(s_client, topic, 1);
+        }
+
+        /* Publish "online" status */
+        mqtt_publish_status("online");
+
+        /* Start heartbeat */
+        if (!s_heartbeat_task) {
+            xTaskCreate(heartbeat_task, "mqtt_heartbeat", 2048, NULL, 3, &s_heartbeat_task);
+        }
+
+        sm_send_event(SM_EVT_MQTT_CONNECTED);
+        break;
+
+    case MQTT_EVENT_DISCONNECTED:
+        ESP_LOGW(TAG, "MQTT disconnected — reconnecting in %lums", (unsigned long)s_reconnect_delay_ms);
+
+        /* Stop heartbeat */
+        if (s_heartbeat_task) {
+            vTaskDelete(s_heartbeat_task);
+            s_heartbeat_task = NULL;
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(s_reconnect_delay_ms));
+        esp_mqtt_client_reconnect(s_client);
+
+        /* Double backoff, cap at maximum */
+        s_reconnect_delay_ms *= 2;
+        if (s_reconnect_delay_ms > MQTT_RECONNECT_MAX_MS) {
+            s_reconnect_delay_ms = MQTT_RECONNECT_MAX_MS;
+        }
+        sm_send_event(SM_EVT_MQTT_DISCONNECTED);
+        break;
+
+    case MQTT_EVENT_DATA: {
+        char topic[256] = {0};
+        char data[512]  = {0};
+
+        int topic_len = event->topic_len < (int)sizeof(topic) - 1 ? event->topic_len : (int)sizeof(topic) - 1;
+        int data_len  = event->data_len  < (int)sizeof(data)  - 1 ? event->data_len  : (int)sizeof(data)  - 1;
+
+        memcpy(topic, event->topic, topic_len);
+        memcpy(data,  event->data,  data_len);
+
+        /* Check if this is an OTA notify message */
+        char ota_topic[256];
+        snprintf(ota_topic, sizeof(ota_topic),
+                 "org/%s/device/%s/ota/notify",
+                 s_cfg.tenant_id, s_cfg.device_id);
+
+        if (strncmp(topic, ota_topic, strlen(ota_topic)) == 0) {
+            ESP_LOGI(TAG, "OTA notify received: %s", data);
+            if (s_ota_cb) {
+                s_ota_cb(data);
+            }
+            sm_send_event(SM_EVT_OTA_NOTIFY);
+        }
+        break;
+    }
+
+    case MQTT_EVENT_ERROR:
+        ESP_LOGE(TAG, "MQTT error");
+        break;
+
+    default:
+        break;
+    }
+}
+
+/* -----------------------------------------------------------------------
+ * Public API
+ * --------------------------------------------------------------------- */
+void mqtt_manager_start(const device_config_t *cfg)
+{
+    if (!cfg) return;
+    memcpy(&s_cfg, cfg, sizeof(s_cfg));
+
+    /* Build LWT topic */
+    char lwt_topic[256];
+    snprintf(lwt_topic, sizeof(lwt_topic),
+             "org/%s/device/%s/status",
+             s_cfg.tenant_id, s_cfg.device_id);
+
+    esp_mqtt_client_config_t mqtt_cfg = {
+        .broker = {
+            .address.uri   = s_cfg.mqtt_broker_url,
+            .verification  = {
+                .certificate = isrg_root_x1_pem_start,
+            },
+        },
+        .credentials = {
+            .client_id     = s_cfg.device_id,
+            .username      = s_cfg.device_id,
+            .authentication = {
+                .password  = s_cfg.device_token,
+            },
+        },
+        .session = {
+            .last_will = {
+                .topic = lwt_topic,
+                .msg   = "offline",
+                .qos   = 1,
+                .retain= 1,
+            },
+        },
+    };
+
+    s_client = esp_mqtt_client_init(&mqtt_cfg);
+    esp_mqtt_client_register_event(s_client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
+    esp_mqtt_client_start(s_client);
+
+    ESP_LOGI(TAG, "MQTT client started → %s", s_cfg.mqtt_broker_url);
+}
+
+void mqtt_manager_stop(void)
+{
+    if (s_client) {
+        esp_mqtt_client_stop(s_client);
+        esp_mqtt_client_destroy(s_client);
+        s_client = NULL;
+    }
+    if (s_heartbeat_task) {
+        vTaskDelete(s_heartbeat_task);
+        s_heartbeat_task = NULL;
+    }
+}
+
+esp_err_t mqtt_publish_telemetry(const char *json_payload)
+{
+    if (!s_client || !json_payload) return ESP_ERR_INVALID_ARG;
+
+    char topic[256];
+    snprintf(topic, sizeof(topic),
+             "org/%s/device/%s/telemetry",
+             s_cfg.tenant_id, s_cfg.device_id);
+
+    int msg_id = esp_mqtt_client_publish(s_client, topic, json_payload, 0, 0, 0);
+    return (msg_id >= 0) ? ESP_OK : ESP_FAIL;
+}
+
+esp_err_t mqtt_publish_status(const char *status)
+{
+    if (!s_client || !status) return ESP_ERR_INVALID_ARG;
+
+    char topic[256];
+    snprintf(topic, sizeof(topic),
+             "org/%s/device/%s/status",
+             s_cfg.tenant_id, s_cfg.device_id);
+
+    int msg_id = esp_mqtt_client_publish(s_client, topic, status, 0, 1, 1);
+    return (msg_id >= 0) ? ESP_OK : ESP_FAIL;
+}
+
+void mqtt_subscribe_ota_notify(mqtt_ota_cb_t cb)
+{
+    s_ota_cb = cb;
+}
