@@ -97,4 +97,14 @@ async function remove(id) {
   return db('devices').where({ id }).delete();
 }
 
-module.exports = { findAll, findById, findByToken, insert, update, remove, count };
+/**
+ * Find a device by its claim_token (for the claiming flow).
+ * Not tenant-scoped — token uniquely identifies the device globally.
+ * @param {string} claimToken
+ * @returns {Promise<object|undefined>}
+ */
+async function findByClaimToken(claimToken) {
+  return db('devices').where({ claim_token: claimToken }).first();
+}
+
+module.exports = { findAll, findById, findByToken, findByClaimToken, insert, update, remove, count };

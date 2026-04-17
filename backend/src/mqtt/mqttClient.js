@@ -1,7 +1,14 @@
 const mqtt = require('mqtt');
 const { createMqttConfig } = require('../config/mqtt');
+const { handleHeartbeat } = require('./handlers/heartbeat');
 
-const SUBSCRIBE_TOPIC = 'devices/+/telemetry';
+// Legacy topic for backward compatibility
+const SUBSCRIBE_TOPIC_LEGACY = 'devices/+/telemetry';
+
+// New tenant-namespaced topic for heartbeat / status
+// Pattern: org/{tenantId}/device/{deviceId}/status
+// OTA notify (future): org/{tenantId}/device/{deviceId}/ota/notify
+const SUBSCRIBE_TOPIC_STATUS = 'org/+/device/+/status';
 
 let client = null;
 
@@ -25,11 +32,20 @@ function initMqtt(deps) {
 
   client.on('connect', () => {
     console.log('MQTT connected to', url);
-    client.subscribe(SUBSCRIBE_TOPIC, (err, granted) => {
+    // Subscribe to legacy telemetry topic
+    client.subscribe(SUBSCRIBE_TOPIC_LEGACY, (err, granted) => {
       if (err) {
-        console.error('Failed to subscribe to', SUBSCRIBE_TOPIC, err);
+        console.error('Failed to subscribe to', SUBSCRIBE_TOPIC_LEGACY, err);
       } else {
-        console.log('Subscribed to', SUBSCRIBE_TOPIC, 'granted=', granted);
+        console.log('Subscribed to', SUBSCRIBE_TOPIC_LEGACY, 'granted=', granted);
+      }
+    });
+    // Subscribe to new tenant-namespaced status (heartbeat) topic
+    client.subscribe(SUBSCRIBE_TOPIC_STATUS, (err, granted) => {
+      if (err) {
+        console.error('Failed to subscribe to', SUBSCRIBE_TOPIC_STATUS, err);
+      } else {
+        console.log('Subscribed to', SUBSCRIBE_TOPIC_STATUS, 'granted=', granted);
       }
     });
   });
@@ -40,6 +56,16 @@ function initMqtt(deps) {
     // Esperamos topics como: devices/<deviceId>/telemetry
     const m = /^devices\/([^/]+)\/telemetry$/.exec(topic);
     return m ? m[1] : null;
+  }
+
+  /**
+   * Extract tenantId and deviceId from new topic format:
+   * org/{tenantId}/device/{deviceId}/{event}
+   */
+  function extractTenantDevice(topic) {
+    const m = /^org\/([^/]+)\/device\/([^/]+)\/(.+)$/.exec(topic);
+    if (!m) return null;
+    return { tenantId: m[1], deviceId: m[2], event: m[3] };
   }
 
   function safeJsonParse(str) {
@@ -67,6 +93,19 @@ function initMqtt(deps) {
       } else {
         // Log error but don't throw — requirement 4
         console.error('MQTT: invalid JSON payload from topic', topic, 'payload=', payloadStr, 'error=', parsed.error && parsed.error.message ? parsed.error.message : parsed.error);
+      }
+
+      // ── Route to appropriate handler ─────────────────────────────────────
+      // New namespaced topic: org/{tenantId}/device/{deviceId}/{event}
+      const tenantDevice = extractTenantDevice(topic);
+      if (tenantDevice) {
+        if (tenantDevice.event === 'status') {
+          handleHeartbeat(tenantDevice.tenantId, tenantDevice.deviceId, data).catch((err) => {
+            console.error('[MQTT] heartbeat handler error:', err && err.message ? err.message : err);
+          });
+        }
+        // Future: add more event handlers here (ota/notify, etc.)
+        return;
       }
 
       const structured = {
