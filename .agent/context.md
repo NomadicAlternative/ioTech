@@ -31,7 +31,7 @@ Devices -> MQTT -> Backend (Node.js/Express) -> PostgreSQL (RLS) -> WebSocket ->
 - **WebSocket**: Socket.io (real-time telemetry)
 - **Validation**: Joi (per-module schemas)
 - **API Docs**: Swagger/OpenAPI 3.0 at `/api-docs`
-- **Testing**: Jest (142 tests), ESLint, Prettier
+- **Testing**: Jest (249 tests), ESLint, Prettier
 - **Config**: dotenv (.env)
 
 ## Project Structure
@@ -130,7 +130,7 @@ ioTech/
 - OTA update client
 - State machine for device lifecycle
 
-### Phase 5 — Dashboard Web (IN PROGRESS — Phase 1-5 of 6 complete, branch: feat/dashboard)
+### Phase 5 — Dashboard Web (COMPLETE — ALL 6/6 PHASES ✅, branch: feat/dashboard)
 Full SDD cycle done. Artifacts in engram (project: iotech): explore, widget-catalog, proposal, spec (36 reqs, 39 scenarios), design (9 ADs), tasks (41 tasks).
 
 Stack: React 19 + Vite + Tailwind 4 + Shadcn/ui + Zustand 5 + react-grid-layout + Recharts + Socket.io client + React Router 7 + Axios
@@ -157,7 +157,7 @@ Implementation progress (41 tasks in 6 phases):
 3. ✅ Frontend scaffold: Vite, stores, auth, routing, Axios interceptor (6 tasks)
 4. ✅ Dashboard UI: grid, 9 widgets, config panel, Socket.io, auto-save, sharing (8 tasks)
 5. ✅ Frontend TDD: ~95 new tests — stores, registry, config panel, CRUD, commands, Socket.io, access, sharing, extensibility (9 tasks)
-6. 🔲 QA, conventions, cleanup (3 tasks) — NEXT
+6. ✅ QA, conventions, cleanup (3 tasks) — DONE
 
 Total new tests: ~170 (75 backend + 95 frontend)
 Branch: feat/dashboard

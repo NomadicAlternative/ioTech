@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { sendDeviceCommand } from '@/features/dashboard/api'
 import type { WidgetProps, ConfigFieldsProps } from '../types'
@@ -6,16 +6,24 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
+/** Debounce delay (ms) for button commands — prevents rapid duplicate sends (SC-DASH-028). */
+const BUTTON_DEBOUNCE_MS = 300
+
 export function ButtonWidget({ widgetId: _widgetId, config }: WidgetProps) {
   const deviceId = config.deviceId ?? ''
   const [loading, setLoading] = useState(false)
+  const lastClickRef = useRef<number>(0)
 
   const action = String(config.settings.action ?? 'trigger')
   const label = String(config.settings.label ?? 'Send')
   const variant = (config.settings.variant as 'default' | 'destructive' | 'outline') ?? 'default'
 
-  const handleClick = async () => {
+  // SC-DASH-028: debounce rapid clicks — only one command per 300ms window
+  const handleClick = useCallback(async () => {
     if (!deviceId) return
+    const now = Date.now()
+    if (now - lastClickRef.current < BUTTON_DEBOUNCE_MS) return
+    lastClickRef.current = now
     setLoading(true)
     try {
       await sendDeviceCommand(deviceId, action, config.settings.payload)
@@ -24,7 +32,7 @@ export function ButtonWidget({ widgetId: _widgetId, config }: WidgetProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [deviceId, action, config.settings.payload])
 
   return (
     <div className="flex items-center justify-center h-full">

@@ -32,6 +32,8 @@ export function WidgetConfigPanel() {
 
   // Local config state (edited but not yet saved)
   const [localConfig, setLocalConfig] = useState<WidgetConfig | null>(null)
+  // Widget-type config validation state (e.g. gauge min < max)
+  const [configValid, setConfigValid] = useState(true)
 
   // Device + datastream data
   const [devices, setDevices] = useState<Device[]>([])
@@ -43,6 +45,7 @@ export function WidgetConfigPanel() {
   useEffect(() => {
     if (isOpen && entry) {
       setLocalConfig({ ...entry.config, settings: { ...entry.config.settings } })
+      setConfigValid(true) // reset validation on open
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, editingWidgetId])
@@ -142,22 +145,32 @@ export function WidgetConfigPanel() {
           {localConfig.deviceId && (
             <div className="space-y-1">
               <Label>Datastream</Label>
-              <Select
-                value={localConfig.datastreamKey ?? ''}
-                onValueChange={(v) => updateConfig({ datastreamKey: v || null })}
-                disabled={loadingTemplate || !template}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={loadingTemplate ? 'Loading…' : 'Select a datastream'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {datastreams.map((ds) => (
-                    <SelectItem key={ds.key} value={ds.key}>
-                      {ds.name} <span className="text-muted-foreground text-xs">({ds.key})</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {!loadingTemplate && localConfig.deviceId && devices.find((d) => d.id === localConfig.deviceId) && !devices.find((d) => d.id === localConfig.deviceId)?.templateId ? (
+                <p className="text-xs text-muted-foreground">
+                  This device has no template assigned. Assign a template to select a datastream.
+                </p>
+              ) : !loadingTemplate && template && datastreams.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  This device's template has no datastreams configured.
+                </p>
+              ) : (
+                <Select
+                  value={localConfig.datastreamKey ?? ''}
+                  onValueChange={(v) => updateConfig({ datastreamKey: v || null })}
+                  disabled={loadingTemplate || !template}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={loadingTemplate ? 'Loading…' : 'Select a datastream'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {datastreams.map((ds) => (
+                      <SelectItem key={ds.key} value={ds.key}>
+                        {ds.name} <span className="text-muted-foreground text-xs">({ds.key})</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           )}
 
@@ -170,13 +183,14 @@ export function WidgetConfigPanel() {
               <def.configFields
                 settings={localConfig.settings}
                 onChange={(settings) => updateConfig({ settings })}
+                onValidChange={setConfigValid}
               />
             </div>
           )}
         </div>
 
         <SheetFooter className="flex-col gap-2 sm:flex-col">
-          <Button className="w-full" onClick={handleSave}>Save changes</Button>
+          <Button className="w-full" onClick={handleSave} disabled={!configValid}>Save changes</Button>
           <Button variant="destructive" className="w-full" onClick={handleDelete}>
             Delete widget
           </Button>

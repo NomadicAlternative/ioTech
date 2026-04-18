@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { ArrowLeft, Plus, Share2, Save, Loader2 } from 'lucide-react'
-import GridLayout, { type Layout } from 'react-grid-layout'
+import GridLayout, { type Layout, type LayoutItem } from 'react-grid-layout'
 import { v4 as uuidv4 } from 'uuid'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useDashboardStore } from './dashboardStore'
+import { useAuthStore } from '@/features/auth/authStore'
 import { WidgetRenderer } from '@/features/widgets/WidgetRenderer'
 import { WidgetConfigPanel } from '@/features/widgets/WidgetConfigPanel'
 import { WIDGET_TYPES } from '@/features/widgets/registry'
@@ -23,6 +24,9 @@ import 'react-resizable/css/styles.css'
 export function DashboardEditorPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const userRole = useAuthStore((s) => s.user?.role)
+  const isInstaller = userRole === 'installer' || userRole === 'admin'
+
   const {
     currentDashboard,
     layout,
@@ -70,7 +74,7 @@ export function DashboardEditorPage() {
   }, [shareOpen, id])
 
   const handleLayoutChange = useCallback(
-    (newGridLayout: Layout[]) => {
+    (newGridLayout: Layout) => {
       const updated: WidgetLayoutEntry[] = newGridLayout.map((gl) => {
         const existing = layout.find((e) => e.i === gl.i)
         return existing
@@ -117,7 +121,7 @@ export function DashboardEditorPage() {
     } catch {/* ignore */}
   }
 
-  const gridLayout: Layout[] = layout.map((e) => ({
+  const gridLayout: LayoutItem[] = layout.map((e) => ({
     i: e.i,
     x: e.x,
     y: e.y,
@@ -126,6 +130,12 @@ export function DashboardEditorPage() {
     minW: 2,
     minH: 2,
   }))
+
+  // SC-DASH-005: Redirect clients away from the edit route → view mode.
+  // Guard is placed here (after all hooks) to comply with Rules of Hooks.
+  if (!isInstaller) {
+    return <Navigate to={`/app/dashboards/${id}`} replace />
+  }
 
   if (loading) {
     return (
@@ -213,14 +223,11 @@ export function DashboardEditorPage() {
             <GridLayout
               className="layout"
               layout={gridLayout}
-              cols={12}
-              rowHeight={80}
               width={1200}
-              isDraggable
-              isResizable
+              gridConfig={{ cols: 12, rowHeight: 80, margin: [12, 12] as [number, number] }}
+              dragConfig={{ enabled: true }}
+              resizeConfig={{ enabled: true }}
               onLayoutChange={handleLayoutChange}
-              margin={[12, 12]}
-              compactType="vertical"
             >
               {layout.map((entry) => (
                 <div key={entry.i}>

@@ -2,13 +2,23 @@ import type React from 'react'
 
 // ─── Core widget data types ───────────────────────────────────────────────────
 
+/**
+ * Per-widget configuration stored inside `WidgetLayoutEntry.config`.
+ * Saved as part of the layout JSONB in the `dashboards` table (AD-DASH-005).
+ */
 export interface WidgetConfig {
+  /** Displayed as the widget's header label. Defaults to widget type name. */
   name: string
   deviceId: string | null
   datastreamKey: string | null
+  /** Type-specific settings (e.g. min/max for Gauge, period for LineChart). */
   settings: Record<string, unknown>
 }
 
+/**
+ * A single entry in the dashboard layout array.
+ * Combines react-grid-layout positional data with widget type and config.
+ */
 export interface WidgetLayoutEntry {
   i: string           // uuid — react-grid-layout key
   x: number
@@ -21,17 +31,25 @@ export interface WidgetLayoutEntry {
 
 // ─── Widget component contracts ───────────────────────────────────────────────
 
+/** Props received by every widget display component. */
 export interface WidgetProps {
   widgetId: string
   config: WidgetConfig
   isEditing: boolean
 }
 
+/** Props received by every widget config-fields component rendered inside `WidgetConfigPanel`. */
 export interface ConfigFieldsProps {
   settings: Record<string, unknown>
   onChange: (settings: Record<string, unknown>) => void
+  /** Optional callback — widget config fields call this with `false` when there's a validation error. */
+  onValidChange?: (isValid: boolean) => void
 }
 
+/**
+ * A single entry in the `WIDGET_REGISTRY`.
+ * Adding one entry here (+ one component file) is all that's needed to register a new widget type.
+ */
 export interface WidgetDefinition {
   type: string
   label: string

@@ -89,6 +89,7 @@ vi.mock('@/features/widgets/registry', () => ({
 
 import * as dashboardApi from '@/features/dashboard/api'
 import { useDashboardStore } from '@/features/dashboard/dashboardStore'
+import { useAuthStore } from '@/features/auth/authStore'
 import { DashboardListPage } from '@/features/dashboard/DashboardListPage'
 import { DashboardEditorPage } from '@/features/dashboard/DashboardEditorPage'
 
@@ -124,6 +125,11 @@ function resetStores() {
     isEditing: false,
     isSaving: false,
     saveError: null,
+  })
+  useAuthStore.setState({
+    user: { id: 'user-1', email: 'installer@test.com', role: 'installer', tenantId: 'tenant-1' },
+    accessToken: 'mock-token',
+    isAuthenticated: true,
   })
 }
 

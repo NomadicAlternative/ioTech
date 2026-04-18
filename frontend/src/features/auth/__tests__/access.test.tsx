@@ -6,7 +6,7 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom'
 
 // Mock AppShell to avoid importing full component tree
 vi.mock('@/components/AppShell', () => ({
-  AppShell: () => <div data-testid="app-shell"><outlet /></div>,
+  AppShell: () => <div data-testid="app-shell"><div data-testid="outlet" /></div>,
 }))
 
 import { useAuthStore } from '@/features/auth/authStore'

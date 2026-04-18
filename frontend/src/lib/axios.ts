@@ -4,6 +4,15 @@ import axios, {
 } from 'axios'
 import { useAuthStore } from '@/features/auth/authStore'
 
+/**
+ * Pre-configured Axios instance for all API calls.
+ *
+ * - Base URL from `VITE_API_URL` (defaults to localhost:3000).
+ * - `withCredentials: true` to send the httpOnly refresh cookie automatically.
+ * - Request interceptor injects the in-memory access token as a Bearer header.
+ * - Response interceptor handles 401 with a singleton refresh flow (AD-DASH-004):
+ *   parallel 401s queue and share a single refresh promise to avoid thundering herd.
+ */
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3000',
   withCredentials: true, // httpOnly refresh cookie

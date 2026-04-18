@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor, act } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 
@@ -79,6 +79,7 @@ vi.mock('@/components/ui/label', () => ({
 
 import * as dashboardApi from '@/features/dashboard/api'
 import { useDashboardStore } from '@/features/dashboard/dashboardStore'
+import { useAuthStore } from '@/features/auth/authStore'
 import { DashboardEditorPage } from '@/features/dashboard/DashboardEditorPage'
 import { DashboardListPage } from '@/features/dashboard/DashboardListPage'
 
@@ -107,6 +108,11 @@ function resetStores() {
     isEditing: false,
     isSaving: false,
     saveError: null,
+  })
+  useAuthStore.setState({
+    user: { id: 'user-1', email: 'installer@test.com', role: 'installer', tenantId: 'tenant-1' },
+    accessToken: 'mock-token',
+    isAuthenticated: true,
   })
 }
 
@@ -163,8 +169,8 @@ describe('Dashboard Sharing', () => {
 
     // Click the Share button next to Alice
     const shareButtons = screen.getAllByText('Share')
-    // Last share button is the one in the dialog list (first is toolbar)
-    await userEvent.click(shareButtons[shareButtons.length - 1])
+    // Index 0 = toolbar Share button, index 1 = Alice's Share, index 2 = Bob's Share
+    await userEvent.click(shareButtons[1])
 
     await waitFor(() => {
       expect(dashboardApi.shareDashboard).toHaveBeenCalledWith('dash-1', 'client-1')

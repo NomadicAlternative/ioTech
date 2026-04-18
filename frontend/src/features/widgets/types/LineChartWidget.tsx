@@ -17,15 +17,16 @@ export function LineChartWidget({ widgetId: _widgetId, config }: WidgetProps) {
   const deviceId = config.deviceId ?? ''
   const datastreamKey = config.datastreamKey ?? ''
   const color = String(config.settings.color ?? '#3b82f6')
+  const period = String(config.settings.period ?? '24h')
   const showGrid = config.settings.showGrid !== false
 
-  // Load historical data
+  // Load historical data — refetches when device, datastream, or period changes (SC-DASH-038)
   useEffect(() => {
     if (!deviceId || !datastreamKey) return
     fetchTelemetryHistory(deviceId, datastreamKey, 100)
       .then((data) => setHistory(data.map((d) => ({ ...d, value: Number(d.value) }))))
       .catch(() => {/* silently ignore */})
-  }, [deviceId, datastreamKey])
+  }, [deviceId, datastreamKey, period])
 
   // Subscribe to live updates
   const liveEntry = useTelemetryStore((s) => {

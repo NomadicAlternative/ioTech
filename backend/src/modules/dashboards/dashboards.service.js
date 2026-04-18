@@ -60,7 +60,9 @@ async function getById(tenantId, id) {
  * @returns {Promise<object>}
  */
 async function create(tenantId, data) {
-  const layout = data.layout || { widgets: [], gridConfig: {} };
+  // Use undefined-check so that explicit null is NOT silently replaced with the default.
+  // null layout must reach validateLayoutStructure and throw ValidationError.
+  const layout = data.layout !== undefined ? data.layout : { widgets: [], gridConfig: {} };
   validateLayoutStructure(layout);
 
   const dashboard = await dashboardsModel.create(tenantId, {
