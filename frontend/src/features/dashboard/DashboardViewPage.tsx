@@ -15,14 +15,13 @@ export function DashboardViewPage() {
   const { currentDashboard, layout, fetchDashboard, clearCurrent } = useDashboardStore()
   const user = useAuthStore((s) => s.user)
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const isInstaller = user?.role === 'installer' || user?.role === 'admin'
 
   useEffect(() => {
     if (!id) return
-    setLoading(true)
     fetchDashboard(id)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))

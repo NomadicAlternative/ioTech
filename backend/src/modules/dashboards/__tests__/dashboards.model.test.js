@@ -38,7 +38,7 @@ function makeDashboard(overrides = {}) {
 function makeTrx(opts = {}) {
   const {
     insertResult = [makeDashboard()],
-    updateResult = [makeDashboard()],
+    _updateResult = [makeDashboard()],
     deleteResult = 1,
     firstResult = makeDashboard(),
     selectResult = [],

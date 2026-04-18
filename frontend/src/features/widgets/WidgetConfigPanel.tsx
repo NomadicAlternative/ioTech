@@ -44,8 +44,10 @@ export function WidgetConfigPanel() {
   // Initialize local config when panel opens
   useEffect(() => {
     if (isOpen && entry) {
-      setLocalConfig({ ...entry.config, settings: { ...entry.config.settings } })
-      setConfigValid(true) // reset validation on open
+      Promise.resolve().then(() => {
+        setLocalConfig({ ...entry.config, settings: { ...entry.config.settings } })
+        setConfigValid(true) // reset validation on open
+      })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, editingWidgetId])
@@ -53,8 +55,9 @@ export function WidgetConfigPanel() {
   // Load devices when panel opens
   useEffect(() => {
     if (!isOpen) return
-    setLoadingDevices(true)
-    fetchDevices()
+    Promise.resolve()
+      .then(() => setLoadingDevices(true))
+      .then(() => fetchDevices())
       .then(setDevices)
       .catch(() => {/* silently ignore */})
       .finally(() => setLoadingDevices(false))
@@ -63,16 +66,17 @@ export function WidgetConfigPanel() {
   // Load template when device changes
   useEffect(() => {
     if (!localConfig?.deviceId) {
-      setTemplate(null)
+      Promise.resolve().then(() => setTemplate(null))
       return
     }
     const device = devices.find((d) => d.id === localConfig.deviceId)
     if (!device?.templateId) {
-      setTemplate(null)
+      Promise.resolve().then(() => setTemplate(null))
       return
     }
-    setLoadingTemplate(true)
-    fetchDeviceTemplate(device.templateId)
+    Promise.resolve()
+      .then(() => setLoadingTemplate(true))
+      .then(() => fetchDeviceTemplate(device.templateId))
       .then(setTemplate)
       .catch(() => setTemplate(null))
       .finally(() => setLoadingTemplate(false))

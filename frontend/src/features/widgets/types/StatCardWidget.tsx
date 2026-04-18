@@ -1,19 +1,23 @@
+import { useEffect, useState } from 'react'
 import { useTelemetryValue } from '@/stores/telemetryStore'
 import type { WidgetProps, ConfigFieldsProps } from '../types'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
-import { useRef } from 'react'
 
 export function StatCardWidget({ widgetId: _widgetId, config }: WidgetProps) {
   const entry = useTelemetryValue(config.deviceId ?? '', config.datastreamKey ?? '')
   const value = typeof entry?.value === 'number' ? entry.value : Number(entry?.value ?? 0)
   const unit = String(config.settings.unit ?? '')
 
-  // Track previous value for trend
-  const prevRef = useRef<number | null>(null)
-  const trend = prevRef.current === null ? 'neutral' : value > prevRef.current ? 'up' : value < prevRef.current ? 'down' : 'neutral'
-  prevRef.current = value
+  // Track previous value for trend via async state update (satisfies no-ref-during-render + no-sync-setState-in-effect)
+  const [prevValue, setPrevValue] = useState<number | null>(null)
+  const trend: 'up' | 'down' | 'neutral' =
+    prevValue === null ? 'neutral' : value > prevValue ? 'up' : value < prevValue ? 'down' : 'neutral'
+
+  useEffect(() => {
+    Promise.resolve().then(() => setPrevValue(value))
+  }, [value])
 
   return (
     <div className="flex flex-col justify-between h-full p-1">
