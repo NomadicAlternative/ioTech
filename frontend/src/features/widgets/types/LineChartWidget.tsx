@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useTelemetryStore } from '@/stores/telemetryStore'
 import { fetchTelemetryHistory } from '@/features/dashboard/api'
@@ -34,21 +34,20 @@ export function LineChartWidget({ widgetId: _widgetId, config }: WidgetProps) {
     return s.data[key]
   })
 
-  useEffect(() => {
-    if (!liveEntry) return
-    setHistory((prev) => {
-      const newPoint: DataPoint = {
-        value: Number(liveEntry.value),
-        timestamp: new Date(liveEntry.ts).toISOString(),
+  const chartData = useMemo(() => {
+    const base = history.map((d) => ({
+      t: new Date(d.timestamp).toLocaleTimeString(),
+      v: d.value,
+    }))
+    if (liveEntry) {
+      const livePoint = {
+        t: new Date(liveEntry.ts).toLocaleTimeString(),
+        v: Number(liveEntry.value),
       }
-      return [...prev.slice(-199), newPoint]
-    })
-  }, [liveEntry])
-
-  const chartData = history.map((d) => ({
-    t: new Date(d.timestamp).toLocaleTimeString(),
-    v: d.value,
-  }))
+      return [...base, livePoint]
+    }
+    return base
+  }, [history, liveEntry])
 
   if (!deviceId || !datastreamKey) {
     return (

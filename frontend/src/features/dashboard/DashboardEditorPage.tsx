@@ -38,7 +38,7 @@ export function DashboardEditorPage() {
     setIsEditing,
   } = useDashboardStore()
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   // Share dialog state
@@ -49,7 +49,6 @@ export function DashboardEditorPage() {
 
   useEffect(() => {
     if (!id) return
-    setLoading(true)
     setIsEditing(true)
     fetchDashboard(id)
       .catch((err) => setError(err.message))
@@ -63,8 +62,9 @@ export function DashboardEditorPage() {
   // Load share data when dialog opens
   useEffect(() => {
     if (!shareOpen || !id) return
-    setSharingLoading(true)
-    Promise.all([fetchClients(), fetchDashboardSharedClients(id)])
+    Promise.resolve()
+      .then(() => setSharingLoading(true))
+      .then(() => Promise.all([fetchClients(), fetchDashboardSharedClients(id)]))
       .then(([c, shared]) => {
         setClients(c)
         setSharedClientIds(shared)

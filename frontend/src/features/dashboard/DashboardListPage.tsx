@@ -25,7 +25,7 @@ export function DashboardListPage() {
   const navigate = useNavigate()
   const { dashboards, fetchDashboards, createDashboard, deleteDashboard } = useDashboardStore()
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [newName, setNewName] = useState('')
@@ -33,7 +33,6 @@ export function DashboardListPage() {
   const [creating, setCreating] = useState(false)
 
   useEffect(() => {
-    setLoading(true)
     fetchDashboards()
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))

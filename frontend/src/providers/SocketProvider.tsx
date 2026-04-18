@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { io, type Socket } from 'socket.io-client'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useTelemetryStore } from '@/stores/telemetryStore'
@@ -15,6 +15,7 @@ interface SocketContextValue {
 const SocketContext = createContext<SocketContextValue>({ socket: null })
 
 /** Access the raw Socket.io socket. Returns null when unauthenticated. */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSocket() {
   return useContext(SocketContext)
 }
@@ -37,6 +38,7 @@ interface TelemetryEvent {
  */
 export function SocketProvider({ children }: { children: React.ReactNode }) {
   const socketRef = useRef<Socket | null>(null)
+  const [socket, setSocket] = useState<Socket | null>(null)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const accessToken = useAuthStore((s) => s.accessToken)
   const setTelemetry = useTelemetryStore((s) => s.setTelemetry)
@@ -47,13 +49,14 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       if (socketRef.current) {
         socketRef.current.disconnect()
         socketRef.current = null
+        setSocket(null)
       }
       return
     }
 
     const SOCKET_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
-    const socket = io(SOCKET_URL, {
+    const newSocket = io(SOCKET_URL, {
       auth: { token: accessToken },
       reconnection: true,
       reconnectionAttempts: Infinity,
@@ -62,21 +65,22 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       transports: ['websocket'],
     })
 
-    socketRef.current = socket
+    socketRef.current = newSocket
+    Promise.resolve().then(() => setSocket(newSocket))
 
-    socket.on('connect', () => {
-      console.debug('[Socket] connected', socket.id)
+    newSocket.on('connect', () => {
+      console.debug('[Socket] connected', newSocket.id)
     })
 
-    socket.on('disconnect', (reason) => {
+    newSocket.on('disconnect', (reason) => {
       console.debug('[Socket] disconnected', reason)
     })
 
-    socket.on('connect_error', (err) => {
+    newSocket.on('connect_error', (err) => {
       console.warn('[Socket] connection error', err.message)
     })
 
-    socket.on('telemetry', (event: TelemetryEvent) => {
+    newSocket.on('telemetry', (event: TelemetryEvent) => {
       setTelemetry(
         event.deviceId,
         event.datastreamKey,
@@ -86,13 +90,14 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => {
-      socket.disconnect()
+      newSocket.disconnect()
       socketRef.current = null
+      setSocket(null)
     }
   }, [isAuthenticated, accessToken, setTelemetry])
 
   return (
-    <SocketContext.Provider value={{ socket: socketRef.current }}>
+    <SocketContext.Provider value={{ socket }}>
       {children}
     </SocketContext.Provider>
   )
