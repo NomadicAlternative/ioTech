@@ -2,7 +2,7 @@ import { useTelemetryValue } from '@/stores/telemetryStore'
 import type { WidgetProps, ConfigFieldsProps } from '../types'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-
+import { useEffect } from 'react'
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function GaugeWidget({ widgetId: _widgetId, config }: WidgetProps) {
@@ -68,7 +68,20 @@ export function GaugeWidget({ widgetId: _widgetId, config }: WidgetProps) {
 
 // ─── Config fields ────────────────────────────────────────────────────────────
 
-export function GaugeConfigFields({ settings, onChange }: ConfigFieldsProps) {
+/**
+ * Config fields for the Gauge widget.
+ * Validates that min < max before allowing the parent form to save (SC-DASH-036).
+ */
+export function GaugeConfigFields({ settings, onChange, onValidChange }: ConfigFieldsProps) {
+  const min = Number(settings.min ?? 0)
+  const max = Number(settings.max ?? 100)
+  const minMaxError = min >= max
+
+  // Notify parent of validation state whenever min/max changes (SC-DASH-036)
+  useEffect(() => {
+    onValidChange?.(!minMaxError)
+  }, [minMaxError, onValidChange])
+
   return (
     <div className="space-y-3">
       <div className="space-y-1">
@@ -86,6 +99,9 @@ export function GaugeConfigFields({ settings, onChange }: ConfigFieldsProps) {
           value={String(settings.max ?? 100)}
           onChange={(e) => onChange({ ...settings, max: Number(e.target.value) })}
         />
+        {minMaxError && (
+          <p className="text-xs text-destructive">min must be less than max</p>
+        )}
       </div>
       <div className="space-y-1">
         <Label>Unit</Label>

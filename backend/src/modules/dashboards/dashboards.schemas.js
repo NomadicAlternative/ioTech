@@ -29,7 +29,7 @@ const layoutSchema = Joi.object({
 const createDashboard = Joi.object({
   name: Joi.string().min(1).max(255).required(),
   description: Joi.string().allow('', null),
-  layout: layoutSchema.default({ widgets: [], gridConfig: {} }),
+  layout: layoutSchema.invalid(null).default({ widgets: [], gridConfig: {} }),
 });
 
 const updateDashboard = Joi.object({

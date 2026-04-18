@@ -37,7 +37,10 @@ export default function App() {
         <Route path="/app" element={<SocketProvider><ProtectedRoute /></SocketProvider>}>
           <Route path="dashboards" element={<DashboardListPage />} />
           <Route path="dashboards/:id" element={<DashboardViewPage />} />
-          <Route path="dashboards/:id/edit" element={<DashboardEditorPage />} />
+          <Route
+            path="dashboards/:id/edit"
+            element={<DashboardEditorPage />}
+          />
           <Route path="devices" element={<PlaceholderPage name="Devices" />} />
           <Route path="clients" element={<PlaceholderPage name="Clients" />} />
           <Route path="settings" element={<PlaceholderPage name="Settings" />} />

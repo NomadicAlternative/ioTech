@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Edit, ArrowLeft } from 'lucide-react'
-import GridLayout, { type Layout } from 'react-grid-layout'
+import GridLayout, { type LayoutItem } from 'react-grid-layout'
 import { Button } from '@/components/ui/button'
 import { useDashboardStore } from './dashboardStore'
 import { useAuthStore } from '@/features/auth/authStore'
@@ -49,7 +49,7 @@ export function DashboardViewPage() {
   }
 
   // Convert layout entries to react-grid-layout format
-  const gridLayout: Layout[] = layout.map((e) => ({
+  const gridLayout: LayoutItem[] = layout.map((e) => ({
     i: e.i,
     x: e.x,
     y: e.y,
@@ -94,12 +94,10 @@ export function DashboardViewPage() {
         <GridLayout
           className="layout"
           layout={gridLayout}
-          cols={12}
-          rowHeight={80}
           width={1200}
-          isDraggable={false}
-          isResizable={false}
-          margin={[12, 12]}
+          gridConfig={{ cols: 12, rowHeight: 80, margin: [12, 12] as [number, number] }}
+          dragConfig={{ enabled: false }}
+          resizeConfig={{ enabled: false }}
         >
           {layout.map((entry) => (
             <div key={entry.i}>

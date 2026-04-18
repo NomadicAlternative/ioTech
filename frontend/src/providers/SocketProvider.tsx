@@ -3,12 +3,18 @@ import { io, type Socket } from 'socket.io-client'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useTelemetryStore } from '@/stores/telemetryStore'
 
+/**
+ * Exposes the raw Socket.io socket instance to child components.
+ * Most consumers should use `useTelemetryValue` instead — only use
+ * the socket directly for custom emit calls.
+ */
 interface SocketContextValue {
   socket: Socket | null
 }
 
 const SocketContext = createContext<SocketContextValue>({ socket: null })
 
+/** Access the raw Socket.io socket. Returns null when unauthenticated. */
 export function useSocket() {
   return useContext(SocketContext)
 }
@@ -20,6 +26,15 @@ interface TelemetryEvent {
   timestamp: number
 }
 
+/**
+ * Manages the Socket.io connection lifecycle.
+ *
+ * - Connects automatically when the user is authenticated (has an access token).
+ * - Disconnects and reconnects when the token changes (e.g. after refresh).
+ * - Disconnects on logout.
+ * - Writes incoming `telemetry` events to `telemetryStore` (REQ-DASH-016).
+ * - Configured with unlimited reconnection attempts and exponential back-off (REQ-DASH-015).
+ */
 export function SocketProvider({ children }: { children: React.ReactNode }) {
   const socketRef = useRef<Socket | null>(null)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -66,7 +81,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         event.deviceId,
         event.datastreamKey,
         event.value,
-        event.timestamp ?? Date.now()
+        event.timestamp || Date.now()
       )
     })
 

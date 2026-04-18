@@ -3,9 +3,16 @@ import { debounce } from '@/lib/debounce'
 import type { Dashboard, WidgetLayoutEntry } from '@/features/widgets/types'
 import * as dashboardApi from './api'
 
+/**
+ * Dashboard CRUD + layout state.
+ *
+ * Layout mutations (drag, resize, add, remove, config save) go through `setLayout`,
+ * which triggers a debounced auto-save to the backend (1500ms — REQ-DASH-006).
+ */
 interface DashboardState {
   dashboards: Dashboard[]
   currentDashboard: Dashboard | null
+  /** Live layout array — source of truth for the grid and widget configs. */
   layout: WidgetLayoutEntry[]
   isEditing: boolean
   isSaving: boolean
@@ -18,7 +25,12 @@ interface DashboardActions {
   createDashboard: (name: string, description: string) => Promise<Dashboard>
   updateDashboard: (id: string, data: Partial<Pick<Dashboard, 'name' | 'description'>>) => Promise<void>
   deleteDashboard: (id: string) => Promise<void>
+  /**
+   * Update the layout and trigger the debounced auto-save.
+   * Call this for every grid mutation (drag, resize, add, remove, config change).
+   */
   setLayout: (layout: WidgetLayoutEntry[]) => void
+  /** Trigger the debounced save immediately (useful for imperative saves). */
   saveLayout: () => void
   setIsEditing: (isEditing: boolean) => void
   clearCurrent: () => void
@@ -26,9 +38,15 @@ interface DashboardActions {
 
 type DashboardStore = DashboardState & DashboardActions
 
-// Debounced internal save — will be replaced per-store instance
+// Module-level debounced save reference — replaced when the store is first created.
 let debouncedSave: (() => void) | null = null
 
+/**
+ * Zustand store for dashboard CRUD and layout management.
+ *
+ * @example
+ * const { layout, setLayout, isSaving } = useDashboardStore()
+ */
 export const useDashboardStore = create<DashboardStore>((set, get) => {
   // Build debounced save referencing `get` via closure
   const _performSave = async () => {

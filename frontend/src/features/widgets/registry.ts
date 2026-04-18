@@ -9,6 +9,16 @@ import { StatCardWidget, StatCardConfigFields } from './types/StatCardWidget'
 import { ProgressBarWidget, ProgressBarConfigFields } from './types/ProgressBarWidget'
 import { MapWidget, MapConfigFields } from './types/MapWidget'
 
+/**
+ * Central widget registry — maps widget type keys to their definitions.
+ *
+ * **Extensibility rule (REQ-DASH-036 / SC-DASH-039)**:
+ * Adding a new widget type requires ONLY:
+ * 1. One component file in `types/` (exporting `<Type>Widget` + `<Type>ConfigFields`)
+ * 2. One entry in this map
+ *
+ * No other files need to be modified.
+ */
 export const WIDGET_REGISTRY: Record<string, WidgetDefinition> = {
   gauge: {
     type: 'gauge',
@@ -93,8 +103,10 @@ export const WIDGET_REGISTRY: Record<string, WidgetDefinition> = {
   },
 }
 
+/** Retrieve a widget definition by type key. Returns undefined for unknown types. */
 export function getWidgetDef(type: string): WidgetDefinition | undefined {
   return WIDGET_REGISTRY[type]
 }
 
+/** Ordered list of all registered widget definitions — used by the widget picker in the editor. */
 export const WIDGET_TYPES: WidgetDefinition[] = Object.values(WIDGET_REGISTRY)

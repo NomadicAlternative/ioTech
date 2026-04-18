@@ -7,9 +7,18 @@ import type { WidgetLayoutEntry } from './types'
 
 interface WidgetRendererProps {
   entry: WidgetLayoutEntry
+  /** When true, shows the settings gear button and enables drag handles on the grid. */
   isEditing: boolean
 }
 
+/**
+ * Renders a single widget cell inside the dashboard grid.
+ *
+ * - Looks up the widget component via `getWidgetDef(entry.widgetType)`.
+ * - In edit mode, shows a settings gear button that opens `WidgetConfigPanel`.
+ * - Displays an error state for unknown widget types (e.g. registry entries removed after save).
+ * - The widget's `config.name` is used as the card header label (REQ-DASH-012).
+ */
 export function WidgetRenderer({ entry, isEditing }: WidgetRendererProps) {
   const openConfig = useWidgetConfigStore((s) => s.openConfig)
   const def = getWidgetDef(entry.widgetType)

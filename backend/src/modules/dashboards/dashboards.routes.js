@@ -100,6 +100,20 @@ router.put('/:id/layout', validate(schemas.updateLayout), async (req, res, next)
 });
 
 /**
+ * GET /api/dashboards/:id/share
+ * List all client IDs a dashboard is currently shared with.
+ */
+router.get('/:id/share', async (req, res, next) => {
+  try {
+    const clients = await dashboardsService.listSharedClients(req.tenantId, req.params.id);
+    const clientIds = clients.map((c) => c.client_id ?? c.id ?? c);
+    res.json({ data: clientIds });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * POST /api/dashboards/:id/share
  * Share a dashboard with a client.
  */
