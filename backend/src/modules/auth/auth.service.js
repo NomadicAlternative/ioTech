@@ -79,10 +79,15 @@ async function register(data) {
  * @returns {Promise<{ accessToken: string, refreshToken: string, user: object }>}
  */
 async function login(tenantId, email, password) {
-  if (!tenantId) throw new ValidationError('tenantId is required');
   if (!email || !password) throw new ValidationError('Email and password are required');
 
-  const user = await authModel.findUserByEmail(tenantId, email);
+  let user;
+  if (tenantId) {
+    user = await authModel.findUserByEmail(tenantId, email);
+  } else {
+    // Resolve tenant from email (single-tenant per email in dev/MVP)
+    user = await authModel.findUserByEmailOnly(email);
+  }
   if (!user) throw new UnauthorizedError('Invalid credentials');
 
   const match = await bcrypt.compare(password, user.password_hash);

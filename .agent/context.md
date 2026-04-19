@@ -162,6 +162,15 @@ Implementation progress (41 tasks in 6 phases):
 Total new tests: ~170 (75 backend + 95 frontend)
 Branch: feat/dashboard
 
+Runtime fixes applied (post-implementation):
+- Added CORS middleware (`cors` package) in `app.js`
+- Made `tenantId` optional in login schema + added `findUserByEmailOnly()` in auth model
+- Fixed `SET LOCAL` bind param issue in `tenant-knex.js` (template literal instead)
+- Made TimescaleDB extension conditional in migration 005
+- Refactored `installer_id` usage: all dashboard routes now use `req.user.userId` (JWT user ID) instead of `tenantId` (org UUID)
+- Fixed frontend API envelope extraction in `api.ts` (extract `.data` from response)
+- Fixed blank editor page: `dashboardStore.ts` now extracts `.widgets` from layout object, `api.ts` wraps widgets array in `{ widgets, gridConfig }` on save
+
 ### Future Phases
 - Phase 6: Automation & rules engine (if temp > X then action Y)
 - Phase 7: Production hardening (EMQX broker auth, rate limiting, CI/CD)

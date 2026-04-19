@@ -4,29 +4,29 @@ import type { Dashboard, WidgetLayoutEntry, Device, DeviceTemplate } from '@/fea
 // ─── Dashboards ───────────────────────────────────────────────────────────────
 
 export async function fetchDashboards(): Promise<Dashboard[]> {
-  const res = await api.get<Dashboard[]>('/api/dashboards')
-  return res.data
+  const res = await api.get<{ data: Dashboard[]; meta: unknown }>('/api/dashboards')
+  return res.data.data
 }
 
 export async function fetchDashboard(id: string): Promise<Dashboard> {
-  const res = await api.get<Dashboard>(`/api/dashboards/${id}`)
-  return res.data
+  const res = await api.get<{ data: Dashboard }>(`/api/dashboards/${id}`)
+  return res.data.data
 }
 
 export async function createDashboard(
   name: string,
   description: string
 ): Promise<Dashboard> {
-  const res = await api.post<Dashboard>('/api/dashboards', { name, description })
-  return res.data
+  const res = await api.post<{ data: Dashboard }>('/api/dashboards', { name, description })
+  return res.data.data
 }
 
 export async function updateDashboard(
   id: string,
   data: Partial<Pick<Dashboard, 'name' | 'description'>>
 ): Promise<Dashboard> {
-  const res = await api.put<Dashboard>(`/api/dashboards/${id}`, data)
-  return res.data
+  const res = await api.put<{ data: Dashboard }>(`/api/dashboards/${id}`, data)
+  return res.data.data
 }
 
 export async function deleteDashboard(id: string): Promise<void> {
@@ -37,7 +37,9 @@ export async function saveLayout(
   id: string,
   layout: WidgetLayoutEntry[]
 ): Promise<void> {
-  await api.put(`/api/dashboards/${id}/layout`, { layout })
+  await api.put(`/api/dashboards/${id}/layout`, {
+    layout: { widgets: layout, gridConfig: {} },
+  })
 }
 
 // ─── Sharing ──────────────────────────────────────────────────────────────────
@@ -57,27 +59,27 @@ export async function revokeDashboardShare(
 }
 
 export async function fetchDashboardSharedClients(dashboardId: string): Promise<string[]> {
-  const res = await api.get<string[]>(`/api/dashboards/${dashboardId}/share`)
-  return res.data
+  const res = await api.get<{ data: string[] }>(`/api/dashboards/${dashboardId}/share`)
+  return res.data.data ?? res.data as unknown as string[]
 }
 
 // ─── Devices ──────────────────────────────────────────────────────────────────
 
 export async function fetchDevices(): Promise<Device[]> {
-  const res = await api.get<Device[]>('/api/devices')
-  return res.data
+  const res = await api.get<{ data: Device[]; meta: unknown }>('/api/devices')
+  return res.data.data
 }
 
 export async function fetchDeviceTemplate(templateId: string): Promise<DeviceTemplate> {
-  const res = await api.get<DeviceTemplate>(`/api/device-templates/${templateId}`)
-  return res.data
+  const res = await api.get<{ data: DeviceTemplate }>(`/api/device-templates/${templateId}`)
+  return res.data.data
 }
 
 // ─── Clients ──────────────────────────────────────────────────────────────────
 
 export async function fetchClients(): Promise<{ id: string; name: string; email: string }[]> {
-  const res = await api.get<{ id: string; name: string; email: string }[]>('/api/clients')
-  return res.data
+  const res = await api.get<{ data: { id: string; name: string; email: string }[]; meta: unknown }>('/api/clients')
+  return res.data.data
 }
 
 // ─── Telemetry history ────────────────────────────────────────────────────────
@@ -87,11 +89,11 @@ export async function fetchTelemetryHistory(
   datastreamKey: string,
   limit = 100
 ): Promise<{ value: number; timestamp: string }[]> {
-  const res = await api.get<{ value: number; timestamp: string }[]>(
+  const res = await api.get<{ data: { value: number; timestamp: string }[]; meta: unknown }>(
     `/api/devices/${deviceId}/telemetry`,
     { params: { datastreamKey, limit } }
   )
-  return res.data
+  return res.data.data
 }
 
 // ─── Device commands ──────────────────────────────────────────────────────────

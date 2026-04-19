@@ -10,7 +10,7 @@ const register = Joi.object({
 });
 
 const login = Joi.object({
-  tenantId: Joi.string().uuid().required(),
+  tenantId: Joi.string().uuid().optional(),
   email: Joi.string().email().required(),
   password: Joi.string().min(1).required(),
 });

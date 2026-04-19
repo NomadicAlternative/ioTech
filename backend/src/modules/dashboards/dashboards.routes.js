@@ -19,7 +19,7 @@ router.use(authGuard, tenantResolver);
  */
 router.get('/', paginate(), async (req, res, next) => {
   try {
-    const { data, total } = await dashboardsService.list(req.tenantId, req.pagination);
+    const { data, total } = await dashboardsService.list(req.tenantId, req.user.userId, req.pagination);
     const { page, limit } = req.pagination;
     res.json({
       data,
@@ -36,7 +36,7 @@ router.get('/', paginate(), async (req, res, next) => {
  */
 router.post('/', validate(schemas.createDashboard), async (req, res, next) => {
   try {
-    const dashboard = await dashboardsService.create(req.tenantId, req.body);
+    const dashboard = await dashboardsService.create(req.tenantId, req.user.userId, req.body);
     res.status(201).json({ data: dashboard });
   } catch (err) {
     next(err);
@@ -49,7 +49,7 @@ router.post('/', validate(schemas.createDashboard), async (req, res, next) => {
  */
 router.get('/:id', async (req, res, next) => {
   try {
-    const dashboard = await dashboardsService.getById(req.tenantId, req.params.id);
+    const dashboard = await dashboardsService.getById(req.tenantId, req.user.userId, req.params.id);
     res.json({ data: dashboard });
   } catch (err) {
     next(err);
@@ -62,7 +62,7 @@ router.get('/:id', async (req, res, next) => {
  */
 router.put('/:id', validate(schemas.updateDashboard), async (req, res, next) => {
   try {
-    const dashboard = await dashboardsService.update(req.tenantId, req.params.id, req.body);
+    const dashboard = await dashboardsService.update(req.tenantId, req.user.userId, req.params.id, req.body);
     res.json({ data: dashboard });
   } catch (err) {
     next(err);
@@ -75,7 +75,7 @@ router.put('/:id', validate(schemas.updateDashboard), async (req, res, next) => 
  */
 router.delete('/:id', async (req, res, next) => {
   try {
-    await dashboardsService.remove(req.tenantId, req.params.id);
+    await dashboardsService.remove(req.tenantId, req.user.userId, req.params.id);
     res.status(204).send();
   } catch (err) {
     next(err);
@@ -90,6 +90,7 @@ router.put('/:id/layout', validate(schemas.updateLayout), async (req, res, next)
   try {
     const dashboard = await dashboardsService.updateLayout(
       req.tenantId,
+      req.user.userId,
       req.params.id,
       req.body.layout
     );
@@ -105,7 +106,7 @@ router.put('/:id/layout', validate(schemas.updateLayout), async (req, res, next)
  */
 router.get('/:id/share', async (req, res, next) => {
   try {
-    const clients = await dashboardsService.listSharedClients(req.tenantId, req.params.id);
+    const clients = await dashboardsService.listSharedClients(req.tenantId, req.user.userId, req.params.id);
     const clientIds = clients.map((c) => c.client_id ?? c.id ?? c);
     res.json({ data: clientIds });
   } catch (err) {
@@ -121,6 +122,7 @@ router.post('/:id/share', validate(schemas.shareDashboard), async (req, res, nex
   try {
     const record = await dashboardsService.shareWithClient(
       req.tenantId,
+      req.user.userId,
       req.params.id,
       req.body.clientId
     );
@@ -138,6 +140,7 @@ router.delete('/:id/share/:clientId', async (req, res, next) => {
   try {
     await dashboardsService.revokeClientShare(
       req.tenantId,
+      req.user.userId,
       req.params.id,
       req.params.clientId
     );

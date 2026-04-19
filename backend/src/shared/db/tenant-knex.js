@@ -35,9 +35,9 @@ const db = require('./knex');
 async function withTenant(tenantId, callback) {
   return db.transaction(async (trx) => {
     if (tenantId) {
-      // current_setting() requires the var to exist; SET LOCAL creates it
-      // for the duration of this transaction only.
-      await trx.raw('SET LOCAL app.tenant_id = ?', [tenantId]);
+      // SET LOCAL doesn't support bind parameters — use quoted literal.
+      // tenantId is always a UUID validated upstream (JWT + Joi), so this is safe.
+      await trx.raw(`SET LOCAL app.tenant_id = '${tenantId}'`);
     }
     return callback(trx);
   });

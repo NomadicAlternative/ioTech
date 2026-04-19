@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const cors = require('cors');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const swaggerConfig = require('./config/swagger');
@@ -28,6 +29,10 @@ function createApp() {
   const app = express();
 
   // ── Global middleware ─────────────────────────────────────────────────────
+  app.use(cors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    credentials: true,
+  }));
   app.use(express.json());
 
   // ── Health endpoint ───────────────────────────────────────────────────────
