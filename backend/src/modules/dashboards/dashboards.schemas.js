@@ -5,16 +5,16 @@ const Joi = require('joi');
 // ── Widget schema ─────────────────────────────────────────────────────────────
 
 const widgetSchema = Joi.object({
-  id: Joi.string().required(),
-  type: Joi.string().required(),
-  name: Joi.string().required(),
+  i: Joi.string().required(),
+  widgetType: Joi.string().required(),
   x: Joi.number().integer().min(0).required(),
   y: Joi.number().integer().min(0).required(),
   w: Joi.number().integer().min(1).required(),
   h: Joi.number().integer().min(1).required(),
   config: Joi.object({
-    deviceId: Joi.string().uuid(),
-    datastreamKey: Joi.string(),
+    name: Joi.string().allow('', null),
+    deviceId: Joi.string().uuid().allow(null),
+    datastreamKey: Joi.string().allow(null),
     settings: Joi.object(),
   }).default({}),
 });

@@ -13,6 +13,27 @@ const { getClient: getMqttClient } = require('../../mqtt/mqttClient');
  */
 
 /**
+ * Map a raw PostgreSQL device row (snake_case) to the public API shape (camelCase).
+ * Sensitive fields (tenant_id, device_token, claim_token) are omitted.
+ * @param {object} row
+ * @returns {object}
+ */
+function camelizeDevice(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    templateId: row.template_id,
+    clientId: row.client_id,
+    status: row.status,
+    isOnline: row.is_online,
+    lastSeen: row.last_seen,
+    metadata: row.metadata,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+/**
  * List all devices for a tenant, with pagination.
  * @param {string} tenantId
  * @param {{ page: number, limit: number, sortBy: string|null, sortDir: string }} [pagination]
@@ -23,7 +44,7 @@ async function list(tenantId, pagination = {}) {
     devicesModel.findAll(tenantId, pagination),
     devicesModel.count(tenantId),
   ]);
-  return { data, total };
+  return { data: data.map(camelizeDevice), total };
 }
 
 /**
@@ -35,7 +56,7 @@ async function list(tenantId, pagination = {}) {
 async function getById(tenantId, id) {
   const device = await devicesModel.findById(tenantId, id);
   if (!device) throw new NotFoundError(`Device not found: ${id}`);
-  return device;
+  return camelizeDevice(device);
 }
 
 /**
