@@ -1,5 +1,5 @@
 import api from '@/lib/axios'
-import type { Device, DeviceTemplate, Client, PaginationMeta } from '@/features/widgets/types'
+import type { Device, Client, PaginationMeta } from '@/features/widgets/types'
 
 // ─── Payloads ─────────────────────────────────────────────────────────────────
 
@@ -54,17 +54,9 @@ export async function sendDeviceCommand(
 
 // ─── Templates & Clients (for dropdowns) ─────────────────────────────────────
 
-export async function listTemplates(): Promise<DeviceTemplate[]> {
-  const res = await api.get<{ data: DeviceTemplate[] }>('/api/device-templates')
-  return res.data.data
-}
+export { listTemplatesFlat as listTemplates, getTemplate as fetchDeviceTemplate } from '@/features/templates/api'
 
 export async function listClients(): Promise<Client[]> {
   const res = await api.get<{ data: Client[] }>('/api/clients')
-  return res.data.data
-}
-
-export async function fetchDeviceTemplate(templateId: string): Promise<DeviceTemplate> {
-  const res = await api.get<{ data: DeviceTemplate }>(`/api/device-templates/${templateId}`)
   return res.data.data
 }
