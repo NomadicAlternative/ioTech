@@ -77,8 +77,27 @@ export interface Dashboard {
 export interface Device {
   id: string
   name: string
-  templateId: string
+  templateId: string | null
+  clientId: string | null
   status: string
+  isOnline: boolean
+  lastSeen: string | null
+  metadata: Record<string, unknown> | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Client {
+  id: string
+  name: string
+  email: string
+}
+
+export interface PaginationMeta {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
 }
 
 export interface Datastream {

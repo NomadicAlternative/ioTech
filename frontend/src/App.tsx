@@ -4,6 +4,8 @@ import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
 import { DashboardListPage } from '@/features/dashboard/DashboardListPage'
 import { DashboardViewPage } from '@/features/dashboard/DashboardViewPage'
 import { DashboardEditorPage } from '@/features/dashboard/DashboardEditorPage'
+import { DeviceListPage } from '@/features/devices/DeviceListPage'
+import { DeviceDetailPage } from '@/features/devices/DeviceDetailPage'
 import { SocketProvider } from '@/providers/SocketProvider'
 
 function PlaceholderPage({ name }: { name: string }) {
@@ -41,7 +43,8 @@ export default function App() {
             path="dashboards/:id/edit"
             element={<DashboardEditorPage />}
           />
-          <Route path="devices" element={<PlaceholderPage name="Devices" />} />
+          <Route path="devices" element={<DeviceListPage />} />
+          <Route path="devices/:id" element={<DeviceDetailPage />} />
           <Route path="clients" element={<PlaceholderPage name="Clients" />} />
           <Route path="settings" element={<PlaceholderPage name="Settings" />} />
         </Route>
