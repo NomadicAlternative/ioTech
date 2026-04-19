@@ -76,7 +76,7 @@ export function WidgetConfigPanel() {
     }
     Promise.resolve()
       .then(() => setLoadingTemplate(true))
-      .then(() => fetchDeviceTemplate(device.templateId))
+      .then(() => fetchDeviceTemplate(device.templateId!))
       .then(setTemplate)
       .catch(() => setTemplate(null))
       .finally(() => setLoadingTemplate(false))

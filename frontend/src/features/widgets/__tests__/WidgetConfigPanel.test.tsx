@@ -96,8 +96,8 @@ const MOCK_LAYOUT_ENTRY = {
 }
 
 const MOCK_DEVICES = [
-  { id: 'device-1', name: 'Sensor A', templateId: 'tmpl-1', status: 'online' },
-  { id: 'device-2', name: 'Sensor B', templateId: 'tmpl-2', status: 'offline' },
+  { id: 'device-1', name: 'Sensor A', templateId: 'tmpl-1', clientId: null, status: 'online', isOnline: true, lastSeen: null, metadata: null, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'device-2', name: 'Sensor B', templateId: 'tmpl-2', clientId: null, status: 'offline', isOnline: false, lastSeen: null, metadata: null, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
 ]
 
 const MOCK_TEMPLATE = {
