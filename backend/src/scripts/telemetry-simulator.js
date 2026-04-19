@@ -1,12 +1,13 @@
 'use strict';
 
-require('dotenv').config({ path: require('path').resolve(__dirname, '../../../.env') });
+require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 
 const mqtt = require('mqtt');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const BROKER_URL = process.env.MQTT_BROKER_URL || 'mqtt://localhost:1883';
+const RAW_URL = process.env.MQTT_BROKER_URL || 'mqtt://localhost:1883';
+const BROKER_URL = RAW_URL.replace(/^tcp:\/\//, 'mqtt://');
 const DEVICE_ID = 'dev-token-esp32-001';
 const TOPIC = `devices/${DEVICE_ID}/telemetry`;
 const INTERVAL_MS = 5000;
