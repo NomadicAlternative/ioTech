@@ -14,7 +14,8 @@
     "format": "prettier --write \"src/**/*.js\" \"*.js\"",
     "migrate": "knex migrate:latest --knexfile knexfile.js",
     "migrate:rollback": "knex migrate:rollback --knexfile knexfile.js",
-    "seed": "knex seed:run --knexfile knexfile.js"
+    "seed": "knex seed:run --knexfile knexfile.js",
+    "simulate": "node src/scripts/telemetry-simulator.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
