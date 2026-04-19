@@ -34,7 +34,6 @@ async function create(tenantId, data) {
     email: data.email || null,
     phone: data.phone || null,
     address: data.address || null,
-    metadata: data.metadata || {},
     created_at: new Date(),
     updated_at: new Date(),
   });

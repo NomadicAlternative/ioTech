@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export function EditDeviceDialog({ deviceId, onClose, onSuccess }: Props) {
+  const { t } = useTranslation()
   const { devices, updateDevice } = useDeviceStore()
   const device = devices.find((d) => d.id === deviceId)
 
@@ -46,8 +48,8 @@ export function EditDeviceDialog({ deviceId, onClose, onSuccess }: Props) {
 
   useEffect(() => {
     Promise.all([listTemplates(), listClients()])
-      .then(([t, c]) => {
-        setTemplates(t)
+      .then(([tmpl, c]) => {
+        setTemplates(tmpl)
         setClients(c)
       })
       .catch(() => {/* dropdowns empty but form still works */})
@@ -62,7 +64,7 @@ export function EditDeviceDialog({ deviceId, onClose, onSuccess }: Props) {
       try {
         parsedMetadata = JSON.parse(metadata) as Record<string, unknown>
       } catch {
-        setMetadataError('JSON inválido')
+        setMetadataError(t('common.invalidJson'))
         return
       }
     }
@@ -78,7 +80,7 @@ export function EditDeviceDialog({ deviceId, onClose, onSuccess }: Props) {
       })
       onSuccess()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al actualizar dispositivo')
+      setError(err instanceof Error ? err.message : t('devices.edit.errorUpdate'))
     } finally {
       setSaving(false)
     }
@@ -88,7 +90,7 @@ export function EditDeviceDialog({ deviceId, onClose, onSuccess }: Props) {
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Editar dispositivo</DialogTitle>
+          <DialogTitle>{t('devices.edit.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           {error && (
@@ -97,27 +99,27 @@ export function EditDeviceDialog({ deviceId, onClose, onSuccess }: Props) {
             </div>
           )}
           <div className="space-y-1">
-            <Label>Nombre *</Label>
+            <Label>{t('common.nameLabel')}</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Nombre del dispositivo"
+              placeholder={t('devices.edit.namePlaceholder')}
               autoFocus
             />
           </div>
           <div className="space-y-1">
-            <Label>Plantilla</Label>
+            <Label>{t('devices.create.templateLabel')}</Label>
             {loadingDropdowns ? (
               <div className="h-9 bg-muted animate-pulse rounded-md" />
             ) : (
               <Select value={templateId} onValueChange={(v) => setTemplateId(v ?? '')}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccioná una plantilla" />
+                  <SelectValue placeholder={t('devices.create.templatePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {templates.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
+                  {templates.map((tmpl) => (
+                    <SelectItem key={tmpl.id} value={tmpl.id}>
+                      {tmpl.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -125,13 +127,13 @@ export function EditDeviceDialog({ deviceId, onClose, onSuccess }: Props) {
             )}
           </div>
           <div className="space-y-1">
-            <Label>Cliente</Label>
+            <Label>{t('devices.create.clientLabel')}</Label>
             {loadingDropdowns ? (
               <div className="h-9 bg-muted animate-pulse rounded-md" />
             ) : (
               <Select value={clientId} onValueChange={(v) => setClientId(v ?? '')}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccioná un cliente" />
+                  <SelectValue placeholder={t('devices.create.clientPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map((c) => (
@@ -144,7 +146,7 @@ export function EditDeviceDialog({ deviceId, onClose, onSuccess }: Props) {
             )}
           </div>
           <div className="space-y-1">
-            <Label>Metadata (JSON opcional)</Label>
+            <Label>{t('devices.create.metadataLabel')}</Label>
             <textarea
               className="w-full rounded-md border bg-background px-3 py-2 text-sm font-mono min-h-[80px] focus:outline-none focus:ring-2 focus:ring-ring"
               value={metadata}
@@ -152,17 +154,17 @@ export function EditDeviceDialog({ deviceId, onClose, onSuccess }: Props) {
                 setMetadata(e.target.value)
                 setMetadataError(null)
               }}
-              placeholder='{"clave": "valor"}'
+              placeholder='{"key": "value"}'
             />
             {metadataError && <p className="text-destructive text-xs">{metadataError}</p>}
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Cancelar
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={!name.trim() || saving}>
-            {saving ? 'Guardando…' : 'Guardar cambios'}
+            {saving ? t('common.saving') : t('common.saveChanges')}
           </Button>
         </DialogFooter>
       </DialogContent>

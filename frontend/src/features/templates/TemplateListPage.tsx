@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, LayoutTemplate, Edit, Trash2, ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,6 +17,7 @@ import { EditTemplateDialog } from './components/EditTemplateDialog'
 // ─── Page component ───────────────────────────────────────────────────────────
 
 export function TemplateListPage() {
+  const { t } = useTranslation()
   const { templates, pagination, search, loading, error, fetchTemplates, deleteTemplate, setSearch } =
     useTemplateStore()
 
@@ -38,7 +40,7 @@ export function TemplateListPage() {
   useEffect(() => {
     setPageLoading(true)
     fetchTemplates(1, 10, '')
-      .catch((err) => setPageError(err instanceof Error ? err.message : 'Error al cargar plantillas'))
+      .catch((err) => setPageError(err instanceof Error ? err.message : t('templates.list.errorLoad')))
       .finally(() => setPageLoading(false))
   }, [fetchTemplates])
 
@@ -50,7 +52,7 @@ export function TemplateListPage() {
     searchTimerRef.current = setTimeout(() => {
       setPageLoading(true)
       fetchTemplates(1, pagination.limit, value)
-        .catch((err) => setPageError(err instanceof Error ? err.message : 'Error al buscar'))
+        .catch((err) => setPageError(err instanceof Error ? err.message : t('templates.list.errorSearch')))
         .finally(() => setPageLoading(false))
     }, 300)
   }
@@ -58,7 +60,7 @@ export function TemplateListPage() {
   function handlePageChange(newPage: number) {
     setPageLoading(true)
     fetchTemplates(newPage, pagination.limit, search)
-      .catch((err) => setPageError(err instanceof Error ? err.message : 'Error al paginar'))
+      .catch((err) => setPageError(err instanceof Error ? err.message : t('templates.list.errorPaginate')))
       .finally(() => setPageLoading(false))
   }
 
@@ -70,7 +72,7 @@ export function TemplateListPage() {
       await deleteTemplate(deleteId)
       setDeleteId(null)
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : 'Error al eliminar plantilla')
+      setDeleteError(err instanceof Error ? err.message : t('templates.delete.errorDelete'))
     } finally {
       setDeleting(false)
     }
@@ -93,14 +95,14 @@ export function TemplateListPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Plantillas</h1>
+          <h1 className="text-2xl font-bold">{t('templates.list.title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Administrá las plantillas de dispositivos y sus datastreams
+            {t('templates.list.subtitle')}
           </p>
         </div>
         <Button onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nueva plantilla
+          {t('templates.list.newButton')}
         </Button>
       </div>
 
@@ -116,7 +118,7 @@ export function TemplateListPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           className="pl-9"
-          placeholder="Buscar plantillas…"
+          placeholder={t('templates.list.searchPlaceholder')}
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
         />
@@ -127,11 +129,11 @@ export function TemplateListPage() {
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Nombre</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('templates.list.colName')}</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">
-                Descripción
+                {t('templates.list.colDescription')}
               </th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Datastreams</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('templates.list.colDatastreams')}</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -158,10 +160,10 @@ export function TemplateListPage() {
                   <div className="flex flex-col items-center gap-3 text-muted-foreground">
                     <LayoutTemplate className="h-12 w-12 opacity-30" />
                     <p className="font-medium">
-                      {search ? 'Sin resultados para la búsqueda' : 'No hay plantillas aún'}
+                      {search ? t('templates.list.emptySearch') : t('templates.list.empty')}
                     </p>
                     {!search && (
-                      <p className="text-xs">Creá tu primera plantilla para comenzar.</p>
+                      <p className="text-xs">{t('templates.list.emptySubtitle')}</p>
                     )}
                   </div>
                 </td>
@@ -218,7 +220,11 @@ export function TemplateListPage() {
       {!isLoading && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            Página {pagination.page} de {pagination.totalPages} ({pagination.total} plantillas)
+            {t('templates.list.pagination', {
+              page: pagination.page,
+              totalPages: pagination.totalPages,
+              total: pagination.total,
+            })}
           </span>
           <div className="flex gap-2">
             <Button
@@ -228,7 +234,7 @@ export function TemplateListPage() {
               onClick={() => handlePageChange(pagination.page - 1)}
             >
               <ChevronLeft className="h-4 w-4" />
-              Anterior
+              {t('common.previous')}
             </Button>
             <Button
               variant="outline"
@@ -236,7 +242,7 @@ export function TemplateListPage() {
               disabled={pagination.page >= pagination.totalPages}
               onClick={() => handlePageChange(pagination.page + 1)}
             >
-              Siguiente
+              {t('common.next')}
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -278,7 +284,7 @@ export function TemplateListPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminar plantilla</DialogTitle>
+            <DialogTitle>{t('templates.delete.title')}</DialogTitle>
           </DialogHeader>
           <div className="py-2 space-y-3">
             {deleteError && (
@@ -287,7 +293,7 @@ export function TemplateListPage() {
               </div>
             )}
             <p className="text-sm text-muted-foreground">
-              ¿Estás seguro que querés eliminar esta plantilla? Esta acción no se puede deshacer.
+              {t('templates.delete.confirm')}
             </p>
           </div>
           <DialogFooter>
@@ -298,10 +304,10 @@ export function TemplateListPage() {
                 setDeleteError(null)
               }}
             >
-              Cancelar
+              {t('common.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete} disabled={deleting}>
-              {deleting ? 'Eliminando…' : 'Eliminar'}
+              {deleting ? t('common.deleting') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

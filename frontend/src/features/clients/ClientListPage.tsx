@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, Users, Edit, Trash2, ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,6 +17,7 @@ import { EditClientDialog } from './components/EditClientDialog'
 // ─── Page component ───────────────────────────────────────────────────────────
 
 export function ClientListPage() {
+  const { t } = useTranslation()
   const { clients, pagination, search, loading, error, fetchClients, deleteClient, setSearch } =
     useClientStore()
 
@@ -38,7 +40,7 @@ export function ClientListPage() {
   useEffect(() => {
     setPageLoading(true)
     fetchClients(1, 10, '')
-      .catch((err) => setPageError(err instanceof Error ? err.message : 'Error al cargar clientes'))
+      .catch((err) => setPageError(err instanceof Error ? err.message : t('clients.list.errorLoad')))
       .finally(() => setPageLoading(false))
   }, [fetchClients])
 
@@ -50,7 +52,7 @@ export function ClientListPage() {
     searchTimerRef.current = setTimeout(() => {
       setPageLoading(true)
       fetchClients(1, pagination.limit, value)
-        .catch((err) => setPageError(err instanceof Error ? err.message : 'Error al buscar'))
+        .catch((err) => setPageError(err instanceof Error ? err.message : t('clients.list.errorSearch')))
         .finally(() => setPageLoading(false))
     }, 300)
   }
@@ -58,7 +60,7 @@ export function ClientListPage() {
   function handlePageChange(newPage: number) {
     setPageLoading(true)
     fetchClients(newPage, pagination.limit, search)
-      .catch((err) => setPageError(err instanceof Error ? err.message : 'Error al paginar'))
+      .catch((err) => setPageError(err instanceof Error ? err.message : t('clients.list.errorPaginate')))
       .finally(() => setPageLoading(false))
   }
 
@@ -70,7 +72,7 @@ export function ClientListPage() {
       await deleteClient(deleteId)
       setDeleteId(null)
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : 'Error al eliminar cliente')
+      setDeleteError(err instanceof Error ? err.message : t('clients.delete.errorDelete'))
     } finally {
       setDeleting(false)
     }
@@ -93,14 +95,14 @@ export function ClientListPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Clientes</h1>
+          <h1 className="text-2xl font-bold">{t('clients.list.title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Administrá los clientes y su información de contacto
+            {t('clients.list.subtitle')}
           </p>
         </div>
         <Button onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nuevo cliente
+          {t('clients.list.newButton')}
         </Button>
       </div>
 
@@ -116,7 +118,7 @@ export function ClientListPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           className="pl-9"
-          placeholder="Buscar clientes…"
+          placeholder={t('clients.list.searchPlaceholder')}
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
         />
@@ -127,15 +129,15 @@ export function ClientListPage() {
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Nombre</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('clients.list.colName')}</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">
-                Email
+                {t('clients.list.colEmail')}
               </th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">
-                Teléfono
+                {t('clients.list.colPhone')}
               </th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">
-                Dirección
+                {t('clients.list.colAddress')}
               </th>
               <th className="px-4 py-3" />
             </tr>
@@ -166,10 +168,10 @@ export function ClientListPage() {
                   <div className="flex flex-col items-center gap-3 text-muted-foreground">
                     <Users className="h-12 w-12 opacity-30" />
                     <p className="font-medium">
-                      {search ? 'Sin resultados para la búsqueda' : 'No hay clientes aún'}
+                      {search ? t('clients.list.emptySearch') : t('clients.list.empty')}
                     </p>
                     {!search && (
-                      <p className="text-xs">Creá tu primer cliente para comenzar.</p>
+                      <p className="text-xs">{t('clients.list.emptySubtitle')}</p>
                     )}
                   </div>
                 </td>
@@ -229,7 +231,11 @@ export function ClientListPage() {
       {!isLoading && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            Página {pagination.page} de {pagination.totalPages} ({pagination.total} clientes)
+            {t('clients.list.pagination', {
+              page: pagination.page,
+              totalPages: pagination.totalPages,
+              total: pagination.total,
+            })}
           </span>
           <div className="flex gap-2">
             <Button
@@ -239,7 +245,7 @@ export function ClientListPage() {
               onClick={() => handlePageChange(pagination.page - 1)}
             >
               <ChevronLeft className="h-4 w-4" />
-              Anterior
+              {t('common.previous')}
             </Button>
             <Button
               variant="outline"
@@ -247,7 +253,7 @@ export function ClientListPage() {
               disabled={pagination.page >= pagination.totalPages}
               onClick={() => handlePageChange(pagination.page + 1)}
             >
-              Siguiente
+              {t('common.next')}
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -289,7 +295,7 @@ export function ClientListPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminar cliente</DialogTitle>
+            <DialogTitle>{t('clients.delete.title')}</DialogTitle>
           </DialogHeader>
           <div className="py-2 space-y-3">
             {deleteError && (
@@ -298,7 +304,7 @@ export function ClientListPage() {
               </div>
             )}
             <p className="text-sm text-muted-foreground">
-              ¿Estás seguro que querés eliminar este cliente? Esta acción no se puede deshacer.
+              {t('clients.delete.confirm')}
             </p>
           </div>
           <DialogFooter>
@@ -309,10 +315,10 @@ export function ClientListPage() {
                 setDeleteError(null)
               }}
             >
-              Cancelar
+              {t('common.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete} disabled={deleting}>
-              {deleting ? 'Eliminando…' : 'Eliminar'}
+              {deleting ? t('common.deleting') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

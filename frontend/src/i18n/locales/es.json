@@ -1,0 +1,249 @@
+{
+  "common": {
+    "cancel": "Cancelar",
+    "create": "Crear",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "back": "Volver",
+    "saving": "Guardando…",
+    "creating": "Creando…",
+    "deleting": "Eliminando…",
+    "saveChanges": "Guardar cambios",
+    "done": "Listo",
+    "nameLabel": "Nombre *",
+    "descLabel": "Descripción",
+    "invalidJson": "JSON inválido",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "noResults": "Sin resultados para la búsqueda",
+    "confirmIrreversible": "Esta acción no se puede deshacer."
+  },
+  "nav": {
+    "dashboards": "Dashboards",
+    "devices": "Dispositivos",
+    "templates": "Plantillas",
+    "clients": "Clientes",
+    "settings": "Configuración",
+    "logout": "Cerrar sesión",
+    "language": "Idioma"
+  },
+  "auth": {
+    "subtitle": "Ingresá a tu cuenta",
+    "emailLabel": "Email",
+    "emailPlaceholder": "vos@ejemplo.com",
+    "passwordLabel": "Contraseña",
+    "signingIn": "Ingresando…",
+    "signIn": "Ingresar",
+    "invalidCredentials": "Credenciales inválidas"
+  },
+  "dashboard": {
+    "list": {
+      "title": "Dashboards",
+      "subtitle": "Monitoreá y controlá tus dispositivos IoT",
+      "newButton": "Nuevo dashboard",
+      "empty": "No hay dashboards aún",
+      "emptySubtitle": "Creá tu primer dashboard para empezar a visualizar tus datos.",
+      "createButton": "Crear dashboard",
+      "widgets_one": "{{count}} widget",
+      "widgets_other": "{{count}} widgets",
+      "failedCreate": "Error al crear el dashboard",
+      "confirmDelete": "¿Eliminar este dashboard?"
+    },
+    "create": {
+      "title": "Nuevo dashboard",
+      "namePlaceholder": "ej. Automatización del hogar",
+      "descPlaceholder": "Descripción opcional"
+    },
+    "editor": {
+      "loading": "Cargando editor…",
+      "widgetsPalette": "Widgets",
+      "saving": "Guardando…",
+      "saved": "Guardado",
+      "errorSaving": "Error al guardar",
+      "shareButton": "Compartir",
+      "done": "Listo",
+      "emptyCanvas": "Hacé clic en un widget de la paleta para agregarlo"
+    },
+    "share": {
+      "title": "Compartir dashboard",
+      "noClients": "No se encontraron clientes.",
+      "revoke": "Revocar",
+      "share": "Compartir"
+    },
+    "view": {
+      "loading": "Cargando dashboard…",
+      "fallbackTitle": "Dashboard",
+      "editButton": "Editar",
+      "empty": "Este dashboard no tiene widgets aún.",
+      "addWidgets": "Agregar widgets"
+    }
+  },
+  "devices": {
+    "list": {
+      "title": "Dispositivos",
+      "subtitle": "Administrá y monitoreá tus dispositivos IoT",
+      "newButton": "Nuevo dispositivo",
+      "searchPlaceholder": "Buscar dispositivos…",
+      "colName": "Nombre",
+      "colStatus": "Estado",
+      "colTemplate": "Plantilla",
+      "colLastSeen": "Última conexión",
+      "emptySearch": "Sin resultados para la búsqueda",
+      "empty": "No hay dispositivos aún",
+      "emptySubtitle": "Creá tu primer dispositivo para comenzar.",
+      "pagination": "Página {{page}} de {{totalPages}} ({{total}} dispositivos)",
+      "errorLoad": "Error al cargar dispositivos",
+      "errorSearch": "Error al buscar",
+      "errorPaginate": "Error al paginar"
+    },
+    "status": {
+      "online": "En línea",
+      "offline": "Desconectado",
+      "unknown": "Desconocido"
+    },
+    "create": {
+      "title": "Nuevo dispositivo",
+      "namePlaceholder": "ej. Sensor de temperatura",
+      "templateLabel": "Plantilla",
+      "templatePlaceholder": "Seleccioná una plantilla",
+      "clientLabel": "Cliente",
+      "clientPlaceholder": "Seleccioná un cliente",
+      "metadataLabel": "Metadata (JSON opcional)",
+      "errorCreate": "Error al crear dispositivo"
+    },
+    "edit": {
+      "title": "Editar dispositivo",
+      "namePlaceholder": "Nombre del dispositivo",
+      "errorUpdate": "Error al actualizar dispositivo"
+    },
+    "delete": {
+      "title": "Eliminar dispositivo",
+      "confirm": "¿Estás seguro que querés eliminar este dispositivo? Esta acción no se puede deshacer.",
+      "errorDelete": "Error al eliminar dispositivo"
+    },
+    "detail": {
+      "backButton": "Dispositivos",
+      "notFound": "Dispositivo no encontrado",
+      "errorLoad": "Error al cargar dispositivo",
+      "lastSeen": "Última conexión: {{date}}",
+      "cardId": "ID",
+      "cardTemplate": "Plantilla",
+      "cardCreated": "Creado",
+      "datastreamTitle": "Datastreams",
+      "dsColKey": "Clave",
+      "dsColName": "Nombre",
+      "dsColType": "Tipo",
+      "dsColUnit": "Unidad",
+      "metadataTitle": "Metadata",
+      "commandTitle": "Enviar comando",
+      "commandSuccess": "Comando enviado con éxito.",
+      "commandActionLabel": "Acción *",
+      "commandActionPlaceholder": "ej. toggle_led",
+      "commandPayloadLabel": "Payload (JSON opcional)",
+      "commandSending": "Enviando…",
+      "commandSend": "Enviar",
+      "commandErrorSend": "Error al enviar comando"
+    }
+  },
+  "templates": {
+    "list": {
+      "title": "Plantillas",
+      "subtitle": "Administrá las plantillas de dispositivos y sus datastreams",
+      "newButton": "Nueva plantilla",
+      "searchPlaceholder": "Buscar plantillas…",
+      "colName": "Nombre",
+      "colDescription": "Descripción",
+      "colDatastreams": "Datastreams",
+      "emptySearch": "Sin resultados para la búsqueda",
+      "empty": "No hay plantillas aún",
+      "emptySubtitle": "Creá tu primera plantilla para comenzar.",
+      "pagination": "Página {{page}} de {{totalPages}} ({{total}} plantillas)",
+      "errorLoad": "Error al cargar plantillas",
+      "errorSearch": "Error al buscar",
+      "errorPaginate": "Error al paginar"
+    },
+    "create": {
+      "title": "Nueva plantilla",
+      "namePlaceholder": "ej. Sensor de temperatura",
+      "descPlaceholder": "Descripción opcional",
+      "errorCreate": "Error al crear plantilla"
+    },
+    "edit": {
+      "title": "Editar plantilla",
+      "namePlaceholder": "Nombre de la plantilla",
+      "descPlaceholder": "Descripción opcional",
+      "errorUpdate": "Error al actualizar plantilla"
+    },
+    "delete": {
+      "title": "Eliminar plantilla",
+      "confirm": "¿Estás seguro que querés eliminar esta plantilla? Esta acción no se puede deshacer.",
+      "errorDelete": "Error al eliminar plantilla"
+    },
+    "datastream": {
+      "title": "Datastreams",
+      "addButton": "Agregar",
+      "empty": "No hay datastreams. Hacé clic en \"Agregar\" para añadir uno.",
+      "keyLabel": "Clave *",
+      "nameLabel": "Nombre *",
+      "typeLabel": "Tipo",
+      "directionLabel": "Dirección",
+      "unitLabel": "Unidad",
+      "minLabel": "Mínimo",
+      "maxLabel": "Máximo",
+      "removeButton": "Quitar",
+      "duplicateKey": "Clave duplicada",
+      "typeNumber": "Número",
+      "typeString": "Texto",
+      "typeBoolean": "Booleano",
+      "dirInput": "Input",
+      "dirOutput": "Output",
+      "dirBidirectional": "Bidireccional",
+      "errorEmptyKey": "Todos los datastreams deben tener una clave",
+      "errorDuplicateKeys": "Las claves de los datastreams deben ser únicas",
+      "errorEmptyName": "Todos los datastreams deben tener un nombre"
+    }
+  },
+  "clients": {
+    "list": {
+      "title": "Clientes",
+      "subtitle": "Administrá los clientes y su información de contacto",
+      "newButton": "Nuevo cliente",
+      "searchPlaceholder": "Buscar clientes…",
+      "colName": "Nombre",
+      "colEmail": "Email",
+      "colPhone": "Teléfono",
+      "colAddress": "Dirección",
+      "emptySearch": "Sin resultados para la búsqueda",
+      "empty": "No hay clientes aún",
+      "emptySubtitle": "Creá tu primer cliente para comenzar.",
+      "pagination": "Página {{page}} de {{totalPages}} ({{total}} clientes)",
+      "errorLoad": "Error al cargar clientes",
+      "errorSearch": "Error al buscar",
+      "errorPaginate": "Error al paginar"
+    },
+    "create": {
+      "title": "Nuevo cliente",
+      "namePlaceholder": "ej. Empresa S.A.",
+      "errorCreate": "Error al crear cliente"
+    },
+    "edit": {
+      "title": "Editar cliente",
+      "namePlaceholder": "Nombre del cliente",
+      "errorUpdate": "Error al actualizar cliente"
+    },
+    "delete": {
+      "title": "Eliminar cliente",
+      "confirm": "¿Estás seguro que querés eliminar este cliente? Esta acción no se puede deshacer.",
+      "errorDelete": "Error al eliminar cliente"
+    },
+    "fields": {
+      "nameLabel": "Nombre *",
+      "emailLabel": "Email",
+      "phoneLabel": "Teléfono",
+      "addressLabel": "Dirección",
+      "emailPlaceholder": "contacto@empresa.com",
+      "phonePlaceholder": "+54 11 1234-5678",
+      "addressPlaceholder": "Av. Corrientes 1234, CABA"
+    }
+  }
+}

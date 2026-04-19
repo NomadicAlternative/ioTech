@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from './authStore'
 import {
   Card,
@@ -13,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 
 export function LoginPage() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -29,7 +31,7 @@ export function LoginPage() {
       navigate('/app/dashboards', { replace: true })
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : 'Invalid credentials'
+        err instanceof Error ? err.message : t('auth.invalidCredentials')
       setError(message)
     } finally {
       setLoading(false)
@@ -41,16 +43,16 @@ export function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">IoTech</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
+          <CardDescription>{t('auth.subtitle')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('auth.emailLabel')}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t('auth.emailPlaceholder')}
                 autoComplete="email"
                 required
                 value={email}
@@ -58,7 +60,7 @@ export function LoginPage() {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('auth.passwordLabel')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -73,7 +75,7 @@ export function LoginPage() {
               <p className="text-sm text-destructive">{error}</p>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in…' : 'Sign in'}
+              {loading ? t('auth.signingIn') : t('auth.signIn')}
             </Button>
           </form>
         </CardContent>

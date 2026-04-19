@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Edit, ArrowLeft } from 'lucide-react'
 import GridLayout, { type LayoutItem } from 'react-grid-layout'
 import { Button } from '@/components/ui/button'
@@ -10,6 +11,7 @@ import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
 export function DashboardViewPage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { currentDashboard, layout, fetchDashboard, clearCurrent } = useDashboardStore()
@@ -31,7 +33,7 @@ export function DashboardViewPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64 text-muted-foreground">
-        Loading dashboard…
+        {t('dashboard.view.loading')}
       </div>
     )
   }
@@ -40,7 +42,7 @@ export function DashboardViewPage() {
     return (
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
-          <ArrowLeft className="h-4 w-4" /> Back
+          <ArrowLeft className="h-4 w-4" /> {t('common.back')}
         </Button>
         <div className="rounded-md bg-destructive/10 text-destructive px-4 py-3 text-sm">{error}</div>
       </div>
@@ -66,7 +68,7 @@ export function DashboardViewPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-xl font-bold">{currentDashboard?.name ?? 'Dashboard'}</h1>
+            <h1 className="text-xl font-bold">{currentDashboard?.name ?? t('dashboard.view.fallbackTitle')}</h1>
             {currentDashboard?.description && (
               <p className="text-sm text-muted-foreground">{currentDashboard.description}</p>
             )}
@@ -74,7 +76,7 @@ export function DashboardViewPage() {
         </div>
         {isInstaller && (
           <Button onClick={() => navigate(`/app/dashboards/${id}/edit`)} className="gap-2">
-            <Edit className="h-4 w-4" /> Edit
+            <Edit className="h-4 w-4" /> {t('dashboard.view.editButton')}
           </Button>
         )}
       </div>
@@ -82,10 +84,10 @@ export function DashboardViewPage() {
       {/* Grid */}
       {layout.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center gap-2">
-          <p className="text-muted-foreground">This dashboard has no widgets yet.</p>
+          <p className="text-muted-foreground">{t('dashboard.view.empty')}</p>
           {isInstaller && (
             <Button variant="outline" onClick={() => navigate(`/app/dashboards/${id}/edit`)}>
-              <Edit className="h-4 w-4 mr-2" /> Add widgets
+              <Edit className="h-4 w-4 mr-2" /> {t('dashboard.view.addWidgets')}
             </Button>
           )}
         </div>

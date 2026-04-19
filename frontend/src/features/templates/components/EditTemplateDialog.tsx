@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -20,8 +21,9 @@ interface Props {
 }
 
 export function EditTemplateDialog({ templateId, onClose, onSuccess }: Props) {
+  const { t } = useTranslation()
   const { templates, updateTemplate } = useTemplateStore()
-  const template = templates.find((t) => t.id === templateId)
+  const template = templates.find((tpl) => tpl.id === templateId)
 
   const [name, setName] = useState(template?.name ?? '')
   const [description, setDescription] = useState(template?.description ?? '')
@@ -36,7 +38,7 @@ export function EditTemplateDialog({ templateId, onClose, onSuccess }: Props) {
     const keys = datastreams.map((d) => d.key.trim())
     const emptyKey = keys.some((k) => k === '')
     if (emptyKey) {
-      setError('Todos los datastreams deben tener una clave')
+      setError(t('templates.datastream.errorEmptyKey'))
       return false
     }
 
@@ -49,13 +51,13 @@ export function EditTemplateDialog({ templateId, onClose, onSuccess }: Props) {
         seen.add(k)
       }
       setDuplicateKeys(dupes)
-      setError('Las claves de los datastreams deben ser únicas')
+      setError(t('templates.datastream.errorDuplicateKeys'))
       return false
     }
 
     const emptyName = datastreams.some((d) => !d.name.trim())
     if (emptyName) {
-      setError('Todos los datastreams deben tener un nombre')
+      setError(t('templates.datastream.errorEmptyName'))
       return false
     }
 
@@ -77,7 +79,7 @@ export function EditTemplateDialog({ templateId, onClose, onSuccess }: Props) {
       })
       onSuccess()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al actualizar plantilla')
+      setError(err instanceof Error ? err.message : t('templates.edit.errorUpdate'))
     } finally {
       setSaving(false)
     }
@@ -87,7 +89,7 @@ export function EditTemplateDialog({ templateId, onClose, onSuccess }: Props) {
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Editar plantilla</DialogTitle>
+          <DialogTitle>{t('templates.edit.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           {error && (
@@ -96,20 +98,20 @@ export function EditTemplateDialog({ templateId, onClose, onSuccess }: Props) {
             </div>
           )}
           <div className="space-y-1">
-            <Label>Nombre *</Label>
+            <Label>{t('common.nameLabel')}</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Nombre de la plantilla"
+              placeholder={t('templates.edit.namePlaceholder')}
               autoFocus
             />
           </div>
           <div className="space-y-1">
-            <Label>Descripción</Label>
+            <Label>{t('common.descLabel')}</Label>
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descripción opcional"
+              placeholder={t('templates.edit.descPlaceholder')}
             />
           </div>
           <DatastreamEditor
@@ -120,10 +122,10 @@ export function EditTemplateDialog({ templateId, onClose, onSuccess }: Props) {
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Cancelar
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={!name.trim() || saving}>
-            {saving ? 'Guardando…' : 'Guardar cambios'}
+            {saving ? t('common.saving') : t('common.saveChanges')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,0 +1,249 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "create": "Create",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "saving": "Saving…",
+    "creating": "Creating…",
+    "deleting": "Deleting…",
+    "saveChanges": "Save changes",
+    "done": "Done",
+    "nameLabel": "Name *",
+    "descLabel": "Description",
+    "invalidJson": "Invalid JSON",
+    "previous": "Previous",
+    "next": "Next",
+    "noResults": "No results for the search",
+    "confirmIrreversible": "This action cannot be undone."
+  },
+  "nav": {
+    "dashboards": "Dashboards",
+    "devices": "Devices",
+    "templates": "Templates",
+    "clients": "Clients",
+    "settings": "Settings",
+    "logout": "Logout",
+    "language": "Language"
+  },
+  "auth": {
+    "subtitle": "Sign in to your account",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "signingIn": "Signing in…",
+    "signIn": "Sign in",
+    "invalidCredentials": "Invalid credentials"
+  },
+  "dashboard": {
+    "list": {
+      "title": "Dashboards",
+      "subtitle": "Monitor and control your IoT devices",
+      "newButton": "New Dashboard",
+      "empty": "No dashboards yet",
+      "emptySubtitle": "Create your first dashboard to start visualizing your data.",
+      "createButton": "Create Dashboard",
+      "widgets_one": "{{count}} widget",
+      "widgets_other": "{{count}} widgets",
+      "failedCreate": "Failed to create dashboard",
+      "confirmDelete": "Delete this dashboard?"
+    },
+    "create": {
+      "title": "New Dashboard",
+      "namePlaceholder": "e.g. Home Automation",
+      "descPlaceholder": "Optional description"
+    },
+    "editor": {
+      "loading": "Loading editor…",
+      "widgetsPalette": "Widgets",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "errorSaving": "Error saving",
+      "shareButton": "Share",
+      "done": "Done",
+      "emptyCanvas": "Click a widget from the palette to add it"
+    },
+    "share": {
+      "title": "Share Dashboard",
+      "noClients": "No clients found.",
+      "revoke": "Revoke",
+      "share": "Share"
+    },
+    "view": {
+      "loading": "Loading dashboard…",
+      "fallbackTitle": "Dashboard",
+      "editButton": "Edit",
+      "empty": "This dashboard has no widgets yet.",
+      "addWidgets": "Add widgets"
+    }
+  },
+  "devices": {
+    "list": {
+      "title": "Devices",
+      "subtitle": "Manage and monitor your IoT devices",
+      "newButton": "New device",
+      "searchPlaceholder": "Search devices…",
+      "colName": "Name",
+      "colStatus": "Status",
+      "colTemplate": "Template",
+      "colLastSeen": "Last connection",
+      "emptySearch": "No results for the search",
+      "empty": "No devices yet",
+      "emptySubtitle": "Create your first device to get started.",
+      "pagination": "Page {{page}} of {{totalPages}} ({{total}} devices)",
+      "errorLoad": "Error loading devices",
+      "errorSearch": "Error searching",
+      "errorPaginate": "Error paginating"
+    },
+    "status": {
+      "online": "Online",
+      "offline": "Offline",
+      "unknown": "Unknown"
+    },
+    "create": {
+      "title": "New device",
+      "namePlaceholder": "e.g. Temperature sensor",
+      "templateLabel": "Template",
+      "templatePlaceholder": "Select a template",
+      "clientLabel": "Client",
+      "clientPlaceholder": "Select a client",
+      "metadataLabel": "Metadata (optional JSON)",
+      "errorCreate": "Error creating device"
+    },
+    "edit": {
+      "title": "Edit device",
+      "namePlaceholder": "Device name",
+      "errorUpdate": "Error updating device"
+    },
+    "delete": {
+      "title": "Delete device",
+      "confirm": "Are you sure you want to delete this device? This action cannot be undone.",
+      "errorDelete": "Error deleting device"
+    },
+    "detail": {
+      "backButton": "Devices",
+      "notFound": "Device not found",
+      "errorLoad": "Error loading device",
+      "lastSeen": "Last connection: {{date}}",
+      "cardId": "ID",
+      "cardTemplate": "Template",
+      "cardCreated": "Created",
+      "datastreamTitle": "Datastreams",
+      "dsColKey": "Key",
+      "dsColName": "Name",
+      "dsColType": "Type",
+      "dsColUnit": "Unit",
+      "metadataTitle": "Metadata",
+      "commandTitle": "Send command",
+      "commandSuccess": "Command sent successfully.",
+      "commandActionLabel": "Action *",
+      "commandActionPlaceholder": "e.g. toggle_led",
+      "commandPayloadLabel": "Payload (optional JSON)",
+      "commandSending": "Sending…",
+      "commandSend": "Send",
+      "commandErrorSend": "Error sending command"
+    }
+  },
+  "templates": {
+    "list": {
+      "title": "Templates",
+      "subtitle": "Manage device templates and their datastreams",
+      "newButton": "New template",
+      "searchPlaceholder": "Search templates…",
+      "colName": "Name",
+      "colDescription": "Description",
+      "colDatastreams": "Datastreams",
+      "emptySearch": "No results for the search",
+      "empty": "No templates yet",
+      "emptySubtitle": "Create your first template to get started.",
+      "pagination": "Page {{page}} of {{totalPages}} ({{total}} templates)",
+      "errorLoad": "Error loading templates",
+      "errorSearch": "Error searching",
+      "errorPaginate": "Error paginating"
+    },
+    "create": {
+      "title": "New template",
+      "namePlaceholder": "e.g. Temperature sensor",
+      "descPlaceholder": "Optional description",
+      "errorCreate": "Error creating template"
+    },
+    "edit": {
+      "title": "Edit template",
+      "namePlaceholder": "Template name",
+      "descPlaceholder": "Optional description",
+      "errorUpdate": "Error updating template"
+    },
+    "delete": {
+      "title": "Delete template",
+      "confirm": "Are you sure you want to delete this template? This action cannot be undone.",
+      "errorDelete": "Error deleting template"
+    },
+    "datastream": {
+      "title": "Datastreams",
+      "addButton": "Add",
+      "empty": "No datastreams. Click \"Add\" to add one.",
+      "keyLabel": "Key *",
+      "nameLabel": "Name *",
+      "typeLabel": "Type",
+      "directionLabel": "Direction",
+      "unitLabel": "Unit",
+      "minLabel": "Min",
+      "maxLabel": "Max",
+      "removeButton": "Remove",
+      "duplicateKey": "Duplicate key",
+      "typeNumber": "Number",
+      "typeString": "Text",
+      "typeBoolean": "Boolean",
+      "dirInput": "Input",
+      "dirOutput": "Output",
+      "dirBidirectional": "Bidirectional",
+      "errorEmptyKey": "All datastreams must have a key",
+      "errorDuplicateKeys": "Datastream keys must be unique",
+      "errorEmptyName": "All datastreams must have a name"
+    }
+  },
+  "clients": {
+    "list": {
+      "title": "Clients",
+      "subtitle": "Manage clients and their contact information",
+      "newButton": "New client",
+      "searchPlaceholder": "Search clients…",
+      "colName": "Name",
+      "colEmail": "Email",
+      "colPhone": "Phone",
+      "colAddress": "Address",
+      "emptySearch": "No results for the search",
+      "empty": "No clients yet",
+      "emptySubtitle": "Create your first client to get started.",
+      "pagination": "Page {{page}} of {{totalPages}} ({{total}} clients)",
+      "errorLoad": "Error loading clients",
+      "errorSearch": "Error searching",
+      "errorPaginate": "Error paginating"
+    },
+    "create": {
+      "title": "New client",
+      "namePlaceholder": "e.g. Company Inc.",
+      "errorCreate": "Error creating client"
+    },
+    "edit": {
+      "title": "Edit client",
+      "namePlaceholder": "Client name",
+      "errorUpdate": "Error updating client"
+    },
+    "delete": {
+      "title": "Delete client",
+      "confirm": "Are you sure you want to delete this client? This action cannot be undone.",
+      "errorDelete": "Error deleting client"
+    },
+    "fields": {
+      "nameLabel": "Name *",
+      "emailLabel": "Email",
+      "phoneLabel": "Phone",
+      "addressLabel": "Address",
+      "emailPlaceholder": "contact@company.com",
+      "phonePlaceholder": "+1 555 123-4567",
+      "addressPlaceholder": "123 Main St, City"
+    }
+  }
+}

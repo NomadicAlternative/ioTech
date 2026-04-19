@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Plus, LayoutDashboard, Edit, Trash2, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,6 +23,7 @@ import { Badge } from '@/components/ui/badge'
 import { useDashboardStore } from './dashboardStore'
 
 export function DashboardListPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { dashboards, fetchDashboards, createDashboard, deleteDashboard } = useDashboardStore()
 
@@ -48,7 +50,7 @@ export function DashboardListPage() {
       setNewDesc('')
       navigate(`/app/dashboards/${dashboard.id}/edit`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create dashboard')
+      setError(err instanceof Error ? err.message : t('dashboard.list.failedCreate'))
     } finally {
       setCreating(false)
     }
@@ -56,7 +58,7 @@ export function DashboardListPage() {
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm('Delete this dashboard?')) return
+    if (!confirm(t('dashboard.list.confirmDelete'))) return
     await deleteDashboard(id).catch(() => {/* ignore */})
   }
 
@@ -65,14 +67,14 @@ export function DashboardListPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Dashboards</h1>
+          <h1 className="text-2xl font-bold">{t('dashboard.list.title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Monitor and control your IoT devices
+            {t('dashboard.list.subtitle')}
           </p>
         </div>
         <Button onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          New Dashboard
+          {t('dashboard.list.newButton')}
         </Button>
       </div>
 
@@ -105,14 +107,14 @@ export function DashboardListPage() {
         <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
           <LayoutDashboard className="h-16 w-16 text-muted-foreground/40" />
           <div>
-            <p className="text-lg font-medium">No dashboards yet</p>
+            <p className="text-lg font-medium">{t('dashboard.list.empty')}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Create your first dashboard to start visualizing your data.
+              {t('dashboard.list.emptySubtitle')}
             </p>
           </div>
           <Button onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Create Dashboard
+            {t('dashboard.list.createButton')}
           </Button>
         </div>
       )}
@@ -158,7 +160,7 @@ export function DashboardListPage() {
               </CardHeader>
               <CardContent className="flex items-center justify-between pt-0">
                 <Badge variant="secondary" className="text-xs">
-                  {dashboard.widgetCount ?? 0} widgets
+                  {t('dashboard.list.widgets', { count: dashboard.widgetCount ?? 0 })}
                 </Badge>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Clock className="h-3 w-3" />
@@ -174,32 +176,32 @@ export function DashboardListPage() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>New Dashboard</DialogTitle>
+            <DialogTitle>{t('dashboard.create.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
-              <Label>Name *</Label>
+              <Label>{t('common.nameLabel')}</Label>
               <Input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                placeholder="e.g. Home Automation"
+                placeholder={t('dashboard.create.namePlaceholder')}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
                 autoFocus
               />
             </div>
             <div className="space-y-1">
-              <Label>Description</Label>
+              <Label>{t('common.descLabel')}</Label>
               <Input
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
-                placeholder="Optional description"
+                placeholder={t('dashboard.create.descPlaceholder')}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>{t('common.cancel')}</Button>
             <Button onClick={handleCreate} disabled={!newName.trim() || creating}>
-              {creating ? 'Creating…' : 'Create'}
+              {creating ? t('common.creating') : t('common.create')}
             </Button>
           </DialogFooter>
         </DialogContent>

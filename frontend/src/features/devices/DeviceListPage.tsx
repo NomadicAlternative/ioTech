@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Plus, Server, Edit, Trash2, ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -27,25 +28,27 @@ import { EditDeviceDialog } from './components/EditDeviceDialog'
 // ─── Status badge helper ──────────────────────────────────────────────────────
 
 function StatusBadge({ isOnline, status }: { isOnline: boolean; status: string }) {
+  const { t } = useTranslation()
   if (isOnline) {
-    return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">En línea</Badge>
+    return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">{t('devices.status.online')}</Badge>
   }
   if (status === 'offline') {
-    return <Badge variant="secondary">Desconectado</Badge>
+    return <Badge variant="secondary">{t('devices.status.offline')}</Badge>
   }
-  return <Badge variant="outline">{status || 'Desconocido'}</Badge>
+  return <Badge variant="outline">{status || t('devices.status.unknown')}</Badge>
 }
 
 // ─── Last seen helper ─────────────────────────────────────────────────────────
 
 function formatLastSeen(lastSeen: string | null): string {
   if (!lastSeen) return '—'
-  return new Date(lastSeen).toLocaleString('es-AR')
+  return new Date(lastSeen).toLocaleString()
 }
 
 // ─── Page component ───────────────────────────────────────────────────────────
 
 export function DeviceListPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { devices, pagination, search, fetchDevices, createDevice, deleteDevice, setSearch } =
     useDeviceStore()
@@ -81,7 +84,7 @@ export function DeviceListPage() {
   useEffect(() => {
     setLoading(true)
     fetchDevices(1, 10, '')
-      .catch((err) => setError(err instanceof Error ? err.message : 'Error al cargar dispositivos'))
+      .catch((err) => setError(err instanceof Error ? err.message : t('devices.list.errorLoad')))
       .finally(() => setLoading(false))
   }, [fetchDevices])
 
@@ -93,7 +96,7 @@ export function DeviceListPage() {
     searchTimerRef.current = setTimeout(() => {
       setLoading(true)
       fetchDevices(1, pagination.limit, value)
-        .catch((err) => setError(err instanceof Error ? err.message : 'Error al buscar'))
+        .catch((err) => setError(err instanceof Error ? err.message : t('devices.list.errorSearch')))
         .finally(() => setLoading(false))
     }, 300)
   }
@@ -101,7 +104,7 @@ export function DeviceListPage() {
   function handlePageChange(newPage: number) {
     setLoading(true)
     fetchDevices(newPage, pagination.limit, search)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Error al paginar'))
+      .catch((err) => setError(err instanceof Error ? err.message : t('devices.list.errorPaginate')))
       .finally(() => setLoading(false))
   }
 
@@ -109,11 +112,11 @@ export function DeviceListPage() {
     setCreateOpen(true)
     setLoadingDropdowns(true)
     try {
-      const [t, c] = await Promise.all([listTemplates(), listClients()])
-      setTemplates(t)
+      const [t2, c] = await Promise.all([listTemplates(), listClients()])
+      setTemplates(t2)
       setClients(c)
     } catch {
-      // dropdowns will be empty — user can still type IDs manually if needed
+      // dropdowns will be empty
     } finally {
       setLoadingDropdowns(false)
     }
@@ -124,7 +127,7 @@ export function DeviceListPage() {
     try {
       return JSON.parse(newMetadata) as Record<string, unknown>
     } catch {
-      setMetadataError('JSON inválido')
+      setMetadataError(t('common.invalidJson'))
       return undefined as never
     }
   }
@@ -149,7 +152,7 @@ export function DeviceListPage() {
       setLoading(true)
       await fetchDevices(1, pagination.limit, search).finally(() => setLoading(false))
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : 'Error al crear dispositivo')
+      setCreateError(err instanceof Error ? err.message : t('devices.create.errorCreate'))
     } finally {
       setCreating(false)
     }
@@ -172,7 +175,7 @@ export function DeviceListPage() {
       await deleteDevice(deleteId)
       setDeleteId(null)
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : 'Error al eliminar dispositivo')
+      setDeleteError(err instanceof Error ? err.message : t('devices.delete.errorDelete'))
     } finally {
       setDeleting(false)
     }
@@ -185,14 +188,14 @@ export function DeviceListPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Dispositivos</h1>
+          <h1 className="text-2xl font-bold">{t('devices.list.title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Administrá y monitoreá tus dispositivos IoT
+            {t('devices.list.subtitle')}
           </p>
         </div>
         <Button onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-2" />
-          Nuevo dispositivo
+          {t('devices.list.newButton')}
         </Button>
       </div>
 
@@ -208,7 +211,7 @@ export function DeviceListPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           className="pl-9"
-          placeholder="Buscar dispositivos…"
+          placeholder={t('devices.list.searchPlaceholder')}
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
         />
@@ -219,13 +222,13 @@ export function DeviceListPage() {
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Nombre</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Estado</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('devices.list.colName')}</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('devices.list.colStatus')}</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">
-                Plantilla
+                {t('devices.list.colTemplate')}
               </th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">
-                Última conexión
+                {t('devices.list.colLastSeen')}
               </th>
               <th className="px-4 py-3" />
             </tr>
@@ -256,10 +259,10 @@ export function DeviceListPage() {
                   <div className="flex flex-col items-center gap-3 text-muted-foreground">
                     <Server className="h-12 w-12 opacity-30" />
                     <p className="font-medium">
-                      {search ? 'Sin resultados para la búsqueda' : 'No hay dispositivos aún'}
+                      {search ? t('devices.list.emptySearch') : t('devices.list.empty')}
                     </p>
                     {!search && (
-                      <p className="text-xs">Creá tu primer dispositivo para comenzar.</p>
+                      <p className="text-xs">{t('devices.list.emptySubtitle')}</p>
                     )}
                   </div>
                 </td>
@@ -319,7 +322,11 @@ export function DeviceListPage() {
       {!loading && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            Página {pagination.page} de {pagination.totalPages} ({pagination.total} dispositivos)
+            {t('devices.list.pagination', {
+              page: pagination.page,
+              totalPages: pagination.totalPages,
+              total: pagination.total,
+            })}
           </span>
           <div className="flex gap-2">
             <Button
@@ -329,7 +336,7 @@ export function DeviceListPage() {
               onClick={() => handlePageChange(pagination.page - 1)}
             >
               <ChevronLeft className="h-4 w-4" />
-              Anterior
+              {t('common.previous')}
             </Button>
             <Button
               variant="outline"
@@ -337,7 +344,7 @@ export function DeviceListPage() {
               disabled={pagination.page >= pagination.totalPages}
               onClick={() => handlePageChange(pagination.page + 1)}
             >
-              Siguiente
+              {t('common.next')}
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -354,7 +361,7 @@ export function DeviceListPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nuevo dispositivo</DialogTitle>
+            <DialogTitle>{t('devices.create.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {createError && (
@@ -363,27 +370,27 @@ export function DeviceListPage() {
               </div>
             )}
             <div className="space-y-1">
-              <Label>Nombre *</Label>
+              <Label>{t('common.nameLabel')}</Label>
               <Input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                placeholder="ej. Sensor de temperatura"
+                placeholder={t('devices.create.namePlaceholder')}
                 autoFocus
               />
             </div>
             <div className="space-y-1">
-              <Label>Plantilla</Label>
+              <Label>{t('devices.create.templateLabel')}</Label>
               {loadingDropdowns ? (
                 <div className="h-9 bg-muted animate-pulse rounded-md" />
               ) : (
                 <Select value={newTemplateId} onValueChange={(v) => setNewTemplateId(v ?? '')}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Seleccioná una plantilla" />
+                    <SelectValue placeholder={t('devices.create.templatePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {templates.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>
-                        {t.name}
+                    {templates.map((tmpl) => (
+                      <SelectItem key={tmpl.id} value={tmpl.id}>
+                        {tmpl.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -391,13 +398,13 @@ export function DeviceListPage() {
               )}
             </div>
             <div className="space-y-1">
-              <Label>Cliente</Label>
+              <Label>{t('devices.create.clientLabel')}</Label>
               {loadingDropdowns ? (
                 <div className="h-9 bg-muted animate-pulse rounded-md" />
               ) : (
                 <Select value={newClientId} onValueChange={(v) => setNewClientId(v ?? '')}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Seleccioná un cliente" />
+                    <SelectValue placeholder={t('devices.create.clientPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {clients.map((c) => (
@@ -410,7 +417,7 @@ export function DeviceListPage() {
               )}
             </div>
             <div className="space-y-1">
-              <Label>Metadata (JSON opcional)</Label>
+              <Label>{t('devices.create.metadataLabel')}</Label>
               <textarea
                 className="w-full rounded-md border bg-background px-3 py-2 text-sm font-mono min-h-[80px] focus:outline-none focus:ring-2 focus:ring-ring"
                 value={newMetadata}
@@ -418,7 +425,7 @@ export function DeviceListPage() {
                   setNewMetadata(e.target.value)
                   setMetadataError(null)
                 }}
-                placeholder='{"clave": "valor"}'
+                placeholder='{"key": "value"}'
               />
               {metadataError && (
                 <p className="text-destructive text-xs">{metadataError}</p>
@@ -427,10 +434,10 @@ export function DeviceListPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>
-              Cancelar
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleCreate} disabled={!newName.trim() || creating}>
-              {creating ? 'Creando…' : 'Crear'}
+              {creating ? t('common.creating') : t('common.create')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -463,7 +470,7 @@ export function DeviceListPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminar dispositivo</DialogTitle>
+            <DialogTitle>{t('devices.delete.title')}</DialogTitle>
           </DialogHeader>
           <div className="py-2 space-y-3">
             {deleteError && (
@@ -472,7 +479,7 @@ export function DeviceListPage() {
               </div>
             )}
             <p className="text-sm text-muted-foreground">
-              ¿Estás seguro que querés eliminar este dispositivo? Esta acción no se puede deshacer.
+              {t('devices.delete.confirm')}
             </p>
           </div>
           <DialogFooter>
@@ -483,10 +490,10 @@ export function DeviceListPage() {
                 setDeleteError(null)
               }}
             >
-              Cancelar
+              {t('common.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete} disabled={deleting}>
-              {deleting ? 'Eliminando…' : 'Eliminar'}
+              {deleting ? t('common.deleting') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function CreateTemplateDialog({ onClose, onSuccess }: Props) {
+  const { t } = useTranslation()
   const { createTemplate } = useTemplateStore()
 
   const [name, setName] = useState('')
@@ -29,14 +31,12 @@ export function CreateTemplateDialog({ onClose, onSuccess }: Props) {
   const [duplicateKeys, setDuplicateKeys] = useState<Set<string>>(new Set())
 
   function validate(): boolean {
-    // Name required
     if (!name.trim()) return false
 
-    // Datastream keys: non-empty and unique
     const keys = datastreams.map((d) => d.key.trim())
     const emptyKey = keys.some((k) => k === '')
     if (emptyKey) {
-      setError('Todos los datastreams deben tener una clave')
+      setError(t('templates.datastream.errorEmptyKey'))
       return false
     }
 
@@ -49,14 +49,13 @@ export function CreateTemplateDialog({ onClose, onSuccess }: Props) {
         seen.add(k)
       }
       setDuplicateKeys(dupes)
-      setError('Las claves de los datastreams deben ser únicas')
+      setError(t('templates.datastream.errorDuplicateKeys'))
       return false
     }
 
-    // Name required in each datastream
     const emptyName = datastreams.some((d) => !d.name.trim())
     if (emptyName) {
-      setError('Todos los datastreams deben tener un nombre')
+      setError(t('templates.datastream.errorEmptyName'))
       return false
     }
 
@@ -78,7 +77,7 @@ export function CreateTemplateDialog({ onClose, onSuccess }: Props) {
       })
       onSuccess()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al crear plantilla')
+      setError(err instanceof Error ? err.message : t('templates.create.errorCreate'))
     } finally {
       setSaving(false)
     }
@@ -88,7 +87,7 @@ export function CreateTemplateDialog({ onClose, onSuccess }: Props) {
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nueva plantilla</DialogTitle>
+          <DialogTitle>{t('templates.create.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           {error && (
@@ -97,20 +96,20 @@ export function CreateTemplateDialog({ onClose, onSuccess }: Props) {
             </div>
           )}
           <div className="space-y-1">
-            <Label>Nombre *</Label>
+            <Label>{t('common.nameLabel')}</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="ej. Sensor de temperatura"
+              placeholder={t('templates.create.namePlaceholder')}
               autoFocus
             />
           </div>
           <div className="space-y-1">
-            <Label>Descripción</Label>
+            <Label>{t('common.descLabel')}</Label>
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descripción opcional"
+              placeholder={t('templates.create.descPlaceholder')}
             />
           </div>
           <DatastreamEditor
@@ -121,10 +120,10 @@ export function CreateTemplateDialog({ onClose, onSuccess }: Props) {
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Cancelar
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={!name.trim() || saving}>
-            {saving ? 'Creando…' : 'Crear'}
+            {saving ? t('common.creating') : t('common.create')}
           </Button>
         </DialogFooter>
       </DialogContent>

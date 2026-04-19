@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Send, Wifi, WifiOff, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -11,6 +12,7 @@ import { fetchDeviceTemplate, sendDeviceCommand } from './api'
 import type { DeviceTemplate } from '@/features/widgets/types'
 
 export function DeviceDetailPage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { currentDevice, fetchDevice, clearCurrent } = useDeviceStore()
@@ -32,7 +34,7 @@ export function DeviceDetailPage() {
     setLoading(true)
     fetchDevice(id)
       .catch((err) =>
-        setError(err instanceof Error ? err.message : 'Error al cargar dispositivo')
+        setError(err instanceof Error ? err.message : t('devices.detail.errorLoad'))
       )
       .finally(() => setLoading(false))
 
@@ -57,7 +59,7 @@ export function DeviceDetailPage() {
       try {
         parsedPayload = JSON.parse(commandPayload)
       } catch {
-        setCommandPayloadError('JSON inválido')
+        setCommandPayloadError(t('common.invalidJson'))
         return
       }
     }
@@ -71,7 +73,7 @@ export function DeviceDetailPage() {
       setCommandAction('')
       setCommandPayload('')
     } catch (err) {
-      setCommandError(err instanceof Error ? err.message : 'Error al enviar comando')
+      setCommandError(err instanceof Error ? err.message : t('devices.detail.commandErrorSend'))
     } finally {
       setSending(false)
     }
@@ -96,10 +98,10 @@ export function DeviceDetailPage() {
       <div className="space-y-4">
         <Button variant="ghost" size="sm" onClick={() => navigate('/app/devices')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver
+          {t('common.back')}
         </Button>
         <div className="rounded-md bg-destructive/10 text-destructive px-4 py-3 text-sm">
-          {error ?? 'Dispositivo no encontrado'}
+          {error ?? t('devices.detail.notFound')}
         </div>
       </div>
     )
@@ -113,7 +115,7 @@ export function DeviceDetailPage() {
       <div className="flex items-start gap-4">
         <Button variant="ghost" size="sm" onClick={() => navigate('/app/devices')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Dispositivos
+          {t('devices.detail.backButton')}
         </Button>
       </div>
 
@@ -123,19 +125,19 @@ export function DeviceDetailPage() {
           {device.isOnline ? (
             <Badge className="bg-green-100 text-green-700 hover:bg-green-100 flex items-center gap-1">
               <Wifi className="h-3 w-3" />
-              En línea
+              {t('devices.status.online')}
             </Badge>
           ) : (
             <Badge variant="secondary" className="flex items-center gap-1">
               <WifiOff className="h-3 w-3" />
-              Desconectado
+              {t('devices.status.offline')}
             </Badge>
           )}
         </div>
         {device.lastSeen && (
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
-            Última conexión: {new Date(device.lastSeen).toLocaleString('es-AR')}
+            {t('devices.detail.lastSeen', { date: new Date(device.lastSeen).toLocaleString() })}
           </div>
         )}
       </div>
@@ -144,7 +146,7 @@ export function DeviceDetailPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">ID</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t('devices.detail.cardId')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="font-mono text-sm break-all">{device.id}</p>
@@ -153,7 +155,7 @@ export function DeviceDetailPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Plantilla</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t('devices.detail.cardTemplate')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm">{template?.name ?? device.templateId ?? '—'}</p>
@@ -162,10 +164,10 @@ export function DeviceDetailPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Creado</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t('devices.detail.cardCreated')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm">{new Date(device.createdAt).toLocaleDateString('es-AR')}</p>
+            <p className="text-sm">{new Date(device.createdAt).toLocaleDateString()}</p>
           </CardContent>
         </Card>
       </div>
@@ -174,17 +176,17 @@ export function DeviceDetailPage() {
       {template && template.datastreams.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Datastreams</CardTitle>
+            <CardTitle className="text-base">{t('devices.detail.datastreamTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="border rounded-md overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">Clave</th>
-                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">Nombre</th>
-                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">Tipo</th>
-                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">Unidad</th>
+                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">{t('devices.detail.dsColKey')}</th>
+                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">{t('devices.detail.dsColName')}</th>
+                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">{t('devices.detail.dsColType')}</th>
+                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">{t('devices.detail.dsColUnit')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -207,7 +209,7 @@ export function DeviceDetailPage() {
       {device.metadata && Object.keys(device.metadata).length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Metadata</CardTitle>
+            <CardTitle className="text-base">{t('devices.detail.metadataTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <pre className="bg-muted rounded-md px-4 py-3 text-xs font-mono overflow-auto">
@@ -220,12 +222,12 @@ export function DeviceDetailPage() {
       {/* Send command */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Enviar comando</CardTitle>
+          <CardTitle className="text-base">{t('devices.detail.commandTitle')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {commandSuccess && (
             <div className="rounded-md bg-green-50 text-green-700 px-3 py-2 text-sm">
-              Comando enviado con éxito.
+              {t('devices.detail.commandSuccess')}
             </div>
           )}
           {commandError && (
@@ -234,15 +236,15 @@ export function DeviceDetailPage() {
             </div>
           )}
           <div className="space-y-1">
-            <Label>Acción *</Label>
+            <Label>{t('devices.detail.commandActionLabel')}</Label>
             <Input
               value={commandAction}
               onChange={(e) => setCommandAction(e.target.value)}
-              placeholder="ej. toggle_led"
+              placeholder={t('devices.detail.commandActionPlaceholder')}
             />
           </div>
           <div className="space-y-1">
-            <Label>Payload (JSON opcional)</Label>
+            <Label>{t('devices.detail.commandPayloadLabel')}</Label>
             <textarea
               className="w-full rounded-md border bg-background px-3 py-2 text-sm font-mono min-h-[60px] focus:outline-none focus:ring-2 focus:ring-ring"
               value={commandPayload}
@@ -262,7 +264,7 @@ export function DeviceDetailPage() {
             className="gap-2"
           >
             <Send className="h-4 w-4" />
-            {sending ? 'Enviando…' : 'Enviar'}
+            {sending ? t('devices.detail.commandSending') : t('devices.detail.commandSend')}
           </Button>
         </CardContent>
       </Card>

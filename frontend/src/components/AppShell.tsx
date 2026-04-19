@@ -1,18 +1,21 @@
 import { Outlet, NavLink } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/features/auth/authStore'
 import { Button } from '@/components/ui/button'
-
-const navItems = [
-  { to: '/app/dashboards', label: 'Dashboards' },
-  { to: '/app/devices', label: 'Devices' },
-  { to: '/app/templates', label: 'Templates' },
-  { to: '/app/clients', label: 'Clients' },
-  { to: '/app/settings', label: 'Settings' },
-]
+import i18n from '@/i18n/i18n'
 
 export function AppShell() {
+  const { t } = useTranslation()
   const logout = useAuthStore((s) => s.logout)
   const user = useAuthStore((s) => s.user)
+
+  const navItems = [
+    { to: '/app/dashboards', label: t('nav.dashboards') },
+    { to: '/app/devices', label: t('nav.devices') },
+    { to: '/app/templates', label: t('nav.templates') },
+    { to: '/app/clients', label: t('nav.clients') },
+    { to: '/app/settings', label: t('nav.settings') },
+  ]
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -39,7 +42,27 @@ export function AppShell() {
             </NavLink>
           ))}
         </nav>
-        <div className="p-3 border-t">
+        <div className="p-3 border-t space-y-2">
+          {/* Language switcher */}
+          <div className="flex items-center gap-1 px-2">
+            <span className="text-xs text-muted-foreground mr-1">{t('nav.language')}:</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs"
+              onClick={() => i18n.changeLanguage('es')}
+            >
+              ES
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs"
+              onClick={() => i18n.changeLanguage('en')}
+            >
+              EN
+            </Button>
+          </div>
           <div className="flex items-center justify-between gap-2 px-2 py-1">
             <span className="text-xs text-muted-foreground truncate">
               {user?.email}
@@ -50,7 +73,7 @@ export function AppShell() {
               onClick={() => logout()}
               className="shrink-0"
             >
-              Logout
+              {t('nav.logout')}
             </Button>
           </div>
         </div>

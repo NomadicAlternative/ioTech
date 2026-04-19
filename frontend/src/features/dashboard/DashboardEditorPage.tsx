@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Plus, Share2, Save, Loader2 } from 'lucide-react'
 import GridLayout, { type Layout, type LayoutItem } from 'react-grid-layout'
 import { v4 as uuidv4 } from 'uuid'
@@ -22,6 +23,7 @@ import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
 export function DashboardEditorPage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const userRole = useAuthStore((s) => s.user?.role)
@@ -140,7 +142,7 @@ export function DashboardEditorPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64 text-muted-foreground">
-        Loading editor…
+        {t('dashboard.editor.loading')}
       </div>
     )
   }
@@ -149,7 +151,7 @@ export function DashboardEditorPage() {
     return (
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
-          <ArrowLeft className="h-4 w-4" /> Back
+          <ArrowLeft className="h-4 w-4" /> {t('common.back')}
         </Button>
         <div className="rounded-md bg-destructive/10 text-destructive px-4 py-3 text-sm">{error}</div>
       </div>
@@ -161,7 +163,7 @@ export function DashboardEditorPage() {
       {/* ─── Widget Palette Sidebar ──────────────────────────────────────── */}
       <aside className="w-56 flex-shrink-0 border-r bg-background overflow-y-auto p-3 space-y-2">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1 mb-3">
-          Widgets
+          {t('dashboard.editor.widgetsPalette')}
         </p>
         {WIDGET_TYPES.map((def) => (
           <button
@@ -192,23 +194,23 @@ export function DashboardEditorPage() {
             {isSaving && (
               <Badge variant="secondary" className="gap-1 text-xs">
                 <Loader2 className="h-3 w-3 animate-spin" />
-                Saving…
+                {t('dashboard.editor.saving')}
               </Badge>
             )}
             {!isSaving && !saveError && layout.length > 0 && (
               <Badge variant="secondary" className="gap-1 text-xs text-green-600">
                 <Save className="h-3 w-3" />
-                Saved
+                {t('dashboard.editor.saved')}
               </Badge>
             )}
             {saveError && (
-              <Badge variant="destructive" className="text-xs">Error saving</Badge>
+              <Badge variant="destructive" className="text-xs">{t('dashboard.editor.errorSaving')}</Badge>
             )}
             <Button variant="outline" size="sm" className="gap-2" onClick={() => setShareOpen(true)}>
-              <Share2 className="h-4 w-4" /> Share
+              <Share2 className="h-4 w-4" /> {t('dashboard.editor.shareButton')}
             </Button>
             <Button size="sm" onClick={() => navigate(`/app/dashboards/${id}`)}>
-              Done
+              {t('dashboard.editor.done')}
             </Button>
           </div>
         </div>
@@ -217,7 +219,7 @@ export function DashboardEditorPage() {
         <div className="flex-1 overflow-auto p-4 bg-muted/30">
           {layout.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-2 text-center">
-              <p className="text-muted-foreground">Click a widget from the palette to add it</p>
+              <p className="text-muted-foreground">{t('dashboard.editor.emptyCanvas')}</p>
             </div>
           ) : (
             <GridLayout
@@ -246,14 +248,14 @@ export function DashboardEditorPage() {
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Share Dashboard</DialogTitle>
+            <DialogTitle>{t('dashboard.share.title')}</DialogTitle>
           </DialogHeader>
           {sharingLoading ? (
             <div className="py-8 flex justify-center">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : clients.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">No clients found.</p>
+            <p className="text-sm text-muted-foreground py-4">{t('dashboard.share.noClients')}</p>
           ) : (
             <div className="space-y-2 max-h-[60vh] overflow-y-auto py-2">
               {clients.map((client) => {
@@ -272,7 +274,7 @@ export function DashboardEditorPage() {
                       size="sm"
                       onClick={() => handleToggleShare(client.id)}
                     >
-                      {isShared ? 'Revoke' : 'Share'}
+                      {isShared ? t('dashboard.share.revoke') : t('dashboard.share.share')}
                     </Button>
                   </div>
                 )

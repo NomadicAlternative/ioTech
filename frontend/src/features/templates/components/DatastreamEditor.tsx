@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -31,6 +31,8 @@ const EMPTY_ROW: () => Datastream = () => ({
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function DatastreamEditor({ datastreams, onChange, duplicateKeys }: Props) {
+  const { t } = useTranslation()
+
   function handleChange(index: number, field: keyof Datastream, value: string | number) {
     const updated = datastreams.map((row, i) => {
       if (i !== index) return row
@@ -56,16 +58,16 @@ export function DatastreamEditor({ datastreams, onChange, duplicateKeys }: Props
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Datastreams</span>
+        <span className="text-sm font-medium">{t('templates.datastream.title')}</span>
         <Button type="button" variant="outline" size="sm" onClick={handleAdd}>
           <Plus className="h-3 w-3 mr-1" />
-          Agregar
+          {t('templates.datastream.addButton')}
         </Button>
       </div>
 
       {datastreams.length === 0 && (
         <p className="text-xs text-muted-foreground py-2">
-          No hay datastreams. Hacé clic en "Agregar" para añadir uno.
+          {t('templates.datastream.empty')}
         </p>
       )}
 
@@ -76,7 +78,7 @@ export function DatastreamEditor({ datastreams, onChange, duplicateKeys }: Props
             <div className="grid grid-cols-2 gap-2">
               {/* Key */}
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Clave *</label>
+                <label className="text-xs text-muted-foreground">{t('templates.datastream.keyLabel')}</label>
                 <Input
                   value={row.key}
                   onChange={(e) => handleChange(i, 'key', e.target.value)}
@@ -84,12 +86,12 @@ export function DatastreamEditor({ datastreams, onChange, duplicateKeys }: Props
                   className={isDuplicate ? 'border-destructive' : ''}
                 />
                 {isDuplicate && (
-                  <p className="text-destructive text-xs">Clave duplicada</p>
+                  <p className="text-destructive text-xs">{t('templates.datastream.duplicateKey')}</p>
                 )}
               </div>
               {/* Name */}
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Nombre *</label>
+                <label className="text-xs text-muted-foreground">{t('templates.datastream.nameLabel')}</label>
                 <Input
                   value={row.name}
                   onChange={(e) => handleChange(i, 'name', e.target.value)}
@@ -101,7 +103,7 @@ export function DatastreamEditor({ datastreams, onChange, duplicateKeys }: Props
             <div className="grid grid-cols-3 gap-2">
               {/* Type */}
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Tipo</label>
+                <label className="text-xs text-muted-foreground">{t('templates.datastream.typeLabel')}</label>
                 <Select
                   value={row.type || 'number'}
                   onValueChange={(v) => handleChange(i, 'type', v)}
@@ -110,15 +112,15 @@ export function DatastreamEditor({ datastreams, onChange, duplicateKeys }: Props
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="number">Número</SelectItem>
-                    <SelectItem value="string">Texto</SelectItem>
-                    <SelectItem value="boolean">Booleano</SelectItem>
+                    <SelectItem value="number">{t('templates.datastream.typeNumber')}</SelectItem>
+                    <SelectItem value="string">{t('templates.datastream.typeString')}</SelectItem>
+                    <SelectItem value="boolean">{t('templates.datastream.typeBoolean')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {/* Direction */}
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Dirección</label>
+                <label className="text-xs text-muted-foreground">{t('templates.datastream.directionLabel')}</label>
                 <Select
                   value={row.direction || ''}
                   onValueChange={(v) => handleChange(i, 'direction', v)}
@@ -127,15 +129,15 @@ export function DatastreamEditor({ datastreams, onChange, duplicateKeys }: Props
                     <SelectValue placeholder="—" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="input">Input</SelectItem>
-                    <SelectItem value="output">Output</SelectItem>
-                    <SelectItem value="bidirectional">Bidireccional</SelectItem>
+                    <SelectItem value="input">{t('templates.datastream.dirInput')}</SelectItem>
+                    <SelectItem value="output">{t('templates.datastream.dirOutput')}</SelectItem>
+                    <SelectItem value="bidirectional">{t('templates.datastream.dirBidirectional')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {/* Unit */}
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Unidad</label>
+                <label className="text-xs text-muted-foreground">{t('templates.datastream.unitLabel')}</label>
                 <Input
                   value={row.unit ?? ''}
                   onChange={(e) => handleChange(i, 'unit', e.target.value)}
@@ -148,7 +150,7 @@ export function DatastreamEditor({ datastreams, onChange, duplicateKeys }: Props
             {(row.type === 'number' || !row.type) && (
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Mínimo</label>
+                  <label className="text-xs text-muted-foreground">{t('templates.datastream.minLabel')}</label>
                   <Input
                     type="number"
                     value={row.min ?? ''}
@@ -159,7 +161,7 @@ export function DatastreamEditor({ datastreams, onChange, duplicateKeys }: Props
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Máximo</label>
+                  <label className="text-xs text-muted-foreground">{t('templates.datastream.maxLabel')}</label>
                   <Input
                     type="number"
                     value={row.max ?? ''}
@@ -181,7 +183,7 @@ export function DatastreamEditor({ datastreams, onChange, duplicateKeys }: Props
                 onClick={() => handleRemove(i)}
               >
                 <Trash2 className="h-3 w-3 mr-1" />
-                Quitar
+                {t('templates.datastream.removeButton')}
               </Button>
             </div>
           </div>
