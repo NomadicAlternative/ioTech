@@ -81,7 +81,15 @@ export const useDashboardStore = create<DashboardStore>((set, get) => {
 
     fetchDashboard: async (id: string) => {
       const dashboard = await dashboardApi.fetchDashboard(id)
-      set({ currentDashboard: dashboard, layout: dashboard.layout ?? [] })
+      // Backend stores layout as { widgets: WidgetLayoutEntry[], gridConfig: {} }
+      // The store's layout is the flat widgets array.
+      const rawLayout = dashboard.layout
+      const widgets: WidgetLayoutEntry[] = Array.isArray(rawLayout)
+        ? rawLayout
+        : Array.isArray(rawLayout?.widgets)
+          ? rawLayout.widgets
+          : []
+      set({ currentDashboard: dashboard, layout: widgets })
     },
 
     createDashboard: async (name, description) => {

@@ -36,6 +36,15 @@ async function findUserByEmail(tenantId, email) {
 }
 
 /**
+ * Find a user by email only (no tenant filter — for login without tenantId).
+ * @param {string} email
+ * @returns {Promise<object|undefined>}
+ */
+async function findUserByEmailOnly(email) {
+  return db('users').where({ email }).first();
+}
+
+/**
  * Find a user by their UUID.
  * @param {string} id
  * @returns {Promise<object|undefined>}
@@ -82,6 +91,7 @@ async function deleteRefreshToken(token) {
 module.exports = {
   createUser,
   findUserByEmail,
+  findUserByEmailOnly,
   findUserById,
   createRefreshToken,
   findRefreshToken,

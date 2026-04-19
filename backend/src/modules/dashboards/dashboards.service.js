@@ -33,10 +33,10 @@ function validateLayoutStructure(layout) {
  * @param {{ page: number, limit: number, sortBy: string|null, sortDir: string }} [pagination]
  * @returns {Promise<{ data: object[], total: number }>}
  */
-async function list(tenantId, pagination = {}) {
+async function list(tenantId, userId, pagination = {}) {
   const [data, total] = await Promise.all([
-    dashboardsModel.findAll(tenantId, pagination),
-    dashboardsModel.count(tenantId),
+    dashboardsModel.findAll(tenantId, userId, pagination),
+    dashboardsModel.count(tenantId, userId),
   ]);
   return { data, total };
 }
@@ -47,8 +47,8 @@ async function list(tenantId, pagination = {}) {
  * @param {string} id
  * @returns {Promise<object>}
  */
-async function getById(tenantId, id) {
-  const dashboard = await dashboardsModel.findById(tenantId, id);
+async function getById(tenantId, userId, id) {
+  const dashboard = await dashboardsModel.findById(tenantId, userId, id);
   if (!dashboard) throw new NotFoundError(`Dashboard not found: ${id}`);
   return dashboard;
 }
@@ -59,7 +59,7 @@ async function getById(tenantId, id) {
  * @param {{ name: string, description?: string, layout?: object }} data
  * @returns {Promise<object>}
  */
-async function create(tenantId, data) {
+async function create(tenantId, userId, data) {
   // Use undefined-check so that explicit null is NOT silently replaced with the default.
   // null layout must reach validateLayoutStructure and throw ValidationError.
   const layout = data.layout !== undefined ? data.layout : { widgets: [], gridConfig: {} };
@@ -70,7 +70,7 @@ async function create(tenantId, data) {
     name: data.name,
     description: data.description || null,
     layout: JSON.stringify(layout),
-    installer_id: tenantId,
+    installer_id: userId,
     created_at: new Date(),
     updated_at: new Date(),
   });
@@ -86,10 +86,10 @@ async function create(tenantId, data) {
  * @param {{ name?: string, description?: string }} data
  * @returns {Promise<object>}
  */
-async function update(tenantId, id, data) {
-  await getById(tenantId, id); // ownership check
+async function update(tenantId, userId, id, data) {
+  await getById(tenantId, userId, id); // ownership check
 
-  const updated = await dashboardsModel.update(tenantId, id, {
+  const updated = await dashboardsModel.update(tenantId, userId, id, {
     name: data.name,
     description: data.description,
   });
@@ -105,9 +105,9 @@ async function update(tenantId, id, data) {
  * @param {string} id
  * @returns {Promise<void>}
  */
-async function remove(tenantId, id) {
-  await getById(tenantId, id); // ownership check
-  await dashboardsModel.remove(tenantId, id);
+async function remove(tenantId, userId, id) {
+  await getById(tenantId, userId, id); // ownership check
+  await dashboardsModel.remove(tenantId, userId, id);
   logger.info(`[dashboards.service] Deleted dashboard ${id} for tenant ${tenantId}`);
 }
 
@@ -118,11 +118,11 @@ async function remove(tenantId, id) {
  * @param {object} layout
  * @returns {Promise<object>}
  */
-async function updateLayout(tenantId, id, layout) {
+async function updateLayout(tenantId, userId, id, layout) {
   validateLayoutStructure(layout);
-  await getById(tenantId, id); // ownership check
+  await getById(tenantId, userId, id); // ownership check
 
-  const updated = await dashboardsModel.updateLayout(tenantId, id, layout);
+  const updated = await dashboardsModel.updateLayout(tenantId, userId, id, layout);
   if (!updated) throw new NotFoundError(`Dashboard not found after layout update: ${id}`);
 
   logger.info(`[dashboards.service] Updated layout for dashboard ${id}, tenant ${tenantId}`);
@@ -136,8 +136,8 @@ async function updateLayout(tenantId, id, layout) {
  * @param {string} clientId
  * @returns {Promise<object>}
  */
-async function shareWithClient(tenantId, dashboardId, clientId) {
-  await getById(tenantId, dashboardId); // ownership check
+async function shareWithClient(tenantId, userId, dashboardId, clientId) {
+  await getById(tenantId, userId, dashboardId); // ownership check
 
   try {
     const record = await dashboardsModel.addClient(tenantId, dashboardId, clientId);
@@ -161,8 +161,8 @@ async function shareWithClient(tenantId, dashboardId, clientId) {
  * @param {string} clientId
  * @returns {Promise<void>}
  */
-async function revokeClientShare(tenantId, dashboardId, clientId) {
-  await getById(tenantId, dashboardId); // ownership check
+async function revokeClientShare(tenantId, userId, dashboardId, clientId) {
+  await getById(tenantId, userId, dashboardId); // ownership check
 
   const deleted = await dashboardsModel.removeClient(tenantId, dashboardId, clientId);
   if (!deleted) throw new NotFoundError(`Share not found for client ${clientId}`);
@@ -178,8 +178,8 @@ async function revokeClientShare(tenantId, dashboardId, clientId) {
  * @param {string} dashboardId
  * @returns {Promise<object[]>}
  */
-async function listSharedClients(tenantId, dashboardId) {
-  await getById(tenantId, dashboardId); // ownership check
+async function listSharedClients(tenantId, userId, dashboardId) {
+  await getById(tenantId, userId, dashboardId); // ownership check
   return dashboardsModel.findClientsByDashboard(tenantId, dashboardId);
 }
 

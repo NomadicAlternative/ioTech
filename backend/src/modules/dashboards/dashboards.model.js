@@ -26,7 +26,7 @@ async function create(tenantId, data) {
  * @param {{ page?: number, limit?: number, sortBy?: string|null, sortDir?: string }} [pagination]
  * @returns {Promise<object[]>}
  */
-async function findAll(tenantId, pagination = {}) {
+async function findAll(tenantId, ownerId, pagination = {}) {
   const { page = 1, limit = 20, sortBy = null, sortDir = 'asc' } = pagination;
   const offset = (page - 1) * limit;
   const orderCol = sortBy || 'created_at';
@@ -34,7 +34,7 @@ async function findAll(tenantId, pagination = {}) {
 
   return withTenant(tenantId, (trx) =>
     trx('dashboards')
-      .where({ installer_id: tenantId })
+      .where({ installer_id: ownerId })
       .orderBy(orderCol, orderDir)
       .limit(limit)
       .offset(offset)
@@ -42,26 +42,28 @@ async function findAll(tenantId, pagination = {}) {
 }
 
 /**
- * Count all dashboards for a tenant.
+ * Count all dashboards for an owner.
  * @param {string} tenantId
+ * @param {string} ownerId — the user ID that owns the dashboards
  * @returns {Promise<number>}
  */
-async function count(tenantId) {
+async function count(tenantId, ownerId) {
   const rows = await withTenant(tenantId, (trx) =>
-    trx('dashboards').where({ installer_id: tenantId }).count('id')
+    trx('dashboards').where({ installer_id: ownerId }).count('id')
   );
   return parseInt(rows[0].count, 10);
 }
 
 /**
- * Find a single dashboard by ID, scoped to a tenant.
+ * Find a single dashboard by ID, scoped to an owner.
  * @param {string} tenantId
+ * @param {string} ownerId
  * @param {string} id
  * @returns {Promise<object|undefined>}
  */
-async function findById(tenantId, id) {
+async function findById(tenantId, ownerId, id) {
   return withTenant(tenantId, (trx) =>
-    trx('dashboards').where({ installer_id: tenantId, id }).first()
+    trx('dashboards').where({ installer_id: ownerId, id }).first()
   );
 }
 
@@ -72,10 +74,10 @@ async function findById(tenantId, id) {
  * @param {object} data
  * @returns {Promise<object>}
  */
-async function update(tenantId, id, data) {
+async function update(tenantId, ownerId, id, data) {
   return withTenant(tenantId, (trx) =>
     trx('dashboards')
-      .where({ installer_id: tenantId, id })
+      .where({ installer_id: ownerId, id })
       .update({ ...data, updated_at: trx.fn.now() })
       .returning('*')
       .then(([row]) => row)
@@ -88,9 +90,9 @@ async function update(tenantId, id, data) {
  * @param {string} id
  * @returns {Promise<number>} rows deleted
  */
-async function remove(tenantId, id) {
+async function remove(tenantId, ownerId, id) {
   return withTenant(tenantId, (trx) =>
-    trx('dashboards').where({ installer_id: tenantId, id }).delete()
+    trx('dashboards').where({ installer_id: ownerId, id }).delete()
   );
 }
 
@@ -101,10 +103,10 @@ async function remove(tenantId, id) {
  * @param {object} layout
  * @returns {Promise<object>}
  */
-async function updateLayout(tenantId, id, layout) {
+async function updateLayout(tenantId, ownerId, id, layout) {
   return withTenant(tenantId, (trx) =>
     trx('dashboards')
-      .where({ installer_id: tenantId, id })
+      .where({ installer_id: ownerId, id })
       .update({ layout: JSON.stringify(layout), updated_at: trx.fn.now() })
       .returning('*')
       .then(([row]) => row)

@@ -11,8 +11,17 @@
 
 /** @param {import('knex').Knex} knex */
 exports.up = async function (knex) {
-  // Enable TimescaleDB extension (idempotent)
-  await knex.raw('CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE');
+  // Check if TimescaleDB is available (without failing the transaction)
+  const { rows } = await knex.raw(
+    "SELECT count(*)::int AS cnt FROM pg_available_extensions WHERE name = 'timescaledb'"
+  );
+  const hasTimescale = rows[0]?.cnt > 0;
+
+  if (hasTimescale) {
+    await knex.raw('CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE');
+  } else {
+    console.warn('TimescaleDB not available — telemetry will use a regular table');
+  }
 
   await knex.schema.createTable('telemetry', (table) => {
     // bigserial PK — knex maps .bigIncrements() to bigserial
@@ -27,10 +36,12 @@ exports.up = async function (knex) {
     table.index(['tenant_id']);
   });
 
-  // Convert to TimescaleDB hypertable — chunk_time_interval = 1 week
-  await knex.raw(
-    "SELECT create_hypertable('telemetry', 'received_at', chunk_time_interval => INTERVAL '1 week')"
-  );
+  // Convert to TimescaleDB hypertable if available
+  if (hasTimescale) {
+    await knex.raw(
+      "SELECT create_hypertable('telemetry', 'received_at', chunk_time_interval => INTERVAL '1 week')"
+    );
+  }
 };
 
 /** @param {import('knex').Knex} knex */
