@@ -7,6 +7,7 @@ import { DashboardEditorPage } from '@/features/dashboard/DashboardEditorPage'
 import { DeviceListPage } from '@/features/devices/DeviceListPage'
 import { DeviceDetailPage } from '@/features/devices/DeviceDetailPage'
 import { TemplateListPage } from '@/features/templates/TemplateListPage'
+import { ClientListPage } from '@/features/clients/ClientListPage'
 import { SocketProvider } from '@/providers/SocketProvider'
 
 function PlaceholderPage({ name }: { name: string }) {
@@ -47,7 +48,7 @@ export default function App() {
           <Route path="devices" element={<DeviceListPage />} />
           <Route path="devices/:id" element={<DeviceDetailPage />} />
           <Route path="templates" element={<TemplateListPage />} />
-          <Route path="clients" element={<PlaceholderPage name="Clients" />} />
+          <Route path="clients" element={<ClientListPage />} />
           <Route path="settings" element={<PlaceholderPage name="Settings" />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />

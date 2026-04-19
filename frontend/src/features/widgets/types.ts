@@ -89,8 +89,14 @@ export interface Device {
 
 export interface Client {
   id: string
+  tenantId?: string
   name: string
-  email: string
+  email: string | null
+  phone?: string | null
+  address?: string | null
+  metadata?: Record<string, unknown> | null
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface PaginationMeta {
