@@ -104,11 +104,15 @@ export interface Datastream {
   key: string
   name: string
   type: string
+  direction?: string
   unit?: string
+  min?: number
+  max?: number
 }
 
 export interface DeviceTemplate {
   id: string
   name: string
+  description?: string
   datastreams: Datastream[]
 }
