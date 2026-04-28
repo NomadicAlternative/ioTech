@@ -25,8 +25,8 @@ const claim = Joi.object({
 });
 
 const command = Joi.object({
-  action: Joi.string().min(1).required(),
-  payload: Joi.object(),
+  relay: Joi.number().integer().min(1).max(8).required(),
+  state: Joi.string().valid('on', 'off').required(),
 });
 
 module.exports = { create, update, authenticate, claim, command };

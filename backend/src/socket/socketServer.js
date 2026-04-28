@@ -69,15 +69,6 @@ function initSocket(httpServer) {
 
   // Singleton service exposed to mqttClient
   socketService = {
-    /**
-     * Emit telemetry:new to all sockets subscribed to a device.
-     *
-     * @param {string} tenantId
-     * @param {string} deviceId
-     * @param {object} data       - The sensor payload
-     * @param {string} receivedAt - ISO timestamp
-     * @param {string} id         - DB row id for client dedup
-     */
     emitTelemetry(tenantId, deviceId, data, receivedAt, id) {
       io.to(`tenant:${tenantId}`).to(`device:${deviceId}`).emit('telemetry:new', {
         id,
@@ -85,6 +76,17 @@ function initSocket(httpServer) {
         data,
         receivedAt,
       });
+    },
+
+    /**
+     * Emit device:status to all sockets in the tenant room.
+     *
+     * @param {string} tenantId
+     * @param {string} deviceId
+     * @param {'online'|'offline'} status
+     */
+    emitDeviceStatus(tenantId, deviceId, status) {
+      io.to(`tenant:${tenantId}`).emit('device:status', { deviceId, status });
     },
   };
 }
