@@ -9,7 +9,9 @@
 
 #include "mqtt_manager.h"
 #include "nvs_storage.h"
-#include "state_machine.h"
+#include "sm_events.h"
+#include "relay_controller.h"
+#include "cJSON.h"
 
 static const char *TAG = "mqtt_manager";
 
@@ -73,6 +75,16 @@ static void mqtt_event_handler(void *handler_args,
             esp_mqtt_client_subscribe(s_client, topic, 1);
         }
 
+        /* Subscribe to command topic for relay control */
+        {
+            char topic[256];
+            snprintf(topic, sizeof(topic),
+                     "org/%s/device/%s/command",
+                     s_cfg.tenant_id, s_cfg.device_id);
+            esp_mqtt_client_subscribe(s_client, topic, 1);
+            ESP_LOGI(TAG, "Subscribed to command topic: %s", topic);
+        }
+
         /* Publish "online" status */
         mqtt_publish_status("online");
 
@@ -126,7 +138,37 @@ static void mqtt_event_handler(void *handler_args,
                 s_ota_cb(data);
             }
             sm_send_event(SM_EVT_OTA_NOTIFY);
+            break;
         }
+
+        /* Check if this is a command message for relay control */
+        char cmd_topic[256];
+        snprintf(cmd_topic, sizeof(cmd_topic),
+                 "org/%s/device/%s/command",
+                 s_cfg.tenant_id, s_cfg.device_id);
+
+        if (strncmp(topic, cmd_topic, strlen(cmd_topic)) == 0) {
+            ESP_LOGI(TAG, "Command received: %s", data);
+
+            cJSON *root = cJSON_Parse(data);
+            if (root) {
+                cJSON *j_relay = cJSON_GetObjectItem(root, "relay");
+                cJSON *j_state = cJSON_GetObjectItem(root, "state");
+
+                if (cJSON_IsNumber(j_relay) && cJSON_IsString(j_state)) {
+                    uint8_t relay_num = (uint8_t)j_relay->valueint;
+                    bool on = (strcmp(j_state->valuestring, "on") == 0);
+                    relay_set(relay_num, on);
+                } else {
+                    ESP_LOGW(TAG, "Command JSON missing 'relay' or 'state' fields");
+                }
+                cJSON_Delete(root);
+            } else {
+                ESP_LOGW(TAG, "Failed to parse command JSON: %s", data);
+            }
+            break;
+        }
+
         break;
     }
 
@@ -153,11 +195,13 @@ void mqtt_manager_start(const device_config_t *cfg)
              "org/%s/device/%s/status",
              s_cfg.tenant_id, s_cfg.device_id);
 
+    bool use_tls = (strncmp(s_cfg.mqtt_broker_url, "mqtts://", 8) == 0);
+
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address.uri   = s_cfg.mqtt_broker_url,
             .verification  = {
-                .certificate = isrg_root_x1_pem_start,
+                .certificate = use_tls ? isrg_root_x1_pem_start : NULL,
             },
         },
         .credentials = {

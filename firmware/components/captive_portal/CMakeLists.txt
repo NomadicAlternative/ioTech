@@ -9,6 +9,7 @@ idf_component_register(
         esp_netif
         lwip
         freertos
+        efuse
     EMBED_TXTFILES
         ../../data/portal/index.html
         ../../data/portal/styles.css

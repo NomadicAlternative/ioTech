@@ -14,9 +14,10 @@
 
 #include "captive_portal.h"
 #include "nvs_storage.h"
-#include "state_machine.h"
 
 static const char *TAG = "captive_portal";
+
+static captive_portal_on_done_cb_t s_on_done_cb = NULL;
 
 /* Embedded portal HTML via EMBED_TXTFILES in CMakeLists.txt */
 extern const char index_html_start[] asm("_binary_index_html_start");
@@ -206,8 +207,8 @@ static esp_err_t handle_post_provision(httpd_req_t *req)
     httpd_resp_sendstr(req, "<html><body><h2>Connecting...</h2>"
                             "<p>The device is connecting to your network.</p></body></html>");
 
-    /* Signal state machine — will tear down portal from state handler */
-    sm_send_event(SM_EVT_PORTAL_FORM_OK);
+    /* Signal state machine via callback */
+    if (s_on_done_cb) s_on_done_cb();
     return ESP_OK;
 }
 
@@ -278,13 +279,14 @@ static void start_httpd(void)
 /* -----------------------------------------------------------------------
  * Public API
  * --------------------------------------------------------------------- */
-void captive_portal_start(void)
+void captive_portal_start(captive_portal_on_done_cb_t on_done)
 {
     ESP_LOGI(TAG, "Starting captive portal...");
+    s_on_done_cb = on_done;
     s_portal_started = true;
     start_softap();
     start_httpd();
-    xTaskCreate(dns_redirect_task, "dns_redirect", 2048, NULL, 5, NULL);
+    xTaskCreate(dns_redirect_task, "dns_redirect", 4096, NULL, 5, NULL);
 }
 
 void captive_portal_stop(void)

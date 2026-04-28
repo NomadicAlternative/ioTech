@@ -9,7 +9,7 @@
 #include "lwip/ip4_addr.h"
 
 #include "wifi_manager.h"
-#include "state_machine.h"
+#include "sm_events.h"
 
 static const char *TAG = "wifi_manager";
 
@@ -23,7 +23,6 @@ static int s_retry_count = 0;
 
 /* Guards to prevent double-initialisation on re-entry into STATE_CONNECTING */
 static bool s_netif_inited    = false;
-static bool s_event_loop_init = false;
 static bool s_wifi_inited     = false;
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
@@ -62,11 +61,6 @@ void wifi_manager_connect(const wifi_creds_t *creds)
         ESP_ERROR_CHECK(esp_netif_init());
         esp_netif_create_default_wifi_sta();
         s_netif_inited = true;
-    }
-
-    if (!s_event_loop_init) {
-        ESP_ERROR_CHECK(esp_event_loop_create_default());
-        s_event_loop_init = true;
     }
 
     if (!s_wifi_inited) {
