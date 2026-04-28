@@ -33,6 +33,7 @@ const { NotFoundError, ConflictError, ValidationError } = require('../../../shar
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
 const TENANT_ID = 'tenant-uuid-1';
+const USER_ID = 'user-uuid-1';
 const DASHBOARD_ID = 'dash-uuid-1';
 const CLIENT_ID = 'client-uuid-1';
 
@@ -63,10 +64,10 @@ describe('dashboardsService.list()', () => {
     dashboardsModel.findAll.mockResolvedValue([makeDashboard()]);
     dashboardsModel.count.mockResolvedValue(1);
 
-    const result = await dashboardsService.list(TENANT_ID, { page: 1, limit: 20 });
+    const result = await dashboardsService.list(TENANT_ID, USER_ID, { page: 1, limit: 20 });
 
-    expect(dashboardsModel.findAll).toHaveBeenCalledWith(TENANT_ID, { page: 1, limit: 20 });
-    expect(dashboardsModel.count).toHaveBeenCalledWith(TENANT_ID);
+    expect(dashboardsModel.findAll).toHaveBeenCalledWith(TENANT_ID, USER_ID, { page: 1, limit: 20 });
+    expect(dashboardsModel.count).toHaveBeenCalledWith(TENANT_ID, USER_ID);
     expect(result).toEqual({ data: [expect.objectContaining({ id: DASHBOARD_ID })], total: 1 });
   });
 
@@ -74,7 +75,7 @@ describe('dashboardsService.list()', () => {
     dashboardsModel.findAll.mockResolvedValue([]);
     dashboardsModel.count.mockResolvedValue(0);
 
-    const result = await dashboardsService.list(TENANT_ID, {});
+    const result = await dashboardsService.list(TENANT_ID, USER_ID, {});
     expect(result).toEqual({ data: [], total: 0 });
   });
 });
@@ -85,23 +86,23 @@ describe('dashboardsService.getById()', () => {
   it('returns dashboard when it exists and belongs to tenant', async () => {
     dashboardsModel.findById.mockResolvedValue(makeDashboard());
 
-    const result = await dashboardsService.getById(TENANT_ID, DASHBOARD_ID);
+    const result = await dashboardsService.getById(TENANT_ID, USER_ID, DASHBOARD_ID);
 
-    expect(dashboardsModel.findById).toHaveBeenCalledWith(TENANT_ID, DASHBOARD_ID);
+    expect(dashboardsModel.findById).toHaveBeenCalledWith(TENANT_ID, USER_ID, DASHBOARD_ID);
     expect(result).toMatchObject({ id: DASHBOARD_ID });
   });
 
   it('throws NotFoundError when dashboard does not exist', async () => {
     dashboardsModel.findById.mockResolvedValue(null);
 
-    await expect(dashboardsService.getById(TENANT_ID, DASHBOARD_ID))
+    await expect(dashboardsService.getById(TENANT_ID, USER_ID, DASHBOARD_ID))
       .rejects.toThrow(NotFoundError);
   });
 
   it('throws NotFoundError when dashboard belongs to different tenant (RLS returns null)', async () => {
     dashboardsModel.findById.mockResolvedValue(undefined);
 
-    await expect(dashboardsService.getById('other-tenant', DASHBOARD_ID))
+    await expect(dashboardsService.getById('other-tenant', USER_ID, DASHBOARD_ID))
       .rejects.toThrow(NotFoundError);
   });
 });
@@ -118,7 +119,7 @@ describe('dashboardsService.create()', () => {
   });
 
   it('creates dashboard with auto-generated UUID id', async () => {
-    await dashboardsService.create(TENANT_ID, { name: 'New Board' });
+    await dashboardsService.create(TENANT_ID, USER_ID, { name: 'New Board' });
 
     const arg = dashboardsModel.create.mock.calls[0][1];
     expect(arg.id).toBeDefined();
@@ -126,14 +127,14 @@ describe('dashboardsService.create()', () => {
   });
 
   it('sets installer_id to tenantId', async () => {
-    await dashboardsService.create(TENANT_ID, { name: 'Board' });
+    await dashboardsService.create(TENANT_ID, USER_ID, { name: 'Board' });
 
     const arg = dashboardsModel.create.mock.calls[0][1];
-    expect(arg.installer_id).toBe(TENANT_ID);
+    expect(arg.installer_id).toBe(USER_ID);
   });
 
   it('uses default empty layout when none provided', async () => {
-    await dashboardsService.create(TENANT_ID, { name: 'Board' });
+    await dashboardsService.create(TENANT_ID, USER_ID, { name: 'Board' });
 
     const arg = dashboardsModel.create.mock.calls[0][1];
     expect(JSON.parse(arg.layout)).toEqual({ widgets: [], gridConfig: {} });
@@ -142,25 +143,25 @@ describe('dashboardsService.create()', () => {
   it('accepts valid layout with widgets array', async () => {
     const layout = { widgets: [{ id: 'w1', type: 'gauge', name: 'Temp', x: 0, y: 0, w: 2, h: 2, config: {} }], gridConfig: { cols: 12 } };
     await expect(
-      dashboardsService.create(TENANT_ID, { name: 'Board', layout })
+      dashboardsService.create(TENANT_ID, USER_ID, { name: 'Board', layout })
     ).resolves.toBeDefined();
   });
 
   it('throws ValidationError when layout is not an object', async () => {
     await expect(
-      dashboardsService.create(TENANT_ID, { name: 'Board', layout: INVALID_LAYOUT_NULL })
+      dashboardsService.create(TENANT_ID, USER_ID, { name: 'Board', layout: INVALID_LAYOUT_NULL })
     ).rejects.toThrow(ValidationError);
   });
 
   it('throws ValidationError when layout.widgets is missing', async () => {
     await expect(
-      dashboardsService.create(TENANT_ID, { name: 'Board', layout: INVALID_LAYOUT_NO_WIDGETS })
+      dashboardsService.create(TENANT_ID, USER_ID, { name: 'Board', layout: INVALID_LAYOUT_NO_WIDGETS })
     ).rejects.toThrow(ValidationError);
   });
 
   it('throws ValidationError when layout.gridConfig is missing', async () => {
     await expect(
-      dashboardsService.create(TENANT_ID, { name: 'Board', layout: INVALID_LAYOUT_NO_GRID })
+      dashboardsService.create(TENANT_ID, USER_ID, { name: 'Board', layout: INVALID_LAYOUT_NO_GRID })
     ).rejects.toThrow(ValidationError);
   });
 });
@@ -172,17 +173,17 @@ describe('dashboardsService.update()', () => {
     dashboardsModel.findById.mockResolvedValue(makeDashboard());
     dashboardsModel.update.mockResolvedValue(makeDashboard({ name: 'Renamed' }));
 
-    await dashboardsService.update(TENANT_ID, DASHBOARD_ID, { name: 'Renamed' });
+    await dashboardsService.update(TENANT_ID, USER_ID, DASHBOARD_ID, { name: 'Renamed' });
 
-    expect(dashboardsModel.findById).toHaveBeenCalledWith(TENANT_ID, DASHBOARD_ID);
-    expect(dashboardsModel.update).toHaveBeenCalledWith(TENANT_ID, DASHBOARD_ID, expect.objectContaining({ name: 'Renamed' }));
+    expect(dashboardsModel.findById).toHaveBeenCalledWith(TENANT_ID, USER_ID, DASHBOARD_ID);
+    expect(dashboardsModel.update).toHaveBeenCalledWith(TENANT_ID, USER_ID, DASHBOARD_ID, expect.objectContaining({ name: 'Renamed' }));
   });
 
   it('throws NotFoundError when dashboard not found during ownership check', async () => {
     dashboardsModel.findById.mockResolvedValue(null);
 
     await expect(
-      dashboardsService.update(TENANT_ID, DASHBOARD_ID, { name: 'Renamed' })
+      dashboardsService.update(TENANT_ID, USER_ID, DASHBOARD_ID, { name: 'Renamed' })
     ).rejects.toThrow(NotFoundError);
   });
 
@@ -191,7 +192,7 @@ describe('dashboardsService.update()', () => {
     dashboardsModel.update.mockResolvedValue(undefined);
 
     await expect(
-      dashboardsService.update(TENANT_ID, DASHBOARD_ID, { name: 'Renamed' })
+      dashboardsService.update(TENANT_ID, USER_ID, DASHBOARD_ID, { name: 'Renamed' })
     ).rejects.toThrow(NotFoundError);
   });
 });
@@ -203,16 +204,16 @@ describe('dashboardsService.remove()', () => {
     dashboardsModel.findById.mockResolvedValue(makeDashboard());
     dashboardsModel.remove.mockResolvedValue(1);
 
-    await dashboardsService.remove(TENANT_ID, DASHBOARD_ID);
+    await dashboardsService.remove(TENANT_ID, USER_ID, DASHBOARD_ID);
 
-    expect(dashboardsModel.findById).toHaveBeenCalledWith(TENANT_ID, DASHBOARD_ID);
-    expect(dashboardsModel.remove).toHaveBeenCalledWith(TENANT_ID, DASHBOARD_ID);
+    expect(dashboardsModel.findById).toHaveBeenCalledWith(TENANT_ID, USER_ID, DASHBOARD_ID);
+    expect(dashboardsModel.remove).toHaveBeenCalledWith(TENANT_ID, USER_ID, DASHBOARD_ID);
   });
 
   it('throws NotFoundError when dashboard not found', async () => {
     dashboardsModel.findById.mockResolvedValue(null);
 
-    await expect(dashboardsService.remove(TENANT_ID, DASHBOARD_ID)).rejects.toThrow(NotFoundError);
+    await expect(dashboardsService.remove(TENANT_ID, USER_ID, DASHBOARD_ID)).rejects.toThrow(NotFoundError);
   });
 });
 
@@ -223,16 +224,16 @@ describe('dashboardsService.updateLayout()', () => {
     dashboardsModel.findById.mockResolvedValue(makeDashboard());
     dashboardsModel.updateLayout.mockResolvedValue(makeDashboard({ layout: JSON.stringify(VALID_LAYOUT) }));
 
-    const result = await dashboardsService.updateLayout(TENANT_ID, DASHBOARD_ID, VALID_LAYOUT);
+    const result = await dashboardsService.updateLayout(TENANT_ID, USER_ID, DASHBOARD_ID, VALID_LAYOUT);
 
-    expect(dashboardsModel.findById).toHaveBeenCalledWith(TENANT_ID, DASHBOARD_ID);
-    expect(dashboardsModel.updateLayout).toHaveBeenCalledWith(TENANT_ID, DASHBOARD_ID, VALID_LAYOUT);
+    expect(dashboardsModel.findById).toHaveBeenCalledWith(TENANT_ID, USER_ID, DASHBOARD_ID);
+    expect(dashboardsModel.updateLayout).toHaveBeenCalledWith(TENANT_ID, USER_ID, DASHBOARD_ID, VALID_LAYOUT);
     expect(result).toBeDefined();
   });
 
   it('throws ValidationError for invalid layout BEFORE ownership check', async () => {
     await expect(
-      dashboardsService.updateLayout(TENANT_ID, DASHBOARD_ID, INVALID_LAYOUT_NO_WIDGETS)
+      dashboardsService.updateLayout(TENANT_ID, USER_ID, DASHBOARD_ID, INVALID_LAYOUT_NO_WIDGETS)
     ).rejects.toThrow(ValidationError);
 
     // model should never be called because validation fails first
@@ -243,7 +244,7 @@ describe('dashboardsService.updateLayout()', () => {
     dashboardsModel.findById.mockResolvedValue(null);
 
     await expect(
-      dashboardsService.updateLayout(TENANT_ID, DASHBOARD_ID, VALID_LAYOUT)
+      dashboardsService.updateLayout(TENANT_ID, USER_ID, DASHBOARD_ID, VALID_LAYOUT)
     ).rejects.toThrow(NotFoundError);
   });
 
@@ -252,7 +253,7 @@ describe('dashboardsService.updateLayout()', () => {
     dashboardsModel.updateLayout.mockResolvedValue(undefined);
 
     await expect(
-      dashboardsService.updateLayout(TENANT_ID, DASHBOARD_ID, VALID_LAYOUT)
+      dashboardsService.updateLayout(TENANT_ID, USER_ID, DASHBOARD_ID, VALID_LAYOUT)
     ).rejects.toThrow(NotFoundError);
   });
 });
@@ -264,9 +265,9 @@ describe('dashboardsService.shareWithClient()', () => {
     dashboardsModel.findById.mockResolvedValue(makeDashboard());
     dashboardsModel.addClient.mockResolvedValue({ dashboard_id: DASHBOARD_ID, client_id: CLIENT_ID });
 
-    const result = await dashboardsService.shareWithClient(TENANT_ID, DASHBOARD_ID, CLIENT_ID);
+    const result = await dashboardsService.shareWithClient(TENANT_ID, USER_ID, DASHBOARD_ID, CLIENT_ID);
 
-    expect(dashboardsModel.findById).toHaveBeenCalledWith(TENANT_ID, DASHBOARD_ID);
+    expect(dashboardsModel.findById).toHaveBeenCalledWith(TENANT_ID, USER_ID, DASHBOARD_ID);
     expect(dashboardsModel.addClient).toHaveBeenCalledWith(TENANT_ID, DASHBOARD_ID, CLIENT_ID);
     expect(result).toMatchObject({ client_id: CLIENT_ID });
   });
@@ -275,7 +276,7 @@ describe('dashboardsService.shareWithClient()', () => {
     dashboardsModel.findById.mockResolvedValue(null);
 
     await expect(
-      dashboardsService.shareWithClient(TENANT_ID, DASHBOARD_ID, CLIENT_ID)
+      dashboardsService.shareWithClient(TENANT_ID, USER_ID, DASHBOARD_ID, CLIENT_ID)
     ).rejects.toThrow(NotFoundError);
   });
 
@@ -285,7 +286,7 @@ describe('dashboardsService.shareWithClient()', () => {
     dashboardsModel.addClient.mockRejectedValue(pgError);
 
     await expect(
-      dashboardsService.shareWithClient(TENANT_ID, DASHBOARD_ID, CLIENT_ID)
+      dashboardsService.shareWithClient(TENANT_ID, USER_ID, DASHBOARD_ID, CLIENT_ID)
     ).rejects.toThrow(ConflictError);
   });
 
@@ -294,7 +295,7 @@ describe('dashboardsService.shareWithClient()', () => {
     dashboardsModel.addClient.mockRejectedValue(new Error('unexpected DB error'));
 
     await expect(
-      dashboardsService.shareWithClient(TENANT_ID, DASHBOARD_ID, CLIENT_ID)
+      dashboardsService.shareWithClient(TENANT_ID, USER_ID, DASHBOARD_ID, CLIENT_ID)
     ).rejects.toThrow('unexpected DB error');
   });
 });
@@ -306,7 +307,7 @@ describe('dashboardsService.revokeClientShare()', () => {
     dashboardsModel.findById.mockResolvedValue(makeDashboard());
     dashboardsModel.removeClient.mockResolvedValue(1);
 
-    await dashboardsService.revokeClientShare(TENANT_ID, DASHBOARD_ID, CLIENT_ID);
+    await dashboardsService.revokeClientShare(TENANT_ID, USER_ID, DASHBOARD_ID, CLIENT_ID);
 
     expect(dashboardsModel.removeClient).toHaveBeenCalledWith(TENANT_ID, DASHBOARD_ID, CLIENT_ID);
   });
@@ -315,7 +316,7 @@ describe('dashboardsService.revokeClientShare()', () => {
     dashboardsModel.findById.mockResolvedValue(null);
 
     await expect(
-      dashboardsService.revokeClientShare(TENANT_ID, DASHBOARD_ID, CLIENT_ID)
+      dashboardsService.revokeClientShare(TENANT_ID, USER_ID, DASHBOARD_ID, CLIENT_ID)
     ).rejects.toThrow(NotFoundError);
   });
 
@@ -324,7 +325,7 @@ describe('dashboardsService.revokeClientShare()', () => {
     dashboardsModel.removeClient.mockResolvedValue(0);
 
     await expect(
-      dashboardsService.revokeClientShare(TENANT_ID, DASHBOARD_ID, CLIENT_ID)
+      dashboardsService.revokeClientShare(TENANT_ID, USER_ID, DASHBOARD_ID, CLIENT_ID)
     ).rejects.toThrow(NotFoundError);
   });
 });
@@ -337,9 +338,9 @@ describe('dashboardsService.listSharedClients()', () => {
     dashboardsModel.findById.mockResolvedValue(makeDashboard());
     dashboardsModel.findClientsByDashboard.mockResolvedValue(clients);
 
-    const result = await dashboardsService.listSharedClients(TENANT_ID, DASHBOARD_ID);
+    const result = await dashboardsService.listSharedClients(TENANT_ID, USER_ID, DASHBOARD_ID);
 
-    expect(dashboardsModel.findById).toHaveBeenCalledWith(TENANT_ID, DASHBOARD_ID);
+    expect(dashboardsModel.findById).toHaveBeenCalledWith(TENANT_ID, USER_ID, DASHBOARD_ID);
     expect(dashboardsModel.findClientsByDashboard).toHaveBeenCalledWith(TENANT_ID, DASHBOARD_ID);
     expect(result).toEqual(clients);
   });
@@ -348,7 +349,7 @@ describe('dashboardsService.listSharedClients()', () => {
     dashboardsModel.findById.mockResolvedValue(null);
 
     await expect(
-      dashboardsService.listSharedClients(TENANT_ID, DASHBOARD_ID)
+      dashboardsService.listSharedClients(TENANT_ID, USER_ID, DASHBOARD_ID)
     ).rejects.toThrow(NotFoundError);
   });
 });
