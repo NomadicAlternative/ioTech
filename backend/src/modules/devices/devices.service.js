@@ -160,7 +160,7 @@ async function claimDevice(tenantId, claimToken) {
   return updated;
 }
 
-module.exports = { list, getById, create, update, remove, authenticate, claimDevice, sendCommand };
+module.exports = { list, getById, create, update, remove, authenticate, claimDevice, sendCommand, getProvisioningCredentials };
 
 /**
  * Send a command to a device via MQTT.
@@ -184,4 +184,23 @@ async function sendCommand(tenantId, deviceId, command) {
   }
 
   return { ok: true, topic };
+}
+
+/**
+ * Return the provisioning credentials for a device.
+ * Used by the Web Serial provisioning flow in the dashboard.
+ *
+ * @param {string} tenantId
+ * @param {string} deviceId
+ * @returns {Promise<{ device_token: string, backend_url: string, mqtt_url: string }>}
+ */
+async function getProvisioningCredentials(tenantId, deviceId) {
+  const device = await devicesModel.findById(tenantId, deviceId);
+  if (!device) throw new NotFoundError(`Device not found: ${deviceId}`);
+
+  return {
+    device_token: device.device_token,
+    backend_url: process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`,
+    mqtt_url: process.env.MQTT_BROKER_URL || 'mqtt://localhost:1883',
+  };
 }
