@@ -14,6 +14,7 @@
 #include "mqtt_manager.h"
 #include "ota_manager.h"
 #include "factory_reset.h"
+#include "serial_provisioning.h"
 
 static const char *TAG = "state_machine";
 
@@ -119,8 +120,14 @@ static void state_enter_init(void)
         ESP_LOGI(TAG, "[INIT] WiFi credentials found — going CONNECTING");
         sm_send_event(SM_EVT_NVS_CREDS_FOUND);
     } else {
-        ESP_LOGI(TAG, "[INIT] No WiFi credentials — going PROVISIONING");
-        sm_send_event(SM_EVT_NVS_CREDS_MISSING);
+        ESP_LOGI(TAG, "[INIT] No WiFi credentials — trying serial provisioning first");
+        if (serial_provisioning_receive()) {
+            ESP_LOGI(TAG, "[INIT] Serial provisioning succeeded — going CONNECTING");
+            sm_send_event(SM_EVT_NVS_CREDS_FOUND);
+        } else {
+            ESP_LOGI(TAG, "[INIT] No serial data — going PROVISIONING (captive portal)");
+            sm_send_event(SM_EVT_NVS_CREDS_MISSING);
+        }
     }
 }
 
