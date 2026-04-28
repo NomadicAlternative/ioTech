@@ -10,6 +10,7 @@ idf_component_register(
         mqtt_manager
         ota_manager
         factory_reset
+        serial_provisioning
         nvs_flash
         esp_wifi
         freertos
