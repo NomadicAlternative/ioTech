@@ -19,6 +19,22 @@ async function provision(claimToken, hardwareId) {
   const device = await devicesModel.findByClaimToken(claimToken);
   if (!device) throw new NotFoundError('claim_token not found');
 
+  if (device.status === 'active') {
+    // Idempotent re-provisioning: device already provisioned, return existing token.
+    // This handles the case where the ESP32 lost its NVS (reflash) but the backend
+    // already completed provisioning. hardware_id must still match if set.
+    if (device.hardware_id && device.hardware_id !== hardwareId) {
+      throw new UnprocessableEntityError('hardware_id_mismatch');
+    }
+    logger.info(`[provisioning.service] Device ${device.id} re-provisioning (already active) — returning existing token`);
+    return {
+      device_token: device.device_token,
+      mqtt_url: MQTT_URL,
+      tenant_id: device.tenant_id,
+      device_id: device.id,
+    };
+  }
+
   if (device.status !== 'claimed') {
     throw new ConflictError('device_already_provisioned');
   }

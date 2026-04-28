@@ -1,3 +1,10 @@
+/**
+ * @file wifi_manager.h
+ * @brief WiFi STA connection management.
+ *
+ * Connects to a network using stored credentials, handles connection
+ * timeouts (30 s), and signals the state machine on success or failure.
+ */
 #pragma once
 
 #include "esp_err.h"

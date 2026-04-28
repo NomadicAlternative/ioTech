@@ -1,6 +1,18 @@
 import api from '@/lib/axios'
 import type { Device, Client, PaginationMeta } from '@/features/widgets/types'
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Device is considered online if last_seen is within the last 90 seconds */
+function computeIsOnline(lastSeen: string | null): boolean {
+  if (!lastSeen) return false
+  return Date.now() - new Date(lastSeen).getTime() < 90_000
+}
+
+function withOnlineStatus(device: Device): Device {
+  return { ...device, isOnline: computeIsOnline(device.lastSeen) }
+}
+
 // ─── Payloads ─────────────────────────────────────────────────────────────────
 
 export interface CreateDevicePayload {
@@ -22,12 +34,12 @@ export async function listDevices(
   const res = await api.get<{ data: Device[]; meta: PaginationMeta }>('/api/devices', {
     params: { page, limit, ...(search ? { search } : {}) },
   })
-  return res.data
+  return { ...res.data, data: res.data.data.map(withOnlineStatus) }
 }
 
 export async function getDevice(id: string): Promise<Device> {
   const res = await api.get<{ data: Device }>(`/api/devices/${id}`)
-  return res.data.data
+  return withOnlineStatus(res.data.data)
 }
 
 export async function createDevice(data: CreateDevicePayload): Promise<Device> {
@@ -46,10 +58,10 @@ export async function deleteDevice(id: string): Promise<void> {
 
 export async function sendDeviceCommand(
   deviceId: string,
-  action: string,
-  payload?: unknown
+  relay: number,
+  state: 'on' | 'off'
 ): Promise<void> {
-  await api.post(`/api/devices/${deviceId}/command`, { action, payload })
+  await api.post(`/api/devices/${deviceId}/command`, { relay, state })
 }
 
 // ─── Templates & Clients (for dropdowns) ─────────────────────────────────────

@@ -2,6 +2,7 @@ idf_component_register(
     SRCS "state_machine.c"
     INCLUDE_DIRS "include"
     REQUIRES
+        sm_events
         nvs_storage
         wifi_manager
         captive_portal

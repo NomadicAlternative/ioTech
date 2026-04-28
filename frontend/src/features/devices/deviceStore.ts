@@ -21,6 +21,7 @@ interface DeviceActions {
   setPage: (page: number) => void
   setSearch: (search: string) => void
   clearCurrent: () => void
+  setDeviceOnlineStatus: (deviceId: string, status: 'online' | 'offline') => void
 }
 
 type DeviceStore = DeviceState & DeviceActions
@@ -87,4 +88,17 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
   },
 
   clearCurrent: () => set({ currentDevice: null }),
+
+  setDeviceOnlineStatus: (deviceId: string, status: 'online' | 'offline') => {
+    const isOnline = status === 'online'
+    set((state) => ({
+      devices: state.devices.map((d) =>
+        d.id === deviceId ? { ...d, isOnline } : d
+      ),
+      currentDevice:
+        state.currentDevice?.id === deviceId
+          ? { ...state.currentDevice, isOnline }
+          : state.currentDevice,
+    }))
+  },
 }))

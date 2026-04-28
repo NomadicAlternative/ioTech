@@ -1,3 +1,11 @@
+/**
+ * @file provisioning_client.h
+ * @brief HTTP provisioning client — registers the device with the backend.
+ *
+ * POSTs hardware_id and claim_token to {backend_url}/api/provisioning.
+ * On success (HTTP 200), parses and stores device_token, tenant_id,
+ * device_id, and mqtt_broker_url in NVS via nvs_storage.
+ */
 #pragma once
 
 #include "esp_err.h"

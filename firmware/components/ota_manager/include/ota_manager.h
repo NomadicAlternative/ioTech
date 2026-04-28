@@ -1,3 +1,11 @@
+/**
+ * @file ota_manager.h
+ * @brief OTA (Over-The-Air) firmware update manager.
+ *
+ * Provides a periodic poll task (default: every 1 hour) and an
+ * immediate update trigger used when an ota/notify MQTT message arrives.
+ * Uses ESP-IDF esp_https_ota and the ISRG Root X1 CA certificate.
+ */
 #pragma once
 
 #include "esp_err.h"

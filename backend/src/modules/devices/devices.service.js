@@ -173,12 +173,12 @@ module.exports = { list, getById, create, update, remove, authenticate, claimDev
 async function sendCommand(tenantId, deviceId, command) {
   await getById(tenantId, deviceId); // ensures device exists and belongs to tenant
 
-  const topic = `devices/${deviceId}/command`;
+  const topic = `org/${tenantId}/device/${deviceId}/command`;
   const mqttClient = getMqttClient();
 
   if (mqttClient) {
     mqttClient.publish(topic, JSON.stringify(command), { qos: 1 });
-    logger.info(`[devices.service] Published command to ${topic}: action=${command.action}`);
+    logger.info(`[devices.service] Published command to ${topic}: relay=${command.relay} state=${command.state}`);
   } else {
     logger.warn(`[devices.service] MQTT client not available — command for ${deviceId} not sent`);
   }

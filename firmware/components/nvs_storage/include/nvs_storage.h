@@ -1,3 +1,11 @@
+/**
+ * @file nvs_storage.h
+ * @brief Encrypted NVS persistence layer for WiFi credentials and device config.
+ *
+ * All keys are stored in the "iotech" NVS namespace. Provides typed
+ * read/write helpers for wifi_creds_t and device_config_t, plus a
+ * factory-reset erase function.
+ */
 #pragma once
 
 #include <stddef.h>

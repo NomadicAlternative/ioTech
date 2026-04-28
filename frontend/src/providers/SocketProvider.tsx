@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { io, type Socket } from 'socket.io-client'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useTelemetryStore } from '@/stores/telemetryStore'
+import { useDeviceStore } from '@/features/devices/deviceStore'
 
 /**
  * Exposes the raw Socket.io socket instance to child components.
@@ -42,6 +43,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const accessToken = useAuthStore((s) => s.accessToken)
   const setTelemetry = useTelemetryStore((s) => s.setTelemetry)
+  const setDeviceOnlineStatus = useDeviceStore((s) => s.setDeviceOnlineStatus)
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) {
@@ -89,12 +91,16 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       )
     })
 
+    newSocket.on('device:status', ({ deviceId, status }: { deviceId: string; status: 'online' | 'offline' }) => {
+      setDeviceOnlineStatus(deviceId, status)
+    })
+
     return () => {
       newSocket.disconnect()
       socketRef.current = null
       setSocket(null)
     }
-  }, [isAuthenticated, accessToken, setTelemetry])
+  }, [isAuthenticated, accessToken, setTelemetry, setDeviceOnlineStatus])
 
   return (
     <SocketContext.Provider value={{ socket }}>
