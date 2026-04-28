@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Send, Wifi, WifiOff, Clock } from 'lucide-react'
+import { ArrowLeft, Wifi, WifiOff, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { useDeviceStore } from './deviceStore'
 import { fetchDeviceTemplate, sendDeviceCommand } from './api'
 import type { DeviceTemplate } from '@/features/widgets/types'
+
+const RELAY_COUNT = 7
 
 export function DeviceDetailPage() {
   const { t } = useTranslation()
@@ -21,13 +23,9 @@ export function DeviceDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [template, setTemplate] = useState<DeviceTemplate | null>(null)
 
-  // ── Command state ──
-  const [commandAction, setCommandAction] = useState('')
-  const [commandPayload, setCommandPayload] = useState('')
-  const [commandPayloadError, setCommandPayloadError] = useState<string | null>(null)
-  const [sending, setSending] = useState(false)
-  const [commandSuccess, setCommandSuccess] = useState(false)
-  const [commandError, setCommandError] = useState<string | null>(null)
+  // relay states: index 0 = relay 1, ..., index 6 = relay 7
+  const [relayStates, setRelayStates] = useState<boolean[]>(Array(RELAY_COUNT).fill(false))
+  const [relaySending, setRelaySending] = useState<boolean[]>(Array(RELAY_COUNT).fill(false))
 
   useEffect(() => {
     if (!id) return
@@ -38,12 +36,9 @@ export function DeviceDetailPage() {
       )
       .finally(() => setLoading(false))
 
-    return () => {
-      clearCurrent()
-    }
+    return () => { clearCurrent() }
   }, [id, fetchDevice, clearCurrent])
 
-  // Fetch template once we have the device
   useEffect(() => {
     if (!currentDevice?.templateId) return
     fetchDeviceTemplate(currentDevice.templateId)
@@ -51,35 +46,21 @@ export function DeviceDetailPage() {
       .catch(() => {/* template optional */})
   }, [currentDevice?.templateId])
 
-  async function handleSendCommand() {
-    if (!id || !commandAction.trim()) return
+  async function handleRelayToggle(relayIndex: number, newState: boolean) {
+    if (!id) return
+    const relayNum = relayIndex + 1
 
-    let parsedPayload: unknown = undefined
-    if (commandPayload.trim()) {
-      try {
-        parsedPayload = JSON.parse(commandPayload)
-      } catch {
-        setCommandPayloadError(t('common.invalidJson'))
-        return
-      }
-    }
-
-    setSending(true)
-    setCommandError(null)
-    setCommandSuccess(false)
+    setRelaySending((prev) => { const s = [...prev]; s[relayIndex] = true; return s })
     try {
-      await sendDeviceCommand(id, commandAction.trim(), parsedPayload)
-      setCommandSuccess(true)
-      setCommandAction('')
-      setCommandPayload('')
-    } catch (err) {
-      setCommandError(err instanceof Error ? err.message : t('devices.detail.commandErrorSend'))
+      await sendDeviceCommand(id, relayNum, newState ? 'on' : 'off')
+      setRelayStates((prev) => { const s = [...prev]; s[relayIndex] = newState; return s })
+    } catch {
+      // revert on error — state stays the same
     } finally {
-      setSending(false)
+      setRelaySending((prev) => { const s = [...prev]; s[relayIndex] = false; return s })
     }
   }
 
-  // ── Loading skeleton ──
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
@@ -172,6 +153,38 @@ export function DeviceDetailPage() {
         </Card>
       </div>
 
+      {/* Relay control */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Relay Control</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: RELAY_COUNT }, (_, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between rounded-lg border p-4"
+              >
+                <Label htmlFor={`relay-${i + 1}`} className="font-medium">
+                  Relay {i + 1}
+                </Label>
+                <Switch
+                  id={`relay-${i + 1}`}
+                  checked={relayStates[i]}
+                  disabled={relaySending[i] || !device.isOnline}
+                  onCheckedChange={(checked) => handleRelayToggle(i, checked)}
+                />
+              </div>
+            ))}
+          </div>
+          {!device.isOnline && (
+            <p className="text-xs text-muted-foreground mt-3">
+              Device is offline — relay control disabled.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Datastreams */}
       {template && template.datastreams.length > 0 && (
         <Card>
@@ -218,56 +231,6 @@ export function DeviceDetailPage() {
           </CardContent>
         </Card>
       )}
-
-      {/* Send command */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t('devices.detail.commandTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {commandSuccess && (
-            <div className="rounded-md bg-green-50 text-green-700 px-3 py-2 text-sm">
-              {t('devices.detail.commandSuccess')}
-            </div>
-          )}
-          {commandError && (
-            <div className="rounded-md bg-destructive/10 text-destructive px-3 py-2 text-sm">
-              {commandError}
-            </div>
-          )}
-          <div className="space-y-1">
-            <Label>{t('devices.detail.commandActionLabel')}</Label>
-            <Input
-              value={commandAction}
-              onChange={(e) => setCommandAction(e.target.value)}
-              placeholder={t('devices.detail.commandActionPlaceholder')}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label>{t('devices.detail.commandPayloadLabel')}</Label>
-            <textarea
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm font-mono min-h-[60px] focus:outline-none focus:ring-2 focus:ring-ring"
-              value={commandPayload}
-              onChange={(e) => {
-                setCommandPayload(e.target.value)
-                setCommandPayloadError(null)
-              }}
-              placeholder='{"value": true}'
-            />
-            {commandPayloadError && (
-              <p className="text-destructive text-xs">{commandPayloadError}</p>
-            )}
-          </div>
-          <Button
-            onClick={handleSendCommand}
-            disabled={!commandAction.trim() || sending}
-            className="gap-2"
-          >
-            <Send className="h-4 w-4" />
-            {sending ? t('devices.detail.commandSending') : t('devices.detail.commandSend')}
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   )
 }
