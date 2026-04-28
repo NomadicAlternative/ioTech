@@ -233,3 +233,46 @@ describe('devicesService.getById()', () => {
     await expect(devicesService.getById(TENANT_ID, DEVICE_ID)).rejects.toThrow(NotFoundError);
   });
 });
+
+// ─── getProvisioningCredentials() ────────────────────────────────────────────
+
+describe('devicesService.getProvisioningCredentials()', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('returns device_token, backend_url and mqtt_url for a valid device', async () => {
+    devicesModel.findById.mockResolvedValue(makeDevice());
+
+    const result = await devicesService.getProvisioningCredentials(TENANT_ID, DEVICE_ID);
+
+    expect(devicesModel.findById).toHaveBeenCalledWith(TENANT_ID, DEVICE_ID);
+    expect(result).toMatchObject({
+      device_token: DEVICE_TOKEN,
+      backend_url: expect.any(String),
+      mqtt_url: expect.any(String),
+    });
+  });
+
+  it('throws NotFoundError when device does not belong to tenant', async () => {
+    devicesModel.findById.mockResolvedValue(null);
+
+    await expect(
+      devicesService.getProvisioningCredentials(TENANT_ID, DEVICE_ID)
+    ).rejects.toThrow(NotFoundError);
+  });
+
+  it('falls back to localhost URLs when env vars are not set', async () => {
+    devicesModel.findById.mockResolvedValue(makeDevice());
+    const savedBackend = process.env.BACKEND_URL;
+    const savedMqtt = process.env.MQTT_BROKER_URL;
+    delete process.env.BACKEND_URL;
+    delete process.env.MQTT_BROKER_URL;
+
+    const result = await devicesService.getProvisioningCredentials(TENANT_ID, DEVICE_ID);
+
+    expect(result.backend_url).toMatch(/localhost/);
+    expect(result.mqtt_url).toMatch(/localhost/);
+
+    process.env.BACKEND_URL = savedBackend;
+    process.env.MQTT_BROKER_URL = savedMqtt;
+  });
+});

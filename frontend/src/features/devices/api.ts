@@ -64,6 +64,17 @@ export async function sendDeviceCommand(
   await api.post(`/api/devices/${deviceId}/command`, { relay, state })
 }
 
+export interface ProvisioningCredentials {
+  device_token: string
+  backend_url: string
+  mqtt_url: string
+}
+
+export async function getProvisioningCredentials(deviceId: string): Promise<ProvisioningCredentials> {
+  const res = await api.get<{ data: ProvisioningCredentials }>(`/api/devices/${deviceId}/provisioning-credentials`)
+  return res.data.data
+}
+
 // ─── Templates & Clients (for dropdowns) ─────────────────────────────────────
 
 export { listTemplatesFlat as listTemplates, getTemplate as fetchDeviceTemplate } from '@/features/templates/api'

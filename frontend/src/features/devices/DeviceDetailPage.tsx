@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Wifi, WifiOff, Clock } from 'lucide-react'
+import { ArrowLeft, Wifi, WifiOff, Clock, Usb } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { useDeviceStore } from './deviceStore'
 import { fetchDeviceTemplate, sendDeviceCommand } from './api'
 import type { DeviceTemplate } from '@/features/widgets/types'
+import { ProvisioningModal } from './components/ProvisioningModal'
 
 const RELAY_COUNT = 7
 
@@ -22,6 +23,7 @@ export function DeviceDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [template, setTemplate] = useState<DeviceTemplate | null>(null)
+  const [provisioningOpen, setProvisioningOpen] = useState(false)
 
   // relay states: index 0 = relay 1, ..., index 6 = relay 7
   const [relayStates, setRelayStates] = useState<boolean[]>(Array(RELAY_COUNT).fill(false))
@@ -115,12 +117,18 @@ export function DeviceDetailPage() {
             </Badge>
           )}
         </div>
-        {device.lastSeen && (
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            {t('devices.detail.lastSeen', { date: new Date(device.lastSeen).toLocaleString() })}
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {device.lastSeen && (
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              {t('devices.detail.lastSeen', { date: new Date(device.lastSeen).toLocaleString() })}
+            </div>
+          )}
+          <Button variant="outline" size="sm" onClick={() => setProvisioningOpen(true)}>
+            <Usb className="h-4 w-4 mr-2" />
+            Configurar dispositivo
+          </Button>
+        </div>
       </div>
 
       {/* Info cards */}
@@ -231,6 +239,14 @@ export function DeviceDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Provisioning modal */}
+      <ProvisioningModal
+        deviceId={device.id}
+        deviceName={device.name}
+        open={provisioningOpen}
+        onClose={() => setProvisioningOpen(false)}
+      />
     </div>
   )
 }
