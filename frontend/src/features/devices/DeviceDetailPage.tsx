@@ -111,9 +111,8 @@ export function DeviceDetailPage() {
               : 'flex items-center gap-1'}
             variant={device.isOnline ? undefined : 'secondary'}
           >
-            {device.isOnline
-              ? <Wifi className="h-3 w-3" />
-              : <WifiOff className="h-3 w-3" />}
+            <Wifi className={`h-3 w-3 ${device.isOnline ? '' : 'hidden'}`} />
+            <WifiOff className={`h-3 w-3 ${device.isOnline ? 'hidden' : ''}`} />
             {device.isOnline ? t('devices.status.online') : t('devices.status.offline')}
           </Badge>
         </div>
