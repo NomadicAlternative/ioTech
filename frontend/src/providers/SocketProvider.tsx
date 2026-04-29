@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, startTransition } from 'react'
 import { io, type Socket } from 'socket.io-client'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useTelemetryStore } from '@/stores/telemetryStore'
@@ -92,7 +92,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     })
 
     newSocket.on('device:status', ({ deviceId, status }: { deviceId: string; status: 'online' | 'offline' }) => {
-      setDeviceOnlineStatus(deviceId, status)
+      startTransition(() => {
+        setDeviceOnlineStatus(deviceId, status)
+      })
     })
 
     return () => {
