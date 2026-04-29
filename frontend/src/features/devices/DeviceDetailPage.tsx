@@ -105,17 +105,17 @@ export function DeviceDetailPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold">{device.name}</h1>
-          {device.isOnline ? (
-            <Badge className="bg-green-100 text-green-700 hover:bg-green-100 flex items-center gap-1">
-              <Wifi className="h-3 w-3" />
-              {t('devices.status.online')}
-            </Badge>
-          ) : (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <WifiOff className="h-3 w-3" />
-              {t('devices.status.offline')}
-            </Badge>
-          )}
+          <Badge
+            className={device.isOnline
+              ? 'bg-green-100 text-green-700 hover:bg-green-100 flex items-center gap-1'
+              : 'flex items-center gap-1'}
+            variant={device.isOnline ? undefined : 'secondary'}
+          >
+            {device.isOnline
+              ? <Wifi className="h-3 w-3" />
+              : <WifiOff className="h-3 w-3" />}
+            {device.isOnline ? t('devices.status.online') : t('devices.status.offline')}
+          </Badge>
         </div>
         <div className="flex items-center gap-3">
           {device.lastSeen && (
@@ -185,11 +185,9 @@ export function DeviceDetailPage() {
               </div>
             ))}
           </div>
-          {!device.isOnline && (
-            <p className="text-xs text-muted-foreground mt-3">
-              Device is offline — relay control disabled.
-            </p>
-          )}
+          <p className={`text-xs text-muted-foreground mt-3 ${device.isOnline ? 'hidden' : ''}`}>
+            Device is offline — relay control disabled.
+          </p>
         </CardContent>
       </Card>
 
