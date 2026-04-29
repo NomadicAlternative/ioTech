@@ -66,6 +66,8 @@ export async function sendDeviceCommand(
 
 export interface ProvisioningCredentials {
   device_token: string
+  tenant_id: string
+  device_id: string
   backend_url: string
   mqtt_url: string
 }

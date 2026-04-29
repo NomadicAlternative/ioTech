@@ -12,23 +12,27 @@ static const char *TAG = "serial_prov";
 /* UART configuration */
 #define PROV_UART_NUM       UART_NUM_0
 #define PROV_UART_BUF_SIZE  512
-#define PROV_LINE_MAX       480   /* max bytes we read before giving up */
+#define PROV_LINE_MAX       600   /* max JSON payload size */
 
 /* -----------------------------------------------------------------------
  * Helpers
  * --------------------------------------------------------------------- */
 
 /**
- * Read bytes from UART looking for a line that starts with '{'.
- * Skips any garbage before the '{' (bootloader noise).
- * Returns number of bytes in buf (excluding null terminator), 0 on timeout.
+ * Read a complete JSON object from UART.
+ * Skips bootloader noise, starts at '{', ends at matching '}'.
+ * Also ends on '\n' as fallback.
+ * Returns number of bytes in buf, 0 on timeout or incomplete JSON.
  */
 static int read_json_line(char *buf, int max_len, int timeout_ms)
 {
     int pos = 0;
+    int depth = 0;
     bool in_json = false;
+    bool in_string = false;
+    bool escaped = false;
     int elapsed = 0;
-    const int poll_ms = 20;
+    const int poll_ms = 10;  /* tighter poll for faster response */
 
     while (elapsed < timeout_ms && pos < max_len - 1) {
         uint8_t byte;
@@ -38,25 +42,37 @@ static int read_json_line(char *buf, int max_len, int timeout_ms)
 
         if (n <= 0) continue;
 
-        /* Start accumulating when we see '{' */
         if (!in_json) {
             if (byte == '{') {
                 in_json = true;
+                depth = 1;
                 buf[pos++] = '{';
             }
             continue;
         }
 
-        /* We are inside the JSON */
-        if (byte == '\n' || byte == '\r') {
-            break;   /* end of line — done */
-        }
-
         buf[pos++] = (char)byte;
+
+        /* Track string context to ignore braces inside strings */
+        if (escaped) {
+            escaped = false;
+        } else if (byte == '\\' && in_string) {
+            escaped = true;
+        } else if (byte == '"') {
+            in_string = !in_string;
+        } else if (!in_string) {
+            if (byte == '{') depth++;
+            else if (byte == '}') {
+                depth--;
+                if (depth == 0) break;  /* complete JSON */
+            } else if (byte == '\n') {
+                break;  /* newline fallback */
+            }
+        }
     }
 
     buf[pos] = '\0';
-    return (in_json && pos > 1) ? pos : 0;
+    return (in_json && pos > 2) ? pos : 0;
 }
 
 static const char *json_str(cJSON *obj, const char *key)
@@ -108,8 +124,10 @@ bool serial_provisioning_receive(void)
     const char *backend_url  = json_str(root, "backend_url");
     const char *mqtt_url     = json_str(root, "mqtt_url");
     const char *device_token = json_str(root, "device_token");
+    const char *tenant_id    = json_str(root, "tenant_id");
+    const char *device_id    = json_str(root, "device_id");
 
-    if (!ssid || !password || !backend_url || !mqtt_url || !device_token) {
+    if (!ssid || !password || !backend_url || !mqtt_url || !device_token || !tenant_id || !device_id) {
         ESP_LOGW(TAG, "Missing required fields in JSON payload");
         cJSON_Delete(root);
         return false;
@@ -127,9 +145,11 @@ bool serial_provisioning_receive(void)
         return false;
     }
 
-    /* Write device config */
+    /* Write device config — all fields come from the dashboard, no HTTP provisioning needed */
     device_config_t dev = {0};
     strlcpy(dev.device_token,    device_token, sizeof(dev.device_token));
+    strlcpy(dev.tenant_id,       tenant_id,    sizeof(dev.tenant_id));
+    strlcpy(dev.device_id,       device_id,    sizeof(dev.device_id));
     strlcpy(dev.backend_url,     backend_url,  sizeof(dev.backend_url));
     strlcpy(dev.mqtt_broker_url, mqtt_url,     sizeof(dev.mqtt_broker_url));
 
