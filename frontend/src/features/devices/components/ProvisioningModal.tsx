@@ -82,11 +82,9 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
   }
 
   async function sendViaSerial(creds: ProvisioningCredentials) {
-    // Web Serial: request port → open → send JSON every 300ms for 6s → close
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const serial = (navigator as any).serial
     const port = await serial.requestPort()
-    await port.open({ baudRate: 115200 })
 
     const payload = JSON.stringify({
       wifi_ssid: wifiSsid,
@@ -100,18 +98,41 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
 
     const encoded = new TextEncoder().encode(payload)
 
-    const SEND_DURATION_MS = 6000
+    const SEND_DURATION_MS = 8000
     const SEND_INTERVAL_MS = 300
+    const RECONNECT_DELAY_MS = 1200
     const deadline = Date.now() + SEND_DURATION_MS
 
-    const writer = port.writable.getWriter()
+    // Open port (may need to reopen after EN/RESET)
+    async function openPort() {
+      if (port.readable || port.writable) {
+        try { await port.close() } catch { /* already closed */ }
+      }
+      await port.open({ baudRate: 115200 })
+    }
+
+    await openPort()
+
     while (Date.now() < deadline) {
-      await writer.write(encoded)
+      try {
+        const writer = port.writable.getWriter()
+        await writer.write(encoded)
+        writer.releaseLock()
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : ''
+        const isDeviceLost = msg.includes('device has been lost') || msg.includes('disconnected')
+        if (isDeviceLost) {
+          // EN/RESET pressed — wait for device to re-enumerate, then reconnect
+          await new Promise(r => setTimeout(r, RECONNECT_DELAY_MS))
+          try { await openPort() } catch { /* still reconnecting */ }
+        } else {
+          throw err
+        }
+      }
       await new Promise(r => setTimeout(r, SEND_INTERVAL_MS))
     }
-    writer.releaseLock()
 
-    await port.close()
+    try { await port.close() } catch { /* ignore */ }
   }
 
   async function handleCopy(text: string, key: string) {
@@ -232,7 +253,7 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
                 {step === 'connecting' ? 'Obteniendo credenciales…' : 'Enviando configuración al dispositivo…'}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {step === 'sending' && 'Seleccioná el puerto serial del ESP32 en el diálogo del navegador'}
+                {step === 'sending' && 'Seleccioná el puerto y presioná el botón EN/RESET del ESP32 para que reciba la configuración'}
               </p>
             </div>
           </div>
