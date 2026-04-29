@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include "esp_log.h"
 #include "driver/uart.h"
 #include "cJSON.h"
@@ -18,14 +19,16 @@ static const char *TAG = "serial_prov";
  * --------------------------------------------------------------------- */
 
 /**
- * Read bytes from UART until '\n' or timeout.
- * Returns number of bytes written to buf (excluding null terminator).
+ * Read bytes from UART looking for a line that starts with '{'.
+ * Skips any garbage before the '{' (bootloader noise).
+ * Returns number of bytes in buf (excluding null terminator), 0 on timeout.
  */
-static int read_line(char *buf, int max_len, int timeout_ms)
+static int read_json_line(char *buf, int max_len, int timeout_ms)
 {
     int pos = 0;
+    bool in_json = false;
     int elapsed = 0;
-    const int poll_ms = 50;
+    const int poll_ms = 20;
 
     while (elapsed < timeout_ms && pos < max_len - 1) {
         uint8_t byte;
@@ -35,16 +38,25 @@ static int read_line(char *buf, int max_len, int timeout_ms)
 
         if (n <= 0) continue;
 
+        /* Start accumulating when we see '{' */
+        if (!in_json) {
+            if (byte == '{') {
+                in_json = true;
+                buf[pos++] = '{';
+            }
+            continue;
+        }
+
+        /* We are inside the JSON */
         if (byte == '\n' || byte == '\r') {
-            if (pos > 0) break;   /* got a complete line */
-            continue;             /* skip leading newlines */
+            break;   /* end of line — done */
         }
 
         buf[pos++] = (char)byte;
     }
 
     buf[pos] = '\0';
-    return pos;
+    return (in_json && pos > 1) ? pos : 0;
 }
 
 static const char *json_str(cJSON *obj, const char *key)
@@ -74,7 +86,7 @@ bool serial_provisioning_receive(void)
     ESP_LOGI(TAG, "Waiting %d ms for serial provisioning data...", SERIAL_PROV_TIMEOUT_MS);
 
     char line[PROV_LINE_MAX] = {0};
-    int len = read_line(line, sizeof(line), SERIAL_PROV_TIMEOUT_MS);
+    int len = read_json_line(line, sizeof(line), SERIAL_PROV_TIMEOUT_MS);
 
     uart_driver_delete(PROV_UART_NUM);
 
@@ -83,7 +95,7 @@ bool serial_provisioning_receive(void)
         return false;
     }
 
-    ESP_LOGI(TAG, "Received %d bytes, parsing JSON...", len);
+    ESP_LOGI(TAG, "Received %d bytes: [%s]", len, line);
 
     cJSON *root = cJSON_Parse(line);
     if (!root) {
