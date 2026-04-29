@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Usb, Wifi, CheckCircle2, AlertTriangle, Loader2, Copy, Check } from 'lucide-react'
 import {
   Dialog,
@@ -33,6 +34,7 @@ interface Props {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props) {
+  const { t } = useTranslation()
   const [step, setStep] = useState<Step>('browser-check')
   const [wifiSsid, setWifiSsid] = useState('')
   const [wifiPassword, setWifiPassword] = useState('')
@@ -147,7 +149,7 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Usb className="h-5 w-5 text-primary" />
-            Configurar dispositivo
+            {t('devices.provisioning.title')}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
             {deviceName}
@@ -162,20 +164,18 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
                 <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-green-800">Navegador compatible</p>
-                    <p className="text-xs text-green-700 mt-0.5">
-                      Tu navegador soporta Web Serial API. Conectá el ESP32 por USB antes de continuar.
-                    </p>
+                    <p className="text-sm font-medium text-green-800">{t('devices.provisioning.browserOk')}</p>
+                    <p className="text-xs text-green-700 mt-0.5">{t('devices.provisioning.browserOkDesc')}</p>
                   </div>
                 </div>
                 <ol className="text-sm text-muted-foreground space-y-1.5 list-decimal list-inside">
-                  <li>Conectá el ESP32 al puerto USB de tu computadora</li>
-                  <li>Ingresá las credenciales WiFi del cliente</li>
-                  <li>El dashboard enviará la configuración automáticamente</li>
-                  <li>El dispositivo se reiniciará y estará online en segundos</li>
+                  <li>{t('devices.provisioning.step1')}</li>
+                  <li>{t('devices.provisioning.step2')}</li>
+                  <li>{t('devices.provisioning.step3')}</li>
+                  <li className="font-semibold text-foreground">{t('devices.provisioning.step4')}</li>
                 </ol>
                 <Button className="w-full" onClick={handleStart}>
-                  Continuar
+                  {t('devices.provisioning.btnContinue')}
                 </Button>
               </>
             ) : (
@@ -183,17 +183,13 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
                 <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 flex items-start gap-3">
                   <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-amber-800">Navegador no compatible</p>
-                    <p className="text-xs text-amber-700 mt-0.5">
-                      Web Serial API requiere Chrome o Edge. Safari y Firefox no están soportados.
-                    </p>
+                    <p className="text-sm font-medium text-amber-800">{t('devices.provisioning.browserFail')}</p>
+                    <p className="text-xs text-amber-700 mt-0.5">{t('devices.provisioning.browserFailDesc')}</p>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Abrí esta página en <strong>Google Chrome</strong> o <strong>Microsoft Edge</strong> para usar el provisioning USB.
-                </p>
+                <p className="text-sm text-muted-foreground">{t('devices.provisioning.browserFailHint')}</p>
                 <Button variant="outline" className="w-full" onClick={onClose}>
-                  Cerrar
+                  {t('devices.provisioning.btnClose')}
                 </Button>
               </>
             )}
@@ -205,21 +201,21 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
           <div className="space-y-4 py-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Wifi className="h-4 w-4" />
-              <span>Credenciales WiFi del cliente</span>
+              <span>{t('devices.provisioning.wifiTitle')}</span>
             </div>
             <div className="space-y-3">
               <div className="space-y-1">
-                <Label htmlFor="wifi-ssid">Nombre de red (SSID)</Label>
+                <Label htmlFor="wifi-ssid">{t('devices.provisioning.ssidLabel')}</Label>
                 <Input
                   id="wifi-ssid"
                   value={wifiSsid}
                   onChange={(e) => setWifiSsid(e.target.value)}
-                  placeholder="MiRedWiFi"
+                  placeholder={t('devices.provisioning.ssidPlaceholder')}
                   autoFocus
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="wifi-password">Contraseña</Label>
+                <Label htmlFor="wifi-password">{t('devices.provisioning.passwordLabel')}</Label>
                 <Input
                   id="wifi-password"
                   type="password"
@@ -231,14 +227,10 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
             </div>
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => setStep('browser-check')}>
-                Atrás
+                {t('devices.provisioning.btnBack')}
               </Button>
-              <Button
-                className="flex-1"
-                disabled={!wifiSsid.trim()}
-                onClick={handleConnect}
-              >
-                Enviar al dispositivo
+              <Button className="flex-1" disabled={!wifiSsid.trim()} onClick={handleConnect}>
+                {t('devices.provisioning.btnSend')}
               </Button>
             </div>
           </div>
@@ -246,15 +238,20 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
 
         {/* ── Step: connecting / sending ── */}
         {(step === 'connecting' || step === 'sending') && (
-          <div className="py-8 flex flex-col items-center gap-4">
+          <div className="py-6 flex flex-col items-center gap-4">
             <Loader2 className="h-10 w-10 text-primary animate-spin" />
-            <div className="text-center">
+            <div className="text-center space-y-3">
               <p className="text-sm font-medium">
-                {step === 'connecting' ? 'Obteniendo credenciales…' : 'Enviando configuración al dispositivo…'}
+                {step === 'connecting' ? t('devices.provisioning.connecting') : t('devices.provisioning.sending')}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {step === 'sending' && 'Seleccioná el puerto y presioná el botón EN/RESET del ESP32 para que reciba la configuración'}
-              </p>
+              {step === 'sending' && (
+                <div className="rounded-lg bg-amber-50 border-2 border-amber-400 px-4 py-3 flex items-center gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+                  <p className="text-sm font-bold text-amber-800">
+                    {t('devices.provisioning.resetAlert')}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -265,14 +262,12 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
             <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 flex items-start gap-3">
               <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm font-medium text-green-800">¡Configuración enviada!</p>
-                <p className="text-xs text-green-700 mt-0.5">
-                  El ESP32 se reiniciará y conectará a la red. En unos segundos debería aparecer online en el dashboard.
-                </p>
+                <p className="text-sm font-medium text-green-800">{t('devices.provisioning.doneTitle')}</p>
+                <p className="text-xs text-green-700 mt-0.5">{t('devices.provisioning.doneDesc')}</p>
               </div>
             </div>
             <Button className="w-full" onClick={() => { onClose(); reset() }}>
-              Listo
+              {t('devices.provisioning.btnDone')}
             </Button>
           </div>
         )}
@@ -283,16 +278,15 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
             <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm font-medium text-destructive">Error al configurar</p>
+                <p className="text-sm font-medium text-destructive">{t('devices.provisioning.errorTitle')}</p>
                 <p className="text-xs text-destructive/80 mt-0.5">{errorMsg}</p>
               </div>
             </div>
 
-            {/* Fallback: mostrar credenciales para configuración manual */}
             {credentials && (
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                  Credenciales para configuración manual
+                  {t('devices.provisioning.manualTitle')}
                 </p>
                 {[
                   { label: 'WiFi SSID', value: wifiSsid, key: 'ssid' },
@@ -321,10 +315,10 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
 
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => setStep('wifi-form')}>
-                Reintentar
+                {t('devices.provisioning.btnRetry')}
               </Button>
               <Button variant="outline" className="flex-1" onClick={() => { onClose(); reset() }}>
-                Cerrar
+                {t('devices.provisioning.btnClose')}
               </Button>
             </div>
           </div>
