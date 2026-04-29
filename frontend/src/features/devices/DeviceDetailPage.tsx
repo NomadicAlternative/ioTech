@@ -32,14 +32,14 @@ export function DeviceDetailPage() {
   useEffect(() => {
     if (!id) return
     setLoading(true)
+    clearCurrent()
     fetchDevice(id)
       .catch((err) =>
         setError(err instanceof Error ? err.message : t('devices.detail.errorLoad'))
       )
       .finally(() => setLoading(false))
-
-    return () => { clearCurrent() }
-  }, [id, fetchDevice, clearCurrent])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
 
   useEffect(() => {
     if (!currentDevice?.templateId) return
@@ -105,17 +105,16 @@ export function DeviceDetailPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold">{device.name}</h1>
-          {device.isOnline ? (
-            <Badge className="bg-green-100 text-green-700 hover:bg-green-100 flex items-center gap-1">
-              <Wifi className="h-3 w-3" />
-              {t('devices.status.online')}
-            </Badge>
-          ) : (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <WifiOff className="h-3 w-3" />
-              {t('devices.status.offline')}
-            </Badge>
-          )}
+          <Badge
+            className={device.isOnline
+              ? 'bg-green-100 text-green-700 hover:bg-green-100 flex items-center gap-1'
+              : 'flex items-center gap-1'}
+            variant={device.isOnline ? undefined : 'secondary'}
+          >
+            <Wifi className={`h-3 w-3 ${device.isOnline ? '' : 'hidden'}`} />
+            <WifiOff className={`h-3 w-3 ${device.isOnline ? 'hidden' : ''}`} />
+            {device.isOnline ? t('devices.status.online') : t('devices.status.offline')}
+          </Badge>
         </div>
         <div className="flex items-center gap-3">
           {device.lastSeen && (
@@ -185,11 +184,9 @@ export function DeviceDetailPage() {
               </div>
             ))}
           </div>
-          {!device.isOnline && (
-            <p className="text-xs text-muted-foreground mt-3">
-              Device is offline — relay control disabled.
-            </p>
-          )}
+          <p className={`text-xs text-muted-foreground mt-3 ${device.isOnline ? 'hidden' : ''}`}>
+            Device is offline — relay control disabled.
+          </p>
         </CardContent>
       </Card>
 
