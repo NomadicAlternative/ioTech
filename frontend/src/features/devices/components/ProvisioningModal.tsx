@@ -41,6 +41,7 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
   const [credentials, setCredentials] = useState<ProvisioningCredentials | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
+  const [portSelected, setPortSelected] = useState(false)
 
   const supported = isWebSerialSupported()
 
@@ -59,6 +60,7 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
     setCredentials(null)
     setErrorMsg(null)
     setCopied(null)
+    setPortSelected(false)
   }
 
   function handleStart() {
@@ -87,6 +89,7 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const serial = (navigator as any).serial
     const port = await serial.requestPort()
+    setPortSelected(true)
 
     const payload = JSON.stringify({
       wifi_ssid: wifiSsid,
@@ -244,7 +247,12 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
               <p className="text-sm font-medium">
                 {step === 'connecting' ? t('devices.provisioning.connecting') : t('devices.provisioning.sending')}
               </p>
-              {step === 'sending' && (
+              {step === 'sending' && !portSelected && (
+                <p className="text-sm text-muted-foreground">
+                  {t('devices.provisioning.selectPort')}
+                </p>
+              )}
+              {step === 'sending' && portSelected && (
                 <div className="rounded-lg bg-amber-50 border-2 border-amber-400 px-4 py-3 flex items-center gap-3">
                   <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
                   <p className="text-sm font-bold text-amber-800">

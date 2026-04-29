@@ -167,6 +167,7 @@
       "btnContinue": "Continue",
       "connecting": "Fetching credentials…",
       "sending": "Sending configuration…",
+      "selectPort": "Select the ESP32 serial port in the browser dialog",
       "resetAlert": "⚠ Press EN/RESET on the ESP32 now",
       "doneTitle": "Configuration sent!",
       "doneDesc": "The device will restart and connect to the network in seconds.",
