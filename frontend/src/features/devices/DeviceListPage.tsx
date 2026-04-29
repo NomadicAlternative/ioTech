@@ -29,13 +29,19 @@ import { EditDeviceDialog } from './components/EditDeviceDialog'
 
 function StatusBadge({ isOnline, status }: { isOnline: boolean; status: string }) {
   const { t } = useTranslation()
-  if (isOnline) {
-    return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">{t('devices.status.online')}</Badge>
-  }
-  if (status === 'offline') {
-    return <Badge variant="secondary">{t('devices.status.offline')}</Badge>
-  }
-  return <Badge variant="outline">{status || t('devices.status.unknown')}</Badge>
+  const label = isOnline
+    ? t('devices.status.online')
+    : status === 'offline'
+      ? t('devices.status.offline')
+      : (status || t('devices.status.unknown'))
+  const className = isOnline
+    ? 'bg-green-100 text-green-700 hover:bg-green-100'
+    : undefined
+  const variant: 'secondary' | 'outline' | undefined = isOnline
+    ? undefined
+    : status === 'offline' ? 'secondary' : 'outline'
+
+  return <Badge className={className} variant={variant}>{label}</Badge>
 }
 
 // ─── Last seen helper ─────────────────────────────────────────────────────────
