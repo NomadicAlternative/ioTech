@@ -171,7 +171,31 @@ Runtime fixes applied (post-implementation):
 - Fixed frontend API envelope extraction in `api.ts` (extract `.data` from response)
 - Fixed blank editor page: `dashboardStore.ts` now extracts `.widgets` from layout object, `api.ts` wraps widgets array in `{ widgets, gridConfig }` on save
 
-### Future Phases
+### Phase 4c — Serial (USB) Provisioning (COMPLETE — branch: feat/relay-control)
+
+- `serial_provisioning` ESP-IDF component: brace-counting JSON reader over UART, NVS writer
+- STATE_INIT tries serial provisioning before captive portal
+- Sends `wifi_ssid`, `wifi_password`, `backend_url`, `mqtt_url`, `device_token`, `tenant_id`, `device_id` directly (no HTTP claiming needed)
+- `claim_token[128]` (was 64) to fit 64-char hex tokens
+- Web Serial modal in dashboard: port selection → send loop 8s/300ms → auto-reconnect after EN/RESET
+- Backend `getProvisioningCredentials()` returns `tenant_id` + `device_id`
+- Frontend `ProvisioningModal` fully i18n (ES + EN)
+- Fixed React `insertBefore` crash: `startTransition` for WebSocket status updates, single `Badge` instance (no conditional mount/unmount), `ErrorBoundary` on device detail route
+- `clearCurrent()` moved to start of useEffect (not cleanup) to avoid race with WebSocket
+- `Promise.resolve().then(setSocket)` removed from SocketProvider
+- NVS-only erase (no re-flash): `esptool erase-region 0x9000 0x5000`
+- ESP32 works on any 5V source once provisioned — no PC needed
+
+Key files:
+- `firmware/components/serial_provisioning/serial_provisioning.c`
+- `firmware/components/nvs_storage/include/nvs_storage.h`
+- `backend/src/modules/devices/devices.service.js`
+- `frontend/src/providers/SocketProvider.tsx`
+- `frontend/src/features/devices/DeviceDetailPage.tsx`
+- `frontend/src/features/devices/DeviceListPage.tsx`
+- `frontend/src/features/devices/components/ProvisioningModal.tsx`
+- `frontend/src/components/ErrorBoundary.tsx`
+- `frontend/src/i18n/locales/es.json` + `en.json`
 - Phase 6: Automation & rules engine (if temp > X then action Y)
 - Phase 7: Production hardening (EMQX broker auth, rate limiting, CI/CD)
 - Phase 8: Mobile app for installers
