@@ -167,7 +167,7 @@
       "btnContinue": "Continuar",
       "connecting": "Obteniendo credenciales…",
       "sending": "Enviando configuración…",
-      "selectPort": "Seleccioná el puerto serial del ESP32 en el diálogo del navegador, luego presioná EN/RESET en el dispositivo y soltá",
+      "selectPort": "Seleccioná el puerto serial. Luego seleccioná \"Conectar\" y enseguida presioná EN/RESET en el dispositivo y esperá",
       "resetAlert": "⚠ Presioná EN/RESET en el ESP32 ahora",
       "doneTitle": "¡Configuración enviada!",
       "doneDesc": "El dispositivo se reiniciará y conectará a la red en segundos.",
