@@ -32,14 +32,14 @@ export function DeviceDetailPage() {
   useEffect(() => {
     if (!id) return
     setLoading(true)
+    clearCurrent()
     fetchDevice(id)
       .catch((err) =>
         setError(err instanceof Error ? err.message : t('devices.detail.errorLoad'))
       )
       .finally(() => setLoading(false))
-
-    return () => { clearCurrent() }
-  }, [id, fetchDevice, clearCurrent])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
 
   useEffect(() => {
     if (!currentDevice?.templateId) return

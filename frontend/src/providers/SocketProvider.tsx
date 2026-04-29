@@ -68,7 +68,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     })
 
     socketRef.current = newSocket
-    Promise.resolve().then(() => setSocket(newSocket))
+    setSocket(newSocket)
 
     newSocket.on('connect', () => {
       console.debug('[Socket] connected', newSocket.id)
