@@ -200,6 +200,8 @@ async function getProvisioningCredentials(tenantId, deviceId) {
 
   return {
     device_token: device.device_token,
+    tenant_id: device.tenant_id,
+    device_id: device.id,
     backend_url: process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`,
     mqtt_url: process.env.MQTT_BROKER_URL || 'mqtt://localhost:1883',
   };

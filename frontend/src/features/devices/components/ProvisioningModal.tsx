@@ -82,7 +82,7 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
   }
 
   async function sendViaSerial(creds: ProvisioningCredentials) {
-    // Web Serial: request port → open → write JSON → close
+    // Web Serial: request port → open → send JSON every 300ms for 6s → close
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const serial = (navigator as any).serial
     const port = await serial.requestPort()
@@ -94,12 +94,23 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
       backend_url: creds.backend_url,
       mqtt_url: creds.mqtt_url,
       device_token: creds.device_token,
-    })
+      tenant_id: creds.tenant_id,
+      device_id: creds.device_id,
+    }) + '\n'
+
+    const encoded = new TextEncoder().encode(payload)
+
+    const SEND_DURATION_MS = 6000
+    const SEND_INTERVAL_MS = 300
+    const deadline = Date.now() + SEND_DURATION_MS
 
     const writer = port.writable.getWriter()
-    const encoded = new TextEncoder().encode(payload + '\n')
-    await writer.write(encoded)
+    while (Date.now() < deadline) {
+      await writer.write(encoded)
+      await new Promise(r => setTimeout(r, SEND_INTERVAL_MS))
+    }
     writer.releaseLock()
+
     await port.close()
   }
 
