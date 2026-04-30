@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { useDeviceStore } from './deviceStore'
+import { useAuthStore } from '@/features/auth/authStore'
 import { fetchDeviceTemplate, sendDeviceCommand } from './api'
 import type { DeviceTemplate } from '@/features/widgets/types'
 import { ProvisioningModal } from './components/ProvisioningModal'
@@ -19,6 +20,8 @@ export function DeviceDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { currentDevice, fetchDevice, clearCurrent } = useDeviceStore()
+  const userRole = useAuthStore((s) => s.user?.role)
+  const canSeeDatastreams = userRole === 'admin' || userRole === 'installer'
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -53,19 +56,23 @@ export function DeviceDetailPage() {
     if (!id) return
     const relayNum = relayIndex + 1
 
+    // Optimistic update — respuesta inmediata al usuario
+    setRelayStates((prev) => { const s = [...prev]; s[relayIndex] = newState; return s })
+
+    // Animación solo al encender
+    if (newState) {
+      setRelayAnimating((prev) => { const s = [...prev]; s[relayIndex] = true; return s })
+      setTimeout(() => {
+        setRelayAnimating((prev) => { const s = [...prev]; s[relayIndex] = false; return s })
+      }, 650)
+    }
+
     setRelaySending((prev) => { const s = [...prev]; s[relayIndex] = true; return s })
     try {
       await sendDeviceCommand(id, relayNum, newState ? 'on' : 'off')
-      setRelayStates((prev) => { const s = [...prev]; s[relayIndex] = newState; return s })
-      // Trigger animation only when turning ON
-      if (newState) {
-        setRelayAnimating((prev) => { const s = [...prev]; s[relayIndex] = true; return s })
-        setTimeout(() => {
-          setRelayAnimating((prev) => { const s = [...prev]; s[relayIndex] = false; return s })
-        }, 650)
-      }
     } catch {
-      // revert on error — state stays the same
+      // Revertir si falla
+      setRelayStates((prev) => { const s = [...prev]; s[relayIndex] = !newState; return s })
     } finally {
       setRelaySending((prev) => { const s = [...prev]; s[relayIndex] = false; return s })
     }
@@ -237,8 +244,8 @@ export function DeviceDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Datastreams */}
-      {template && template.datastreams.length > 0 && (
+      {/* Datastreams — solo admin e installer */}
+      {canSeeDatastreams && template && template.datastreams.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{t('devices.detail.datastreamTitle')}</CardTitle>

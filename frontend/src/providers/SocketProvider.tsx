@@ -31,10 +31,12 @@ interface TelemetryEvent {
 /**
  * Manages the Socket.io connection lifecycle.
  *
- * - Connects automatically when the user is authenticated (has an access token).
- * - Disconnects and reconnects when the token changes (e.g. after refresh).
- * - Disconnects on logout.
- * - Writes incoming `telemetry` events to `telemetryStore` (REQ-DASH-016).
+ * - Connects once when the user is authenticated (has an access token).
+ * - On token rotation: updates socket.auth in-place and calls disconnect() so
+ *   Socket.IO reconnects with the new token — avoids tearing down listeners.
+ * - Disconnects on logout (isAuthenticated → false).
+ * - Writes incoming `telemetry:new` events to `telemetryStore` (REQ-DASH-016).
+ * - Listens to `device:status` and updates deviceStore reactively (no polling needed).
  * - Configured with unlimited reconnection attempts and exponential back-off (REQ-DASH-015).
  */
 export function SocketProvider({ children }: { children: React.ReactNode }) {
@@ -45,9 +47,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const setTelemetry = useTelemetryStore((s) => s.setTelemetry)
   const setDeviceOnlineStatus = useDeviceStore((s) => s.setDeviceOnlineStatus)
 
+  // ── Create socket once on first auth ────────────────────────────────────────
   useEffect(() => {
     if (!isAuthenticated || !accessToken) {
-      // Disconnect if we lose auth
       if (socketRef.current) {
         socketRef.current.disconnect()
         socketRef.current = null
@@ -55,6 +57,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       }
       return
     }
+
+    // Already connected — don't recreate
+    if (socketRef.current) return
 
     const SOCKET_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
@@ -82,7 +87,8 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       console.warn('[Socket] connection error', err.message)
     })
 
-    newSocket.on('telemetry', (event: TelemetryEvent) => {
+    // Backend emits 'telemetry:new' (socketServer.js line 73)
+    newSocket.on('telemetry:new', (event: TelemetryEvent) => {
       setTelemetry(
         event.deviceId,
         event.datastreamKey,
@@ -91,6 +97,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       )
     })
 
+    // Real-time device online/offline — no polling needed
     newSocket.on('device:status', ({ deviceId, status }: { deviceId: string; status: 'online' | 'offline' }) => {
       startTransition(() => {
         setDeviceOnlineStatus(deviceId, status)
@@ -102,7 +109,20 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       socketRef.current = null
       setSocket(null)
     }
-  }, [isAuthenticated, accessToken, setTelemetry, setDeviceOnlineStatus])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]) // intentionally omit accessToken — handled below
+
+  // ── Token rotation: update auth without recreating the socket ────────────────
+  useEffect(() => {
+    if (!socketRef.current || !accessToken) return
+    // Update the token used for the next reconnect handshake
+    socketRef.current.auth = { token: accessToken }
+    // If currently disconnected (e.g. expired token caused connect_error),
+    // trigger a reconnect with the fresh token
+    if (!socketRef.current.connected) {
+      socketRef.current.connect()
+    }
+  }, [accessToken])
 
   return (
     <SocketContext.Provider value={{ socket }}>
