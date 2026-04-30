@@ -88,6 +88,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
 
   refreshToken: async () => {
+    // refresh token is sent automatically as httpOnly cookie
     const res = await api.post<{ accessToken: string }>('/api/auth/refresh')
     const { accessToken } = res.data
     const user = decodeJwtPayload(accessToken)
