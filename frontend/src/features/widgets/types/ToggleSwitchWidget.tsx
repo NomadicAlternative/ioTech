@@ -12,17 +12,16 @@ export function ToggleSwitchWidget({ widgetId: _widgetId, config }: WidgetProps)
   const entry = useTelemetryValue(deviceId, datastreamKey)
   const onValue = String(config.settings.onValue ?? '1')
   const isOn = String(entry?.value) === onValue
+  const relayNum = Number(config.settings.relay ?? 1)
 
   const [optimistic, setOptimistic] = useState<boolean | null>(null)
   const displayed = optimistic !== null ? optimistic : isOn
 
   const handleToggle = async (checked: boolean) => {
     setOptimistic(checked)
-    const action = checked
-      ? String(config.settings.onCommand ?? 'on')
-      : String(config.settings.offCommand ?? 'off')
+    const state: 'on' | 'off' = checked ? 'on' : 'off'
     try {
-      await sendDeviceCommand(deviceId, action)
+      await sendDeviceCommand(deviceId, relayNum, state)
     } catch {
       // revert optimistic
       setOptimistic(!checked)
@@ -43,12 +42,14 @@ export function ToggleSwitchConfigFields({ settings, onChange }: ConfigFieldsPro
   return (
     <div className="space-y-3">
       <div className="space-y-1">
-        <Label>On command</Label>
-        <Input value={String(settings.onCommand ?? 'on')} onChange={(e) => onChange({ ...settings, onCommand: e.target.value })} />
-      </div>
-      <div className="space-y-1">
-        <Label>Off command</Label>
-        <Input value={String(settings.offCommand ?? 'off')} onChange={(e) => onChange({ ...settings, offCommand: e.target.value })} />
+        <Label>Relay number</Label>
+        <Input
+          type="number"
+          min={1}
+          max={8}
+          value={String(settings.relay ?? 1)}
+          onChange={(e) => onChange({ ...settings, relay: Number(e.target.value) })}
+        />
       </div>
       <div className="space-y-1">
         <Label>On value (telemetry)</Label>

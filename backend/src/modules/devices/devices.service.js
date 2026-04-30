@@ -177,7 +177,8 @@ async function sendCommand(tenantId, deviceId, command) {
   const mqttClient = getMqttClient();
 
   if (mqttClient) {
-    mqttClient.publish(topic, JSON.stringify(command), { qos: 1 });
+    const payload = { type: 'relay', relay: command.relay, state: command.state };
+    mqttClient.publish(topic, JSON.stringify(payload), { qos: 1 });
     logger.info(`[devices.service] Published command to ${topic}: relay=${command.relay} state=${command.state}`);
   } else {
     logger.warn(`[devices.service] MQTT client not available — command for ${deviceId} not sent`);

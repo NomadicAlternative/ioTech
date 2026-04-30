@@ -35,6 +35,11 @@ async function handleHeartbeat(tenantId, deviceId, payload) {
   try {
     await devicesModel.update(deviceId, { last_seen: new Date(), status: 'online' });
     logger.info(`[heartbeat] device ${deviceId} online (tenant ${tenantId})`);
+
+    const socketSvc = getSocketService();
+    if (socketSvc) {
+      socketSvc.emitDeviceStatus(tenantId, deviceId, 'online');
+    }
   } catch (err) {
     logger.error(`[heartbeat] Failed to update device ${deviceId}: ${err.message}`);
   }

@@ -17,6 +17,8 @@ export function ButtonWidget({ widgetId: _widgetId, config }: WidgetProps) {
   const action = String(config.settings.action ?? 'trigger')
   const label = String(config.settings.label ?? 'Send')
   const variant = (config.settings.variant as 'default' | 'destructive' | 'outline') ?? 'default'
+  const relayNum = Number(config.settings.relay ?? 1)
+  const relayState = (config.settings.state as 'on' | 'off') ?? 'on'
 
   // SC-DASH-028: debounce rapid clicks — only one command per 300ms window
   const handleClick = useCallback(async () => {
@@ -26,13 +28,13 @@ export function ButtonWidget({ widgetId: _widgetId, config }: WidgetProps) {
     lastClickRef.current = now
     setLoading(true)
     try {
-      await sendDeviceCommand(deviceId, action, config.settings.payload)
+      await sendDeviceCommand(deviceId, relayNum, relayState)
     } catch {
       // silently ignore for MVP
     } finally {
       setLoading(false)
     }
-  }, [deviceId, action, config.settings.payload])
+  }, [deviceId, relayNum, relayState])
 
   return (
     <div className="flex items-center justify-center h-full">
@@ -51,8 +53,24 @@ export function ButtonConfigFields({ settings, onChange }: ConfigFieldsProps) {
         <Input value={String(settings.label ?? 'Send')} onChange={(e) => onChange({ ...settings, label: e.target.value })} />
       </div>
       <div className="space-y-1">
-        <Label>Action</Label>
-        <Input value={String(settings.action ?? 'trigger')} onChange={(e) => onChange({ ...settings, action: e.target.value })} />
+        <Label>Relay number</Label>
+        <Input
+          type="number"
+          min={1}
+          max={8}
+          value={String(settings.relay ?? 1)}
+          onChange={(e) => onChange({ ...settings, relay: Number(e.target.value) })}
+        />
+      </div>
+      <div className="space-y-1">
+        <Label>State</Label>
+        <Select value={String(settings.state ?? 'on')} onValueChange={(v) => onChange({ ...settings, state: v })}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="on">On</SelectItem>
+            <SelectItem value="off">Off</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div className="space-y-1">
         <Label>Variant</Label>

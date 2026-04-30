@@ -124,7 +124,7 @@ export function DashboardListPage() {
           {dashboards.map((dashboard) => (
             <Card
               key={dashboard.id}
-              className="cursor-pointer hover:shadow-md transition-shadow group"
+              className="cursor-pointer hover:shadow-lg transition-all group border-2 hover:border-primary/30"
               onClick={() => navigate(`/app/dashboards/${dashboard.id}`)}
             >
               <CardHeader className="pb-2">
@@ -159,7 +159,8 @@ export function DashboardListPage() {
                 )}
               </CardHeader>
               <CardContent className="flex items-center justify-between pt-0">
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs font-semibold"
+                       style={{ background: 'color-mix(in oklch, var(--brand-cerulean) 12%, transparent)', color: 'var(--brand-cerulean)' }}>
                   {t('dashboard.list.widgets', { count: dashboard.widgetCount ?? 0 })}
                 </Badge>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">

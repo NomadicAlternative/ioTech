@@ -1,99 +1,144 @@
 import { Outlet, NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/features/auth/authStore'
-import { Button } from '@/components/ui/button'
 import i18n from '@/i18n/i18n'
+import {
+  LayoutDashboard,
+  Cpu,
+  FileCode2,
+  Users,
+  Settings,
+  LogOut,
+  Globe,
+  ShieldCheck,
+} from 'lucide-react'
+
+const NAV_ITEMS = [
+  { to: '/app/dashboards', icon: LayoutDashboard, labelKey: 'nav.dashboards' },
+  { to: '/app/devices',    icon: Cpu,             labelKey: 'nav.devices' },
+  { to: '/app/templates',  icon: FileCode2,        labelKey: 'nav.templates' },
+  { to: '/app/clients',    icon: Users,            labelKey: 'nav.clients' },
+  { to: '/app/settings',   icon: Settings,         labelKey: 'nav.settings' },
+]
 
 export function AppShell() {
   const { t } = useTranslation()
   const logout = useAuthStore((s) => s.logout)
-  const user = useAuthStore((s) => s.user)
-
-  const navItems = [
-    { to: '/app/dashboards', label: t('nav.dashboards') },
-    { to: '/app/devices', label: t('nav.devices') },
-    { to: '/app/templates', label: t('nav.templates') },
-    { to: '/app/clients', label: t('nav.clients') },
-    { to: '/app/settings', label: t('nav.settings') },
-  ]
+  const user   = useAuthStore((s) => s.user)
+  const currentLang = i18n.language?.startsWith('es') ? 'es' : 'en'
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-60 flex flex-col border-r bg-sidebar shrink-0">
-        <div className="px-6 py-5 border-b">
-          <span className="text-lg font-semibold tracking-tight">IoTech</span>
+    <div className="flex h-screen overflow-hidden bg-background">
+      {/* ── Sidebar ── */}
+      <aside className="w-64 flex flex-col shrink-0 bg-sidebar border-r border-sidebar-border">
+
+        {/* Brand */}
+        <div className="px-6 py-5 border-b border-sidebar-border">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                 style={{ background: 'var(--brand-amber)' }}>
+              <Cpu className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-lg font-bold tracking-tight text-sidebar-foreground">
+              IoTech
+            </span>
+          </div>
         </div>
-        <nav className="flex flex-col gap-1 p-3 flex-1">
-          {navItems.map((item) => (
+
+        {/* Nav */}
+        <nav className="flex flex-col gap-0.5 p-3 flex-1 overflow-y-auto">
+          {NAV_ITEMS.map(({ to, icon: Icon, labelKey }) => (
             <NavLink
-              key={item.to}
-              to={item.to}
+              key={to}
+              to={to}
               className={({ isActive }) =>
                 [
-                  'px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
                   isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                    ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
+                    : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                 ].join(' ')
               }
             >
-              {item.label}
+              {({ isActive }) => (
+                <>
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'opacity-100' : 'opacity-60'}`} />
+                  {t(labelKey)}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
-        <div className="p-3 border-t space-y-2">
+
+        {/* Footer */}
+        <div className="p-3 border-t border-sidebar-border space-y-1">
           {/* Language switcher */}
-          <div className="flex items-center gap-1 px-2">
-            <span className="text-xs text-muted-foreground mr-1">{t('nav.language')}:</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 text-xs"
-              onClick={() => i18n.changeLanguage('es')}
-            >
-              ES
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 text-xs"
-              onClick={() => i18n.changeLanguage('en')}
-            >
-              EN
-            </Button>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg">
+            <Globe className="w-4 h-4 text-sidebar-foreground/50 shrink-0" />
+            <span className="text-xs text-sidebar-foreground/50 flex-1">{t('nav.language')}</span>
+            <div className="flex items-center gap-1 bg-sidebar-accent rounded-md p-0.5">
+              <button
+                onClick={() => i18n.changeLanguage('es')}
+                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
+                  currentLang === 'es'
+                    ? 'text-sidebar-primary-foreground shadow-sm'
+                    : 'text-sidebar-foreground/60 hover:text-sidebar-foreground'
+                }`}
+                style={currentLang === 'es' ? { background: 'var(--brand-amber)' } : {}}
+              >
+                ES
+              </button>
+              <button
+                onClick={() => i18n.changeLanguage('en')}
+                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
+                  currentLang === 'en'
+                    ? 'text-sidebar-primary-foreground shadow-sm'
+                    : 'text-sidebar-foreground/60 hover:text-sidebar-foreground'
+                }`}
+                style={currentLang === 'en' ? { background: 'var(--brand-amber)' } : {}}
+              >
+                EN
+              </button>
+            </div>
           </div>
-          <div className="flex items-center justify-between gap-2 px-2 py-1">
-            <span className="text-xs text-muted-foreground truncate">
+
+          {/* User + logout */}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition-colors group">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white"
+                 style={{ background: 'var(--brand-cerulean)' }}>
+              {user?.email?.[0]?.toUpperCase() ?? '?'}
+            </div>
+            <span className="text-xs text-sidebar-foreground/70 truncate flex-1">
               {user?.email}
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={() => logout()}
-              className="shrink-0"
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-sidebar-foreground/50 hover:text-red-400"
+              title={t('nav.logout')}
             >
-              {t('nav.logout')}
-            </Button>
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       </aside>
 
-      {/* Main */}
+      {/* ── Main ── */}
       <div className="flex flex-col flex-1 overflow-hidden">
+
         {/* Top bar */}
-        <header className="h-14 border-b flex items-center px-6 shrink-0">
-          <span className="text-sm text-muted-foreground">
-            {user?.role && (
-              <span className="uppercase text-xs font-medium bg-muted px-2 py-0.5 rounded">
-                {user.role}
-              </span>
-            )}
-          </span>
+        <header className="h-14 border-b bg-card flex items-center justify-between px-6 shrink-0">
+          <div />
+          {user?.role && (
+            <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full"
+                 style={{ background: 'color-mix(in oklch, var(--brand-imperial) 12%, transparent)', color: 'var(--brand-imperial)' }}>
+              <ShieldCheck className="w-3.5 h-3.5" />
+              {user.role.toUpperCase()}
+            </div>
+          )}
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-6 bg-background">
           <Outlet />
         </main>
       </div>

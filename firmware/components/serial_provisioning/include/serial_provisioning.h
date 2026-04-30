@@ -19,7 +19,7 @@ extern "C" {
 #endif
 
 /** Timeout in milliseconds to wait for serial credentials. */
-#define SERIAL_PROV_TIMEOUT_MS 5000
+#define SERIAL_PROV_TIMEOUT_MS 30000
 
 /**
  * @brief Wait for provisioning credentials over UART0.
