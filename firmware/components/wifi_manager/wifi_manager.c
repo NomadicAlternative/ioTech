@@ -83,6 +83,9 @@ void wifi_manager_connect(const wifi_creds_t *creds)
                                                          NULL,
                                                          &instance_got_ip));
 
+    ESP_LOGI(TAG, "Attempting WiFi connection — SSID: '%s' PASS_LEN: %d",
+             creds->ssid, (int)strlen(creds->password));
+
     wifi_config_t wifi_config = {0};
     strlcpy((char *)wifi_config.sta.ssid,     creds->ssid,     sizeof(wifi_config.sta.ssid));
     strlcpy((char *)wifi_config.sta.password, creds->password, sizeof(wifi_config.sta.password));

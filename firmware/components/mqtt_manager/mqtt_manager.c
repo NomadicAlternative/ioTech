@@ -212,6 +212,8 @@ void mqtt_manager_start(const device_config_t *cfg)
             },
         },
         .session = {
+            .keepalive            = 60,
+            .disable_clean_session= true,
             .last_will = {
                 .topic = lwt_topic,
                 .msg   = "offline",

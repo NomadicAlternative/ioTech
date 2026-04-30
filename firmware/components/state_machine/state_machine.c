@@ -116,18 +116,18 @@ static void state_enter_init(void)
      * backend_url are present — that is fine, HTTP provisioning fills the rest. */
     (void)nvs_load_device_config(&dev_cfg);
 
-    if (has_wifi) {
-        ESP_LOGI(TAG, "[INIT] WiFi credentials found — going CONNECTING");
+    /* Always try serial provisioning first — allows re-provisioning even when
+     * NVS already has credentials (e.g. IP address changed). */
+    ESP_LOGI(TAG, "[INIT] Trying serial provisioning first...");
+    if (serial_provisioning_receive()) {
+        ESP_LOGI(TAG, "[INIT] Serial provisioning succeeded — going CONNECTING");
+        sm_send_event(SM_EVT_NVS_CREDS_FOUND);
+    } else if (has_wifi) {
+        ESP_LOGI(TAG, "[INIT] No serial data — WiFi credentials found in NVS, going CONNECTING");
         sm_send_event(SM_EVT_NVS_CREDS_FOUND);
     } else {
-        ESP_LOGI(TAG, "[INIT] No WiFi credentials — trying serial provisioning first");
-        if (serial_provisioning_receive()) {
-            ESP_LOGI(TAG, "[INIT] Serial provisioning succeeded — going CONNECTING");
-            sm_send_event(SM_EVT_NVS_CREDS_FOUND);
-        } else {
-            ESP_LOGI(TAG, "[INIT] No serial data — going PROVISIONING (captive portal)");
-            sm_send_event(SM_EVT_NVS_CREDS_MISSING);
-        }
+        ESP_LOGI(TAG, "[INIT] No serial data and no NVS credentials — going PROVISIONING (captive portal)");
+        sm_send_event(SM_EVT_NVS_CREDS_MISSING);
     }
 }
 
