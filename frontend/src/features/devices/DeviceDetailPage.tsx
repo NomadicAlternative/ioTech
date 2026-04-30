@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Wifi, WifiOff, Clock, Usb } from 'lucide-react'
+import { ArrowLeft, Clock, Usb } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -28,6 +28,7 @@ export function DeviceDetailPage() {
   // relay states: index 0 = relay 1, ..., index 6 = relay 7
   const [relayStates, setRelayStates] = useState<boolean[]>(Array(RELAY_COUNT).fill(false))
   const [relaySending, setRelaySending] = useState<boolean[]>(Array(RELAY_COUNT).fill(false))
+  const [relayAnimating, setRelayAnimating] = useState<boolean[]>(Array(RELAY_COUNT).fill(false))
 
   useEffect(() => {
     if (!id) return
@@ -56,6 +57,13 @@ export function DeviceDetailPage() {
     try {
       await sendDeviceCommand(id, relayNum, newState ? 'on' : 'off')
       setRelayStates((prev) => { const s = [...prev]; s[relayIndex] = newState; return s })
+      // Trigger animation only when turning ON
+      if (newState) {
+        setRelayAnimating((prev) => { const s = [...prev]; s[relayIndex] = true; return s })
+        setTimeout(() => {
+          setRelayAnimating((prev) => { const s = [...prev]; s[relayIndex] = false; return s })
+        }, 650)
+      }
     } catch {
       // revert on error — state stays the same
     } finally {
@@ -106,13 +114,17 @@ export function DeviceDetailPage() {
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold">{device.name}</h1>
           <Badge
-            className={device.isOnline
-              ? 'bg-green-100 text-green-700 hover:bg-green-100 flex items-center gap-1'
-              : 'flex items-center gap-1'}
-            variant={device.isOnline ? undefined : 'secondary'}
+            className="border-0 gap-1.5 font-semibold"
+            style={device.isOnline
+              ? { background: '#dcfce7', color: '#15803d' }
+              : { background: '#fee2e2', color: '#b91c1c' }}
           >
-            <Wifi className={`h-3 w-3 ${device.isOnline ? '' : 'hidden'}`} />
-            <WifiOff className={`h-3 w-3 ${device.isOnline ? 'hidden' : ''}`} />
+            <span
+              className="w-1.5 h-1.5 rounded-full shrink-0"
+              style={device.isOnline
+                ? { background: '#16a34a', boxShadow: '0 0 6px 2px rgba(22,163,74,0.5)' }
+                : { background: '#dc2626', boxShadow: '0 0 6px 2px rgba(220,38,38,0.5)' }}
+            />
             {device.isOnline ? t('devices.status.online') : t('devices.status.offline')}
           </Badge>
         </div>
@@ -162,31 +174,66 @@ export function DeviceDetailPage() {
 
       {/* Relay control */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Relay Control</CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Relay Control</CardTitle>
+            {!device.isOnline && (
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+                    style={{ background: 'color-mix(in oklch, var(--brand-red) 12%, transparent)', color: 'var(--brand-red)' }}>
+                Offline — control disabled
+              </span>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: RELAY_COUNT }, (_, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between rounded-lg border p-4"
-              >
-                <Label htmlFor={`relay-${i + 1}`} className="font-medium">
-                  Relay {i + 1}
-                </Label>
-                <Switch
-                  id={`relay-${i + 1}`}
-                  checked={relayStates[i]}
-                  disabled={relaySending[i] || !device.isOnline}
-                  onCheckedChange={(checked) => handleRelayToggle(i, checked)}
-                />
-              </div>
-            ))}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {Array.from({ length: RELAY_COUNT }, (_, i) => {
+              const isOn = relayStates[i]
+              const isSending = relaySending[i]
+              const isAnimating = relayAnimating[i]
+              return (
+                <div
+                  key={i}
+                  className={[
+                    'relative flex flex-col gap-3 rounded-xl border-2 p-4 transition-all overflow-hidden',
+                    isOn
+                      ? 'border-green-500 bg-green-50'
+                      : 'border-border bg-card hover:border-muted-foreground/30',
+                    isAnimating ? 'relay-card-on-enter' : '',
+                    !device.isOnline ? 'opacity-50' : '',
+                  ].join(' ')}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs font-semibold uppercase tracking-wide ${isOn ? 'text-green-700' : 'text-muted-foreground'}`}>
+                      Relay {i + 1}
+                    </span>
+                    <span
+                      className={[
+                        'w-2.5 h-2.5 rounded-full transition-all',
+                        isOn
+                          ? 'bg-green-500'
+                          : 'bg-muted-foreground/25',
+                        isAnimating ? 'relay-led-blink' : '',
+                      ].join(' ')}
+                      style={isOn ? { boxShadow: '0 0 7px 3px rgba(34,197,94,0.65)' } : {}}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm font-bold ${isOn ? 'text-green-700' : 'text-muted-foreground/60'}`}>
+                      {isOn ? 'ON' : 'OFF'}
+                    </span>
+                    <Switch
+                      id={`relay-${i + 1}`}
+                      checked={isOn}
+                      disabled={isSending || !device.isOnline}
+                      onCheckedChange={(checked) => handleRelayToggle(i, checked)}
+                      className={isSending ? 'opacity-50' : ''}
+                    />
+                  </div>
+                </div>
+              )
+            })}
           </div>
-          <p className={`text-xs text-muted-foreground mt-3 ${device.isOnline ? 'hidden' : ''}`}>
-            Device is offline — relay control disabled.
-          </p>
         </CardContent>
       </Card>
 

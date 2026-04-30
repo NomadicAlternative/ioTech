@@ -34,14 +34,21 @@ function StatusBadge({ isOnline, status }: { isOnline: boolean; status: string }
     : status === 'offline'
       ? t('devices.status.offline')
       : (status || t('devices.status.unknown'))
-  const className = isOnline
-    ? 'bg-green-100 text-green-700 hover:bg-green-100'
-    : undefined
-  const variant: 'secondary' | 'outline' | undefined = isOnline
-    ? undefined
-    : status === 'offline' ? 'secondary' : 'outline'
 
-  return <Badge className={className} variant={variant}>{label}</Badge>
+  const style = isOnline
+    ? { background: '#dcfce7', color: '#15803d' }
+    : { background: '#fee2e2', color: '#b91c1c' }
+
+  const dotStyle = isOnline
+    ? { background: '#16a34a', boxShadow: '0 0 6px 2px rgba(22,163,74,0.5)' }
+    : { background: '#dc2626', boxShadow: '0 0 6px 2px rgba(220,38,38,0.5)' }
+
+  return (
+    <Badge className="border-0 gap-1.5 font-semibold" style={style}>
+      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={dotStyle} />
+      {label}
+    </Badge>
+  )
 }
 
 // ─── Last seen helper ─────────────────────────────────────────────────────────
@@ -287,7 +294,7 @@ export function DeviceListPage() {
                     <StatusBadge isOnline={device.isOnline} status={device.status} />
                   </td>
                   <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
-                    {device.templateId ?? '—'}
+                    {device.templateName ?? device.templateId ?? '—'}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
                     {formatLastSeen(device.lastSeen)}
