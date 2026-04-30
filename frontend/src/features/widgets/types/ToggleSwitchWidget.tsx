@@ -11,28 +11,34 @@ export function ToggleSwitchWidget({ widgetId: _widgetId, config }: WidgetProps)
   const datastreamKey = config.datastreamKey ?? ''
   const entry = useTelemetryValue(deviceId, datastreamKey)
   const onValue = String(config.settings.onValue ?? '1')
-  const isOn = String(entry?.value) === onValue
   const relayNum = Number(config.settings.relay ?? 1)
 
-  const [optimistic, setOptimistic] = useState<boolean | null>(null)
-  const displayed = optimistic !== null ? optimistic : isOn
+  // Derive state from telemetry when available; otherwise track locally
+  const telemetryOn = entry !== undefined ? String(entry.value) === onValue : null
+  const [localState, setLocalState] = useState<boolean | null>(null)
+
+  // telemetry wins once it arrives; until then use localState; default OFF
+  const displayed = telemetryOn !== null ? telemetryOn : (localState ?? false)
+  const [pending, setPending] = useState(false)
 
   const handleToggle = async (checked: boolean) => {
-    setOptimistic(checked)
+    if (pending) return
+    setLocalState(checked)
+    setPending(true)
     const state: 'on' | 'off' = checked ? 'on' : 'off'
     try {
       await sendDeviceCommand(deviceId, relayNum, state)
     } catch {
-      // revert optimistic
-      setOptimistic(!checked)
+      // revert on error
+      setLocalState(!checked)
     } finally {
-      setOptimistic(null)
+      setPending(false)
     }
   }
 
   return (
     <div className="flex items-center justify-center h-full gap-4">
-      <Switch checked={displayed} onCheckedChange={handleToggle} disabled={!deviceId} />
+      <Switch checked={displayed} onCheckedChange={handleToggle} disabled={!deviceId || pending} />
       <Label className="text-sm">{displayed ? 'ON' : 'OFF'}</Label>
     </div>
   )
