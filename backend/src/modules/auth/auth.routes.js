@@ -7,6 +7,16 @@ const schemas = require('./auth.schemas');
 
 const router = Router();
 
+/** Cookie options for the httpOnly refresh token */
+const REFRESH_COOKIE_NAME = 'refreshToken';
+const REFRESH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: 'lax',
+  secure: process.env.NODE_ENV === 'production',
+  path: '/',
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+};
+
 /**
  * @openapi
  * /api/auth/register:
@@ -127,7 +137,9 @@ router.post('/login', validate(schemas.login), async (req, res, next) => {
   try {
     const { tenantId, email, password } = req.body;
     const result = await authService.login(tenantId, email, password);
-    res.status(200).json(result);
+    // Set refresh token as httpOnly cookie — never exposed to JS
+    res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, REFRESH_COOKIE_OPTIONS);
+    res.status(200).json({ accessToken: result.accessToken });
   } catch (err) {
     next(err);
   }
@@ -173,11 +185,16 @@ router.post('/login', validate(schemas.login), async (req, res, next) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/refresh', validate(schemas.refresh), async (req, res, next) => {
+router.post('/refresh', async (req, res, next) => {
   try {
-    const { refreshToken } = req.body;
-    const result = await authService.refreshToken(refreshToken);
-    res.status(200).json(result);
+    const token = req.cookies?.[REFRESH_COOKIE_NAME];
+    if (!token) {
+      return res.status(401).json({ message: 'Refresh token missing' });
+    }
+    const result = await authService.refreshToken(token);
+    // Rotate cookie with fresh refresh token
+    res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, REFRESH_COOKIE_OPTIONS);
+    res.status(200).json({ accessToken: result.accessToken });
   } catch (err) {
     next(err);
   }
@@ -211,8 +228,11 @@ router.post('/refresh', validate(schemas.refresh), async (req, res, next) => {
  */
 router.post('/logout', async (req, res, next) => {
   try {
-    const { refreshToken } = req.body;
-    await authService.logout(refreshToken);
+    const token = req.cookies?.[REFRESH_COOKIE_NAME];
+    if (token) {
+      await authService.logout(token);
+    }
+    res.clearCookie(REFRESH_COOKIE_NAME, { path: '/' });
     res.status(204).send();
   } catch (err) {
     next(err);

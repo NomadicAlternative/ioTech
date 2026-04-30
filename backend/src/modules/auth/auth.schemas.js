@@ -15,8 +15,7 @@ const login = Joi.object({
   password: Joi.string().min(1).required(),
 });
 
-const refresh = Joi.object({
-  refreshToken: Joi.string().required(),
-});
+// refresh token is now read from httpOnly cookie — no body required
+const refresh = Joi.object({});
 
 module.exports = { register, login, refresh };
