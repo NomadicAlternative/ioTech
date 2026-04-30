@@ -1,8 +1,9 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Plus, Share2, Save, Loader2 } from 'lucide-react'
-import GridLayout, { type Layout, type LayoutItem } from 'react-grid-layout'
+import { Responsive as ResponsiveGridLayout } from 'react-grid-layout'
+import type { Layout } from 'react-grid-layout'
 import { v4 as uuidv4 } from 'uuid'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -42,6 +43,8 @@ export function DashboardEditorPage() {
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [canvasWidth, setCanvasWidth] = useState(1200)
+  const canvasRef = useRef<HTMLDivElement>(null)
 
   // Share dialog state
   const [shareOpen, setShareOpen] = useState(false)
@@ -74,6 +77,18 @@ export function DashboardEditorPage() {
       .catch(() => {/* ignore */})
       .finally(() => setSharingLoading(false))
   }, [shareOpen, id])
+
+  // Measure canvas width for the grid
+  useLayoutEffect(() => {
+    const el = canvasRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => {
+      setCanvasWidth(entry.contentRect.width)
+    })
+    ro.observe(el)
+    setCanvasWidth(el.getBoundingClientRect().width)
+    return () => ro.disconnect()
+  }, [])
 
   const handleLayoutChange = useCallback(
     (newGridLayout: Layout) => {
@@ -123,7 +138,7 @@ export function DashboardEditorPage() {
     } catch {/* ignore */}
   }
 
-  const gridLayout: LayoutItem[] = layout.map((e) => ({
+  const gridLayout: Layout = layout.map((e) => ({
     i: e.i,
     x: e.x,
     y: e.y,
@@ -159,7 +174,7 @@ export function DashboardEditorPage() {
   }
 
   return (
-    <div className="flex h-full gap-0">
+    <div className="flex -m-6 h-[calc(100vh-3.5rem)] gap-0 overflow-hidden">
       {/* ─── Widget Palette Sidebar ──────────────────────────────────────── */}
       <aside className="w-56 flex-shrink-0 border-r bg-background overflow-y-auto p-3 space-y-2">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1 mb-3">
@@ -216,27 +231,30 @@ export function DashboardEditorPage() {
         </div>
 
         {/* Grid canvas */}
-        <div className="flex-1 overflow-auto p-4 bg-muted/30">
+        <div ref={canvasRef} className="flex-1 overflow-auto p-4 bg-muted/30">
           {layout.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-2 text-center">
               <p className="text-muted-foreground">{t('dashboard.editor.emptyCanvas')}</p>
             </div>
           ) : (
-            <GridLayout
+            <ResponsiveGridLayout
               className="layout"
-              layout={gridLayout}
-              width={1200}
-              gridConfig={{ cols: 12, rowHeight: 80, margin: [12, 12] as [number, number] }}
-              dragConfig={{ enabled: true }}
-              resizeConfig={{ enabled: true }}
-              onLayoutChange={handleLayoutChange}
+              layouts={{ lg: gridLayout }}
+              breakpoints={{ lg: 1200, md: 996, sm: 768 }}
+              cols={{ lg: 12, md: 10, sm: 6 }}
+              rowHeight={80}
+              margin={[12, 12]}
+              width={canvasWidth || 1200}
+              isDraggable
+              isResizable
+              onLayoutChange={(newLayout) => handleLayoutChange(newLayout)}
             >
               {layout.map((entry) => (
                 <div key={entry.i}>
                   <WidgetRenderer entry={entry} isEditing />
                 </div>
               ))}
-            </GridLayout>
+            </ResponsiveGridLayout>
           )}
         </div>
       </div>

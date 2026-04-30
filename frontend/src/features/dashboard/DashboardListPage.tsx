@@ -165,7 +165,7 @@ export function DashboardListPage() {
                 </Badge>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Clock className="h-3 w-3" />
-                  {new Date(dashboard.updatedAt).toLocaleDateString()}
+                  {dashboard.updatedAt ? new Date(dashboard.updatedAt).toLocaleDateString() : '—'}
                 </div>
               </CardContent>
             </Card>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { v4 as uuidv4 } from 'uuid'
 import {
   Sheet,
   SheetContent,
@@ -88,6 +89,26 @@ export function WidgetConfigPanel() {
       e.i === editingWidgetId ? { ...e, config: localConfig } : e
     )
     setLayout(newLayout)
+    closeConfig()
+  }
+
+  const handleDuplicate = () => {
+    if (!editingWidgetId || !entry || !localConfig) return
+    const maxRelay = layout.reduce((max, e) => {
+      const r = Number(e.config.settings?.relay ?? 0)
+      return r > max ? r : max
+    }, 0)
+    const duplicate = {
+      ...entry,
+      i: uuidv4(),
+      x: entry.x,
+      y: entry.y + entry.h,
+      config: {
+        ...localConfig,
+        settings: { ...localConfig.settings, relay: maxRelay + 1 },
+      },
+    }
+    setLayout([...layout, duplicate])
     closeConfig()
   }
 
@@ -195,6 +216,7 @@ export function WidgetConfigPanel() {
 
         <SheetFooter className="flex-col gap-2 sm:flex-col">
           <Button className="w-full" onClick={handleSave} disabled={!configValid}>Save changes</Button>
+          <Button variant="outline" className="w-full" onClick={handleDuplicate}>Duplicate widget</Button>
           <Button variant="destructive" className="w-full" onClick={handleDelete}>
             Delete widget
           </Button>
