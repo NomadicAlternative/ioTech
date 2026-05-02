@@ -9,7 +9,7 @@
 #include "lwip/ip4_addr.h"
 
 #include "wifi_manager.h"
-#include "state_machine.h"
+#include "sm_events.h"
 
 static const char *TAG = "wifi_manager";
 
@@ -23,7 +23,6 @@ static int s_retry_count = 0;
 
 /* Guards to prevent double-initialisation on re-entry into STATE_CONNECTING */
 static bool s_netif_inited    = false;
-static bool s_event_loop_init = false;
 static bool s_wifi_inited     = false;
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
@@ -64,11 +63,6 @@ void wifi_manager_connect(const wifi_creds_t *creds)
         s_netif_inited = true;
     }
 
-    if (!s_event_loop_init) {
-        ESP_ERROR_CHECK(esp_event_loop_create_default());
-        s_event_loop_init = true;
-    }
-
     if (!s_wifi_inited) {
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
         ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -88,6 +82,9 @@ void wifi_manager_connect(const wifi_creds_t *creds)
                                                          &wifi_event_handler,
                                                          NULL,
                                                          &instance_got_ip));
+
+    ESP_LOGI(TAG, "Attempting WiFi connection — SSID: '%s' PASS_LEN: %d",
+             creds->ssid, (int)strlen(creds->password));
 
     wifi_config_t wifi_config = {0};
     strlcpy((char *)wifi_config.sta.ssid,     creds->ssid,     sizeof(wifi_config.sta.ssid));

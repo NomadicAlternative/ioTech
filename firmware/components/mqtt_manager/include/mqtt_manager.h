@@ -1,3 +1,11 @@
+/**
+ * @file mqtt_manager.h
+ * @brief MQTT client manager for telemetry, status, and OTA notifications.
+ *
+ * Connects to the broker using device_id as client_id and device_token
+ * as password (TLS). Publishes an LWT "offline" message on the status
+ * topic and subscribes to the ota/notify topic.
+ */
 #pragma once
 
 #include "esp_err.h"

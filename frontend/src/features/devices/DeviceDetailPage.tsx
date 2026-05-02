@@ -1,49 +1,50 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Send, Wifi, WifiOff, Clock } from 'lucide-react'
+import { ArrowLeft, Clock, Usb } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { useDeviceStore } from './deviceStore'
+import { useAuthStore } from '@/features/auth/authStore'
 import { fetchDeviceTemplate, sendDeviceCommand } from './api'
 import type { DeviceTemplate } from '@/features/widgets/types'
+import { ProvisioningModal } from './components/ProvisioningModal'
+
+const RELAY_COUNT = 7
 
 export function DeviceDetailPage() {
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { currentDevice, fetchDevice, clearCurrent } = useDeviceStore()
+  const userRole = useAuthStore((s) => s.user?.role)
+  const canSeeDatastreams = userRole === 'admin' || userRole === 'installer'
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [template, setTemplate] = useState<DeviceTemplate | null>(null)
+  const [provisioningOpen, setProvisioningOpen] = useState(false)
 
-  // ── Command state ──
-  const [commandAction, setCommandAction] = useState('')
-  const [commandPayload, setCommandPayload] = useState('')
-  const [commandPayloadError, setCommandPayloadError] = useState<string | null>(null)
-  const [sending, setSending] = useState(false)
-  const [commandSuccess, setCommandSuccess] = useState(false)
-  const [commandError, setCommandError] = useState<string | null>(null)
+  // relay states: index 0 = relay 1, ..., index 6 = relay 7
+  const [relayStates, setRelayStates] = useState<boolean[]>(Array(RELAY_COUNT).fill(false))
+  const [relaySending, setRelaySending] = useState<boolean[]>(Array(RELAY_COUNT).fill(false))
+  const [relayAnimating, setRelayAnimating] = useState<boolean[]>(Array(RELAY_COUNT).fill(false))
 
   useEffect(() => {
     if (!id) return
     setLoading(true)
+    clearCurrent()
     fetchDevice(id)
       .catch((err) =>
         setError(err instanceof Error ? err.message : t('devices.detail.errorLoad'))
       )
       .finally(() => setLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
 
-    return () => {
-      clearCurrent()
-    }
-  }, [id, fetchDevice, clearCurrent])
-
-  // Fetch template once we have the device
   useEffect(() => {
     if (!currentDevice?.templateId) return
     fetchDeviceTemplate(currentDevice.templateId)
@@ -51,35 +52,32 @@ export function DeviceDetailPage() {
       .catch(() => {/* template optional */})
   }, [currentDevice?.templateId])
 
-  async function handleSendCommand() {
-    if (!id || !commandAction.trim()) return
+  async function handleRelayToggle(relayIndex: number, newState: boolean) {
+    if (!id) return
+    const relayNum = relayIndex + 1
 
-    let parsedPayload: unknown = undefined
-    if (commandPayload.trim()) {
-      try {
-        parsedPayload = JSON.parse(commandPayload)
-      } catch {
-        setCommandPayloadError(t('common.invalidJson'))
-        return
-      }
+    // Optimistic update — respuesta inmediata al usuario
+    setRelayStates((prev) => { const s = [...prev]; s[relayIndex] = newState; return s })
+
+    // Animación solo al encender
+    if (newState) {
+      setRelayAnimating((prev) => { const s = [...prev]; s[relayIndex] = true; return s })
+      setTimeout(() => {
+        setRelayAnimating((prev) => { const s = [...prev]; s[relayIndex] = false; return s })
+      }, 650)
     }
 
-    setSending(true)
-    setCommandError(null)
-    setCommandSuccess(false)
+    setRelaySending((prev) => { const s = [...prev]; s[relayIndex] = true; return s })
     try {
-      await sendDeviceCommand(id, commandAction.trim(), parsedPayload)
-      setCommandSuccess(true)
-      setCommandAction('')
-      setCommandPayload('')
-    } catch (err) {
-      setCommandError(err instanceof Error ? err.message : t('devices.detail.commandErrorSend'))
+      await sendDeviceCommand(id, relayNum, newState ? 'on' : 'off')
+    } catch {
+      // Revertir si falla
+      setRelayStates((prev) => { const s = [...prev]; s[relayIndex] = !newState; return s })
     } finally {
-      setSending(false)
+      setRelaySending((prev) => { const s = [...prev]; s[relayIndex] = false; return s })
     }
   }
 
-  // ── Loading skeleton ──
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
@@ -122,24 +120,33 @@ export function DeviceDetailPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold">{device.name}</h1>
-          {device.isOnline ? (
-            <Badge className="bg-green-100 text-green-700 hover:bg-green-100 flex items-center gap-1">
-              <Wifi className="h-3 w-3" />
-              {t('devices.status.online')}
-            </Badge>
-          ) : (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <WifiOff className="h-3 w-3" />
-              {t('devices.status.offline')}
-            </Badge>
-          )}
+          <Badge
+            className="border-0 gap-1.5 font-semibold"
+            style={device.isOnline
+              ? { background: '#dcfce7', color: '#15803d' }
+              : { background: '#fee2e2', color: '#b91c1c' }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full shrink-0"
+              style={device.isOnline
+                ? { background: '#16a34a', boxShadow: '0 0 6px 2px rgba(22,163,74,0.5)' }
+                : { background: '#dc2626', boxShadow: '0 0 6px 2px rgba(220,38,38,0.5)' }}
+            />
+            {device.isOnline ? t('devices.status.online') : t('devices.status.offline')}
+          </Badge>
         </div>
-        {device.lastSeen && (
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            {t('devices.detail.lastSeen', { date: new Date(device.lastSeen).toLocaleString() })}
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {device.lastSeen && (
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              {t('devices.detail.lastSeen', { date: new Date(device.lastSeen).toLocaleString() })}
+            </div>
+          )}
+          <Button variant="outline" size="sm" onClick={() => setProvisioningOpen(true)}>
+            <Usb className="h-4 w-4 mr-2" />
+            Configurar dispositivo
+          </Button>
+        </div>
       </div>
 
       {/* Info cards */}
@@ -172,8 +179,73 @@ export function DeviceDetailPage() {
         </Card>
       </div>
 
-      {/* Datastreams */}
-      {template && template.datastreams.length > 0 && (
+      {/* Relay control */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Relay Control</CardTitle>
+            {!device.isOnline && (
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+                    style={{ background: 'color-mix(in oklch, var(--brand-red) 12%, transparent)', color: 'var(--brand-red)' }}>
+                Offline — control disabled
+              </span>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {Array.from({ length: RELAY_COUNT }, (_, i) => {
+              const isOn = relayStates[i]
+              const isSending = relaySending[i]
+              const isAnimating = relayAnimating[i]
+              return (
+                <div
+                  key={i}
+                  className={[
+                    'relative flex flex-col gap-3 rounded-xl border-2 p-4 transition-all overflow-hidden',
+                    isOn
+                      ? 'border-green-500 bg-green-50'
+                      : 'border-border bg-card hover:border-muted-foreground/30',
+                    isAnimating ? 'relay-card-on-enter' : '',
+                    !device.isOnline ? 'opacity-50' : '',
+                  ].join(' ')}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs font-semibold uppercase tracking-wide ${isOn ? 'text-green-700' : 'text-muted-foreground'}`}>
+                      Relay {i + 1}
+                    </span>
+                    <span
+                      className={[
+                        'w-2.5 h-2.5 rounded-full transition-all',
+                        isOn
+                          ? 'bg-green-500'
+                          : 'bg-muted-foreground/25',
+                        isAnimating ? 'relay-led-blink' : '',
+                      ].join(' ')}
+                      style={isOn ? { boxShadow: '0 0 7px 3px rgba(34,197,94,0.65)' } : {}}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm font-bold ${isOn ? 'text-green-700' : 'text-muted-foreground/60'}`}>
+                      {isOn ? 'ON' : 'OFF'}
+                    </span>
+                    <Switch
+                      id={`relay-${i + 1}`}
+                      checked={isOn}
+                      disabled={isSending || !device.isOnline}
+                      onCheckedChange={(checked) => handleRelayToggle(i, checked)}
+                      className={isSending ? 'opacity-50' : ''}
+                    />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Datastreams — solo admin e installer */}
+      {canSeeDatastreams && template && template.datastreams.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{t('devices.detail.datastreamTitle')}</CardTitle>
@@ -219,55 +291,13 @@ export function DeviceDetailPage() {
         </Card>
       )}
 
-      {/* Send command */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t('devices.detail.commandTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {commandSuccess && (
-            <div className="rounded-md bg-green-50 text-green-700 px-3 py-2 text-sm">
-              {t('devices.detail.commandSuccess')}
-            </div>
-          )}
-          {commandError && (
-            <div className="rounded-md bg-destructive/10 text-destructive px-3 py-2 text-sm">
-              {commandError}
-            </div>
-          )}
-          <div className="space-y-1">
-            <Label>{t('devices.detail.commandActionLabel')}</Label>
-            <Input
-              value={commandAction}
-              onChange={(e) => setCommandAction(e.target.value)}
-              placeholder={t('devices.detail.commandActionPlaceholder')}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label>{t('devices.detail.commandPayloadLabel')}</Label>
-            <textarea
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm font-mono min-h-[60px] focus:outline-none focus:ring-2 focus:ring-ring"
-              value={commandPayload}
-              onChange={(e) => {
-                setCommandPayload(e.target.value)
-                setCommandPayloadError(null)
-              }}
-              placeholder='{"value": true}'
-            />
-            {commandPayloadError && (
-              <p className="text-destructive text-xs">{commandPayloadError}</p>
-            )}
-          </div>
-          <Button
-            onClick={handleSendCommand}
-            disabled={!commandAction.trim() || sending}
-            className="gap-2"
-          >
-            <Send className="h-4 w-4" />
-            {sending ? t('devices.detail.commandSending') : t('devices.detail.commandSend')}
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Provisioning modal */}
+      <ProvisioningModal
+        deviceId={device.id}
+        deviceName={device.name}
+        open={provisioningOpen}
+        onClose={() => setProvisioningOpen(false)}
+      />
     </div>
   )
 }

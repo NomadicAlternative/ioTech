@@ -1,3 +1,11 @@
+/**
+ * @file nvs_storage.h
+ * @brief Encrypted NVS persistence layer for WiFi credentials and device config.
+ *
+ * All keys are stored in the "iotech" NVS namespace. Provides typed
+ * read/write helpers for wifi_creds_t and device_config_t, plus a
+ * factory-reset erase function.
+ */
 #pragma once
 
 #include <stddef.h>
@@ -24,7 +32,7 @@ typedef struct {
     char device_id[64];        /**< Device identifier (UUID) */
     char mqtt_broker_url[128]; /**< Full MQTT broker URL e.g. mqtts://broker.example.com */
     char backend_url[128];     /**< Backend REST API base URL */
-    char claim_token[64];      /**< Claim token (cleared after 422 or success) */
+    char claim_token[128];     /**< Claim token (cleared after 422 or success) */
     char hardware_id[32];      /**< MAC-derived hardware ID (set at boot) */
     char firmware_version[32]; /**< Last known firmware version after OTA */
 } device_config_t;

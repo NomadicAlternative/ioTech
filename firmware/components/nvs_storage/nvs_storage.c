@@ -117,15 +117,18 @@ esp_err_t nvs_load_device_config(device_config_t *out)
     esp_err_t err = nvs_open(NVS_NS, NVS_READONLY, &h);
     if (err != ESP_OK) return err;
 
-    err = nvs_read_str(h, KEY_DEVICE_TOKEN,  out->device_token,    sizeof(out->device_token));
-    if (err == ESP_OK) err = nvs_read_str(h, KEY_TENANT_ID,        out->tenant_id,         sizeof(out->tenant_id));
-    if (err == ESP_OK) err = nvs_read_str(h, KEY_DEVICE_ID,        out->device_id,         sizeof(out->device_id));
-    if (err == ESP_OK) err = nvs_read_str(h, KEY_MQTT_URL,         out->mqtt_broker_url,   sizeof(out->mqtt_broker_url));
-    if (err == ESP_OK) err = nvs_read_str(h, KEY_BACKEND_URL,      out->backend_url,       sizeof(out->backend_url));
+    /* Post-provisioning fields — only present after HTTP provisioning completes */
+    nvs_read_str(h, KEY_DEVICE_TOKEN,  out->device_token,    sizeof(out->device_token));
+    nvs_read_str(h, KEY_TENANT_ID,     out->tenant_id,       sizeof(out->tenant_id));
+    nvs_read_str(h, KEY_DEVICE_ID,     out->device_id,       sizeof(out->device_id));
+    nvs_read_str(h, KEY_MQTT_URL,      out->mqtt_broker_url, sizeof(out->mqtt_broker_url));
 
-    /* Optional fields — don't fail if missing */
-    nvs_read_str(h, KEY_HW_ID,         out->hardware_id,     sizeof(out->hardware_id));
-    nvs_read_str(h, KEY_CLAIM_TOKEN,   out->claim_token,     sizeof(out->claim_token));
+    /* Always present after captive portal — needed for HTTP provisioning */
+    err = nvs_read_str(h, KEY_BACKEND_URL, out->backend_url, sizeof(out->backend_url));
+
+    /* Optional fields */
+    nvs_read_str(h, KEY_HW_ID,         out->hardware_id,      sizeof(out->hardware_id));
+    nvs_read_str(h, KEY_CLAIM_TOKEN,   out->claim_token,      sizeof(out->claim_token));
     nvs_read_str(h, KEY_FW_VERSION,    out->firmware_version, sizeof(out->firmware_version));
 
     nvs_close(h);

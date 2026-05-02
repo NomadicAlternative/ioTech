@@ -14,6 +14,7 @@
 #include "mqtt_manager.h"
 #include "ota_manager.h"
 #include "factory_reset.h"
+#include "serial_provisioning.h"
 
 static const char *TAG = "state_machine";
 
@@ -108,23 +109,37 @@ static void state_enter_init(void)
     wifi_creds_t wifi_creds = {0};
     device_config_t dev_cfg = {0};
 
-    bool has_wifi  = (nvs_load_credentials(&wifi_creds)  == ESP_OK);
-    bool has_token = (nvs_load_device_config(&dev_cfg)   == ESP_OK);
+    bool has_wifi = (nvs_load_credentials(&wifi_creds) == ESP_OK);
 
-    if (has_wifi && has_token) {
-        ESP_LOGI(TAG, "[INIT] Credentials found — going CONNECTING");
+    /* device_config (device_token, mqtt_url, etc.) is only needed in NORMAL.
+     * On first boot after captive-portal provisioning only claim_token +
+     * backend_url are present — that is fine, HTTP provisioning fills the rest. */
+    (void)nvs_load_device_config(&dev_cfg);
+
+    /* Always try serial provisioning first — allows re-provisioning even when
+     * NVS already has credentials (e.g. IP address changed). */
+    ESP_LOGI(TAG, "[INIT] Trying serial provisioning first...");
+    if (serial_provisioning_receive()) {
+        ESP_LOGI(TAG, "[INIT] Serial provisioning succeeded — going CONNECTING");
+        sm_send_event(SM_EVT_NVS_CREDS_FOUND);
+    } else if (has_wifi) {
+        ESP_LOGI(TAG, "[INIT] No serial data — WiFi credentials found in NVS, going CONNECTING");
         sm_send_event(SM_EVT_NVS_CREDS_FOUND);
     } else {
-        ESP_LOGI(TAG, "[INIT] No credentials — going PROVISIONING");
+        ESP_LOGI(TAG, "[INIT] No serial data and no NVS credentials — going PROVISIONING (captive portal)");
         sm_send_event(SM_EVT_NVS_CREDS_MISSING);
     }
+}
+
+static void on_portal_done(void)
+{
+    sm_send_event(SM_EVT_PORTAL_FORM_OK);
 }
 
 static void state_enter_provisioning(void)
 {
     ESP_LOGI(TAG, "[PROVISIONING] Starting captive portal");
-    captive_portal_start();
-    /* The portal calls sm_send_event(SM_EVT_PORTAL_FORM_OK) on success */
+    captive_portal_start(on_portal_done);
 }
 
 static void state_enter_connecting(void)
@@ -157,11 +172,13 @@ static void state_enter_normal(void)
      * ------------------------------------------------------------------ */
     if (!prov_done) {
         device_config_t cfg = {0};
-        if (nvs_load_device_config(&cfg) != ESP_OK) {
-            ESP_LOGE(TAG, "[NORMAL] Cannot load device config");
-            sm_send_event(SM_EVT_ERROR);
-            return;
-        }
+        /* nvs_load_device_config may fail on first boot (no device_token yet).
+         * That is fine — we only need backend_url + claim_token to provision.
+         * Read what we have and fall through to the device_token check. */
+        nvs_load_device_config(&cfg);
+
+        ESP_LOGI(TAG, "[NORMAL] backend_url='%s' claim_token='%s'",
+                 cfg.backend_url, cfg.claim_token);
 
         if (strlen(cfg.device_token) == 0) {
             ESP_LOGI(TAG, "[NORMAL] No device token found — running HTTP provisioning");
@@ -291,7 +308,7 @@ void sm_start(void)
     s_evt_queue = xQueueCreate(SM_QUEUE_LEN, sizeof(sm_event_t));
     configASSERT(s_evt_queue != NULL);
 
-    xTaskCreate(sm_task, "state_machine", 4096, NULL, 5, NULL);
+    xTaskCreate(sm_task, "state_machine", 8192, NULL, 5, NULL);
 }
 
 void sm_send_event(sm_event_t event)

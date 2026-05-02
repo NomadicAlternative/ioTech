@@ -6,7 +6,7 @@
 
 #include "factory_reset.h"
 #include "nvs_storage.h"
-#include "state_machine.h"
+#include "sm_events.h"
 
 static const char *TAG = "factory_reset";
 

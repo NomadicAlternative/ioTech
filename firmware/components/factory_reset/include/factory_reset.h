@@ -1,3 +1,12 @@
+/**
+ * @file factory_reset.h
+ * @brief Factory reset monitor — GPIO button hold detection.
+ *
+ * Monitors a configurable GPIO pin (default: GPIO0 / BOOT button).
+ * When held LOW continuously for FACTORY_RESET_HOLD_MS (5 seconds),
+ * sends SM_EVT_FACTORY_RESET to the state machine. Short presses are
+ * ignored.
+ */
 #pragma once
 
 #include "esp_err.h"

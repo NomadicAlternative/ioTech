@@ -4,14 +4,13 @@
 #include "esp_http_client.h"
 #include "esp_tls.h"
 #include "cJSON.h"
-#include "esp_efuse.h"
 #include "esp_mac.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
 #include "provisioning_client.h"
 #include "nvs_storage.h"
-#include "state_machine.h"
+#include "sm_events.h"
 
 static const char *TAG = "provisioning_client";
 
@@ -41,6 +40,32 @@ esp_err_t provisioning_build_topic(const device_config_t *cfg,
     return ESP_OK;
 }
 
+static char s_response_buf[1024];
+static int  s_response_len = 0;
+
+static esp_err_t http_event_handler(esp_http_client_event_t *evt)
+{
+    switch (evt->event_id) {
+    case HTTP_EVENT_ON_DATA:
+        if (s_response_len + evt->data_len < (int)sizeof(s_response_buf) - 1) {
+            memcpy(s_response_buf + s_response_len, evt->data, evt->data_len);
+            s_response_len += evt->data_len;
+            s_response_buf[s_response_len] = '\0';
+        }
+        break;
+    case HTTP_EVENT_ON_CONNECTED:
+    case HTTP_EVENT_HEADERS_SENT:
+    case HTTP_EVENT_ON_HEADER:
+    case HTTP_EVENT_ON_FINISH:
+    case HTTP_EVENT_DISCONNECTED:
+    case HTTP_EVENT_REDIRECT:
+        break;
+    default:
+        break;
+    }
+    return ESP_OK;
+}
+
 /* -----------------------------------------------------------------------
  * Provisioning HTTP client
  * --------------------------------------------------------------------- */
@@ -58,12 +83,20 @@ static prov_result_t do_provision_request(device_config_t *cfg)
     int  response_len       = 0;
     int  http_status        = 0;
 
+    /* Reset shared response buffer */
+    memset(s_response_buf, 0, sizeof(s_response_buf));
+    s_response_len = 0;
+
+    /* Use TLS only for https:// URLs; plain TCP for http:// (dev/local) */
+    bool use_tls = (strncmp(url, "https://", 8) == 0);
+
     esp_http_client_config_t http_cfg = {
-        .url             = url,
-        .method          = HTTP_METHOD_POST,
-        .cert_pem        = isrg_root_x1_pem_start,
-        .timeout_ms      = 10000,
-        .transport_type  = HTTP_TRANSPORT_OVER_SSL,
+        .url            = url,
+        .method         = HTTP_METHOD_POST,
+        .cert_pem       = use_tls ? isrg_root_x1_pem_start : NULL,
+        .timeout_ms     = 10000,
+        .transport_type = use_tls ? HTTP_TRANSPORT_OVER_SSL : HTTP_TRANSPORT_OVER_TCP,
+        .event_handler  = http_event_handler,
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&http_cfg);
@@ -78,11 +111,8 @@ static prov_result_t do_provision_request(device_config_t *cfg)
     esp_err_t err = esp_http_client_perform(client);
     if (err == ESP_OK) {
         http_status  = esp_http_client_get_status_code(client);
-        response_len = esp_http_client_get_content_length(client);
-
-        if (response_len > 0 && response_len < (int)sizeof(response_buf) - 1) {
-            esp_http_client_read_response(client, response_buf, response_len);
-        }
+        response_len = s_response_len;
+        memcpy(response_buf, s_response_buf, response_len + 1);
     }
 
     esp_http_client_cleanup(client);
@@ -97,6 +127,7 @@ static prov_result_t do_provision_request(device_config_t *cfg)
     switch (http_status) {
     case 200: {
         /* Parse JSON response */
+        ESP_LOGI(TAG, "Response body (%d bytes): %s", response_len, response_buf);
         cJSON *json = cJSON_Parse(response_buf);
         if (!json) {
             ESP_LOGE(TAG, "Failed to parse provisioning response");
@@ -106,7 +137,7 @@ static prov_result_t do_provision_request(device_config_t *cfg)
         cJSON *device_token    = cJSON_GetObjectItemCaseSensitive(json, "device_token");
         cJSON *tenant_id       = cJSON_GetObjectItemCaseSensitive(json, "tenant_id");
         cJSON *device_id       = cJSON_GetObjectItemCaseSensitive(json, "device_id");
-        cJSON *mqtt_broker_url = cJSON_GetObjectItemCaseSensitive(json, "mqtt_broker_url");
+        cJSON *mqtt_broker_url = cJSON_GetObjectItemCaseSensitive(json, "mqtt_url");
 
         if (!cJSON_IsString(device_token) || !cJSON_IsString(tenant_id) ||
             !cJSON_IsString(device_id)    || !cJSON_IsString(mqtt_broker_url))

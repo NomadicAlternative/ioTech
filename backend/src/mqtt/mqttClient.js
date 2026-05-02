@@ -1,6 +1,7 @@
 const mqtt = require('mqtt');
 const { createMqttConfig } = require('../config/mqtt');
 const { handleHeartbeat } = require('./handlers/heartbeat');
+const { getSocketService } = require('../socket/socketServer');
 
 // Legacy topic for backward compatibility
 const SUBSCRIBE_TOPIC_LEGACY = 'devices/+/telemetry';
@@ -100,9 +101,17 @@ function initMqtt(deps) {
       const tenantDevice = extractTenantDevice(topic);
       if (tenantDevice) {
         if (tenantDevice.event === 'status') {
-          handleHeartbeat(tenantDevice.tenantId, tenantDevice.deviceId, data).catch((err) => {
+          // Accept plain string ("online") or JSON ({ status: "online" })
+          const statusPayload = parsed.ok ? parsed.value : { status: payloadStr };
+          handleHeartbeat(tenantDevice.tenantId, tenantDevice.deviceId, statusPayload).catch((err) => {
             console.error('[MQTT] heartbeat handler error:', err && err.message ? err.message : err);
           });
+          // Emit real-time status update to dashboard via WebSocket
+          const socketSvc = getSocketService();
+          if (socketSvc) {
+            const onlineStatus = statusPayload.status || payloadStr;
+            socketSvc.emitDeviceStatus(tenantDevice.tenantId, tenantDevice.deviceId, onlineStatus);
+          }
         }
         // Future: add more event handlers here (ota/notify, etc.)
         return;

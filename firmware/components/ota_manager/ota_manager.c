@@ -11,7 +11,7 @@
 
 #include "ota_manager.h"
 #include "nvs_storage.h"
-#include "state_machine.h"
+#include "sm_events.h"
 
 static const char *TAG = "ota_manager";
 

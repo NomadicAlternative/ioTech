@@ -29,13 +29,26 @@ import { EditDeviceDialog } from './components/EditDeviceDialog'
 
 function StatusBadge({ isOnline, status }: { isOnline: boolean; status: string }) {
   const { t } = useTranslation()
-  if (isOnline) {
-    return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">{t('devices.status.online')}</Badge>
-  }
-  if (status === 'offline') {
-    return <Badge variant="secondary">{t('devices.status.offline')}</Badge>
-  }
-  return <Badge variant="outline">{status || t('devices.status.unknown')}</Badge>
+  const label = isOnline
+    ? t('devices.status.online')
+    : status === 'offline'
+      ? t('devices.status.offline')
+      : (status || t('devices.status.unknown'))
+
+  const style = isOnline
+    ? { background: '#dcfce7', color: '#15803d' }
+    : { background: '#fee2e2', color: '#b91c1c' }
+
+  const dotStyle = isOnline
+    ? { background: '#16a34a', boxShadow: '0 0 6px 2px rgba(22,163,74,0.5)' }
+    : { background: '#dc2626', boxShadow: '0 0 6px 2px rgba(220,38,38,0.5)' }
+
+  return (
+    <Badge className="border-0 gap-1.5 font-semibold" style={style}>
+      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={dotStyle} />
+      {label}
+    </Badge>
+  )
 }
 
 // ─── Last seen helper ─────────────────────────────────────────────────────────
@@ -281,7 +294,7 @@ export function DeviceListPage() {
                     <StatusBadge isOnline={device.isOnline} status={device.status} />
                   </td>
                   <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
-                    {device.templateId ?? '—'}
+                    {device.templateName ?? device.templateId ?? '—'}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
                     {formatLastSeen(device.lastSeen)}

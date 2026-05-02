@@ -364,4 +364,17 @@ router.post('/:id/authenticate', validate(schemas.authenticate), async (req, res
  *         updatedAt: { type: string, format: date-time }
  */
 
+/**
+ * GET /api/devices/:id/provisioning-credentials
+ * Returns device_token, backend_url, and mqtt_url for the Web Serial provisioning flow.
+ */
+router.get('/:id/provisioning-credentials', async (req, res, next) => {
+  try {
+    const credentials = await devicesService.getProvisioningCredentials(req.tenantId, req.params.id);
+    res.json({ data: credentials });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

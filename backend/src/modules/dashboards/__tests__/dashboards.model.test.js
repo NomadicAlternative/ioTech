@@ -13,6 +13,7 @@ const { withTenant } = require('../../../shared/db/tenant-knex');
 const dashboardsModel = require('../dashboards.model');
 
 const TENANT_ID = 'tenant-uuid-1';
+const OWNER_ID = TENANT_ID;
 const DASHBOARD_ID = 'dash-uuid-1';
 const CLIENT_ID = 'client-uuid-1';
 
@@ -107,7 +108,7 @@ describe('dashboardsModel.findAll()', () => {
     const trx = makeTrx();
     withTenant.mockImplementation(async (tid, cb) => cb(trx));
 
-    await dashboardsModel.findAll(TENANT_ID, { page: 2, limit: 10 });
+    await dashboardsModel.findAll(TENANT_ID, OWNER_ID, { page: 2, limit: 10 });
 
     expect(trx.__chain.limit).toHaveBeenCalledWith(10);
     expect(trx.__chain.offset).toHaveBeenCalledWith(10); // (2-1)*10
@@ -117,7 +118,7 @@ describe('dashboardsModel.findAll()', () => {
     const trx = makeTrx();
     withTenant.mockImplementation(async (tid, cb) => cb(trx));
 
-    await dashboardsModel.findAll(TENANT_ID, { page: 1, limit: 20, sortBy: null, sortDir: 'asc' });
+    await dashboardsModel.findAll(TENANT_ID, OWNER_ID, { page: 1, limit: 20, sortBy: null, sortDir: 'asc' });
 
     expect(trx.__chain.orderBy).toHaveBeenCalledWith('created_at', 'desc');
   });
@@ -126,7 +127,7 @@ describe('dashboardsModel.findAll()', () => {
     const trx = makeTrx();
     withTenant.mockImplementation(async (tid, cb) => cb(trx));
 
-    await dashboardsModel.findAll(TENANT_ID, { page: 1, limit: 20, sortBy: 'name', sortDir: 'asc' });
+    await dashboardsModel.findAll(TENANT_ID, OWNER_ID, { page: 1, limit: 20, sortBy: 'name', sortDir: 'asc' });
 
     expect(trx.__chain.orderBy).toHaveBeenCalledWith('name', 'asc');
   });
@@ -135,7 +136,7 @@ describe('dashboardsModel.findAll()', () => {
     const trx = makeTrx();
     withTenant.mockImplementation(async (tid, cb) => cb(trx));
 
-    await dashboardsModel.findAll(TENANT_ID, {});
+    await dashboardsModel.findAll(TENANT_ID, OWNER_ID, {});
 
     expect(trx.__chain.where).toHaveBeenCalledWith({ installer_id: TENANT_ID });
   });
@@ -182,18 +183,18 @@ describe('dashboardsModel.findById()', () => {
     const trx = makeTrx();
     withTenant.mockImplementation(async (tid, cb) => cb(trx));
 
-    await dashboardsModel.findById(TENANT_ID, DASHBOARD_ID);
+    await dashboardsModel.findById(TENANT_ID, OWNER_ID, DASHBOARD_ID);
 
     expect(trx.__chain.where).toHaveBeenCalledWith({ installer_id: TENANT_ID, id: DASHBOARD_ID });
     expect(trx.__chain.first).toHaveBeenCalled();
   });
 
   it('returns undefined when no row found (RLS fail — wrong tenant)', async () => {
-    const trx = makeTrx({ firstResult: undefined });
+    const trx = makeTrx({ firstResult: null });
     withTenant.mockImplementation(async (tid, cb) => cb(trx));
 
-    const result = await dashboardsModel.findById('wrong-tenant', DASHBOARD_ID);
-    expect(result).toBeUndefined();
+    const result = await dashboardsModel.findById('wrong-tenant', OWNER_ID, DASHBOARD_ID);
+    expect(result).toBeNull();
   });
 });
 
@@ -215,7 +216,7 @@ describe('dashboardsModel.update()', () => {
     trx.fn = { now: jest.fn(() => 'NOW()') };
     withTenant.mockImplementation(async (tid, cb) => cb(trx));
 
-    const result = await dashboardsModel.update(TENANT_ID, DASHBOARD_ID, { name: 'Updated' });
+    const result = await dashboardsModel.update(TENANT_ID, OWNER_ID, DASHBOARD_ID, { name: 'Updated' });
 
     expect(chain.where).toHaveBeenCalledWith({ installer_id: TENANT_ID, id: DASHBOARD_ID });
     expect(result).toEqual(updated);
@@ -235,7 +236,7 @@ describe('dashboardsModel.remove()', () => {
     const trx = jest.fn(() => chain);
     withTenant.mockImplementation(async (tid, cb) => cb(trx));
 
-    const result = await dashboardsModel.remove(TENANT_ID, DASHBOARD_ID);
+    const result = await dashboardsModel.remove(TENANT_ID, OWNER_ID, DASHBOARD_ID);
 
     expect(chain.where).toHaveBeenCalledWith({ installer_id: TENANT_ID, id: DASHBOARD_ID });
     expect(result).toBe(1);
@@ -261,7 +262,7 @@ describe('dashboardsModel.updateLayout()', () => {
     trx.fn = { now: jest.fn(() => 'NOW()') };
     withTenant.mockImplementation(async (tid, cb) => cb(trx));
 
-    const result = await dashboardsModel.updateLayout(TENANT_ID, DASHBOARD_ID, layout);
+    const result = await dashboardsModel.updateLayout(TENANT_ID, OWNER_ID, DASHBOARD_ID, layout);
 
     // update() was called with JSON-stringified layout
     const updateArg = chain.update.mock.calls[0][0];

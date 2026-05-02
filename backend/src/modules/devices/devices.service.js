@@ -160,7 +160,7 @@ async function claimDevice(tenantId, claimToken) {
   return updated;
 }
 
-module.exports = { list, getById, create, update, remove, authenticate, claimDevice, sendCommand };
+module.exports = { list, getById, create, update, remove, authenticate, claimDevice, sendCommand, getProvisioningCredentials };
 
 /**
  * Send a command to a device via MQTT.
@@ -173,15 +173,37 @@ module.exports = { list, getById, create, update, remove, authenticate, claimDev
 async function sendCommand(tenantId, deviceId, command) {
   await getById(tenantId, deviceId); // ensures device exists and belongs to tenant
 
-  const topic = `devices/${deviceId}/command`;
+  const topic = `org/${tenantId}/device/${deviceId}/command`;
   const mqttClient = getMqttClient();
 
   if (mqttClient) {
-    mqttClient.publish(topic, JSON.stringify(command), { qos: 1 });
-    logger.info(`[devices.service] Published command to ${topic}: action=${command.action}`);
+    const payload = { type: 'relay', relay: command.relay, state: command.state };
+    mqttClient.publish(topic, JSON.stringify(payload), { qos: 1 });
+    logger.info(`[devices.service] Published command to ${topic}: relay=${command.relay} state=${command.state}`);
   } else {
     logger.warn(`[devices.service] MQTT client not available — command for ${deviceId} not sent`);
   }
 
   return { ok: true, topic };
+}
+
+/**
+ * Return the provisioning credentials for a device.
+ * Used by the Web Serial provisioning flow in the dashboard.
+ *
+ * @param {string} tenantId
+ * @param {string} deviceId
+ * @returns {Promise<{ device_token: string, backend_url: string, mqtt_url: string }>}
+ */
+async function getProvisioningCredentials(tenantId, deviceId) {
+  const device = await devicesModel.findById(tenantId, deviceId);
+  if (!device) throw new NotFoundError(`Device not found: ${deviceId}`);
+
+  return {
+    device_token: device.device_token,
+    tenant_id: device.tenant_id,
+    device_id: device.id,
+    backend_url: process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`,
+    mqtt_url: process.env.MQTT_BROKER_URL || 'mqtt://localhost:1883',
+  };
 }

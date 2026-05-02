@@ -100,8 +100,8 @@ export async function fetchTelemetryHistory(
 
 export async function sendDeviceCommand(
   deviceId: string,
-  action: string,
-  payload?: unknown
+  relay: number,
+  state: 'on' | 'off'
 ): Promise<void> {
-  await api.post(`/api/devices/${deviceId}/command`, { action, payload })
+  await api.post(`/api/devices/${deviceId}/command`, { relay, state })
 }

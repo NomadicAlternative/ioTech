@@ -9,6 +9,7 @@ import { DeviceDetailPage } from '@/features/devices/DeviceDetailPage'
 import { TemplateListPage } from '@/features/templates/TemplateListPage'
 import { ClientListPage } from '@/features/clients/ClientListPage'
 import { SocketProvider } from '@/providers/SocketProvider'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 function PlaceholderPage({ name }: { name: string }) {
   return (
@@ -46,7 +47,7 @@ export default function App() {
             element={<DashboardEditorPage />}
           />
           <Route path="devices" element={<DeviceListPage />} />
-          <Route path="devices/:id" element={<DeviceDetailPage />} />
+          <Route path="devices/:id" element={<ErrorBoundary><DeviceDetailPage /></ErrorBoundary>} />
           <Route path="templates" element={<TemplateListPage />} />
           <Route path="clients" element={<ClientListPage />} />
           <Route path="settings" element={<PlaceholderPage name="Settings" />} />
