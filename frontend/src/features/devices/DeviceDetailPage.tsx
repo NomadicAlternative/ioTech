@@ -151,14 +151,16 @@ export function DeviceDetailPage() {
 
       {/* Info cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{t('devices.detail.cardId')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-mono text-sm break-all">{device.id}</p>
-          </CardContent>
-        </Card>
+        {canSeeDatastreams && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('devices.detail.cardId')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="font-mono text-sm break-all">{device.id}</p>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader className="pb-2">

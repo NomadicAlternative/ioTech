@@ -5,7 +5,7 @@ const logger = require('../../shared/logger');
 const { getSocketService } = require('../../socket/socketServer');
 
 /** Timeout in ms before a device is marked offline. */
-const OFFLINE_TIMEOUT_MS = 60_000;
+const OFFLINE_TIMEOUT_MS = 90_000;
 
 /**
  * Map of deviceId → NodeJS.Timeout.

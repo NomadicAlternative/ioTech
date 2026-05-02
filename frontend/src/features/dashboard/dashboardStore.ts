@@ -54,7 +54,13 @@ export const useDashboardStore = create<DashboardStore>((set, get) => {
     if (!currentDashboard) return
     set({ isSaving: true, saveError: null })
     try {
-      await dashboardApi.saveLayout(currentDashboard.id, layout)
+      // Sanitize: replace Infinity y-values (react-grid-layout uses Infinity to
+      // place new widgets at the bottom before the first layout pass).
+      const sanitized = layout.map((e) => ({
+        ...e,
+        y: isFinite(e.y) ? e.y : 0,
+      }))
+      await dashboardApi.saveLayout(currentDashboard.id, sanitized)
       set({ isSaving: false })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Save failed'

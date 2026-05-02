@@ -32,12 +32,12 @@ static uint32_t s_reconnect_delay_ms = 2000;
 #define MQTT_RECONNECT_MAX_MS 120000
 
 /* -----------------------------------------------------------------------
- * Heartbeat task: publishes "online" status every 60s
+ * Heartbeat task: publishes "online" status every 30s
  * --------------------------------------------------------------------- */
 static void heartbeat_task(void *arg)
 {
     for (;;) {
-        vTaskDelay(pdMS_TO_TICKS(60000));
+        vTaskDelay(pdMS_TO_TICKS(30000));
         mqtt_publish_status("online");
     }
 }

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Edit, ArrowLeft } from 'lucide-react'
-import GridLayout, { type LayoutItem } from 'react-grid-layout'
+import { Responsive as ResponsiveGridLayout } from 'react-grid-layout'
+import type { Layout } from 'react-grid-layout'
 import { Button } from '@/components/ui/button'
 import { useDashboardStore } from './dashboardStore'
 import { useAuthStore } from '@/features/auth/authStore'
@@ -19,6 +20,8 @@ export function DashboardViewPage() {
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [canvasWidth, setCanvasWidth] = useState(1200)
+  const canvasRef = useRef<HTMLDivElement>(null)
 
   const isInstaller = user?.role === 'installer' || user?.role === 'admin'
 
@@ -29,6 +32,17 @@ export function DashboardViewPage() {
       .finally(() => setLoading(false))
     return () => clearCurrent()
   }, [id, fetchDashboard, clearCurrent])
+
+  useLayoutEffect(() => {
+    const el = canvasRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => {
+      setCanvasWidth(entry.contentRect.width)
+    })
+    ro.observe(el)
+    setCanvasWidth(el.getBoundingClientRect().width)
+    return () => ro.disconnect()
+  }, [])
 
   if (loading) {
     return (
@@ -50,7 +64,7 @@ export function DashboardViewPage() {
   }
 
   // Convert layout entries to react-grid-layout format
-  const gridLayout: LayoutItem[] = layout.map((e) => ({
+  const gridLayout: Layout = layout.map((e) => ({
     i: e.i,
     x: e.x,
     y: e.y,
@@ -60,7 +74,7 @@ export function DashboardViewPage() {
   }))
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" ref={canvasRef}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -92,20 +106,23 @@ export function DashboardViewPage() {
           )}
         </div>
       ) : (
-        <GridLayout
-          className="layout"
-          layout={gridLayout}
-          width={1200}
-          gridConfig={{ cols: 12, rowHeight: 80, margin: [12, 12] as [number, number] }}
-          dragConfig={{ enabled: false }}
-          resizeConfig={{ enabled: false }}
-        >
-          {layout.map((entry) => (
-            <div key={entry.i}>
-              <WidgetRenderer entry={entry} isEditing={false} />
-            </div>
-          ))}
-        </GridLayout>
+        <ResponsiveGridLayout
+            className="layout"
+            layouts={{ lg: gridLayout }}
+            breakpoints={{ lg: 1200, md: 996, sm: 768 }}
+            cols={{ lg: 12, md: 10, sm: 6 }}
+            rowHeight={80}
+            margin={[12, 12]}
+            width={canvasWidth || 1200}
+            isDraggable={false}
+            isResizable={false}
+          >
+            {layout.map((entry) => (
+              <div key={entry.i}>
+                <WidgetRenderer entry={entry} isEditing={false} />
+              </div>
+            ))}
+          </ResponsiveGridLayout>
       )}
     </div>
   )
