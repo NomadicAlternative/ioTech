@@ -19,20 +19,21 @@ Devices -> MQTT -> Backend (Node.js/Express) -> PostgreSQL (RLS) -> WebSocket ->
 | Topic                          | Direction | Description          |
 |--------------------------------|-----------|----------------------|
 | `devices/{deviceId}/telemetry` | Device->Server | Telemetry ingestion |
-| `devices/{deviceId}/command`   | Server->Device | Commands (future)    |
+| `devices/{deviceId}/command`   | Server->Device | Commands (relay, etc.) |
 
 ## Tech Stack
 
 - **Runtime**: Node.js (CommonJS)
 - **Framework**: Express 5
 - **Database**: PostgreSQL with Knex.js, RLS for multi-tenancy
-- **Auth**: JWT (access + refresh tokens), bcrypt
+- **Auth**: JWT (access + refresh tokens), bcrypt — refresh token como httpOnly cookie
 - **MQTT**: mqtt.js 5.x
 - **WebSocket**: Socket.io (real-time telemetry)
 - **Validation**: Joi (per-module schemas)
 - **API Docs**: Swagger/OpenAPI 3.0 at `/api-docs`
-- **Testing**: Jest (249 tests), ESLint, Prettier
+- **Testing**: Jest, ESLint, Prettier
 - **Config**: dotenv (.env)
+- **Frontend**: React 19 + Vite + Tailwind 4 + Shadcn/ui + Zustand 5 + react-grid-layout + Recharts + Socket.io client + React Router 7 + Axios
 
 ## Project Structure
 
@@ -40,166 +41,103 @@ Devices -> MQTT -> Backend (Node.js/Express) -> PostgreSQL (RLS) -> WebSocket ->
 ioTech/
   backend/
     src/
-      index.js                    # Express server + MQTT init
-      app.js                      # Express app factory, mounts routers + Swagger
-      config/
-        mqtt.js                   # MQTT config from env vars
-        swagger.js                # OpenAPI 3.0 config
-      mqtt/
-        mqttClient.js             # MQTT client with DI for telemetry service
-      socket/
-        socketServer.js           # Socket.io real-time telemetry layer
-      shared/
-        db/
-          knex.js                 # Singleton Knex instance
-          tenant-knex.js          # withTenant() for RLS enforcement
-        errors.js                 # AppError, NotFoundError, ValidationError (with details[])
-        middleware/
-          authGuard.js            # JWT verification
-          tenantResolver.js       # Sets tenant context from JWT
-          errorHandler.js         # Centralized error envelope
-          validate.js             # Joi validation middleware factory
-          paginate.js             # Pagination/sorting middleware
+      index.js
+      app.js
+      mqtt/mqttClient.js
+      socket/socketServer.js         # emits 'telemetry:new' (line 73)
+      shared/db/knex.js
+      shared/db/tenant-knex.js       # withTenant() for RLS
+      shared/errors.js
+      shared/middleware/
       modules/
-        auth/                     # register, login, refresh, logout
-        devices/                  # CRUD + device auth + paginated list
-        device-templates/         # CRUD + typed datastreams
-        clients/                  # CRUD + paginated list
-        installers/               # list, get, update + paginated
-        telemetry/                # query endpoint + MQTT ingestion
-        firmware/                 # firmware version CRUD
-        provisioning/             # WiFi provisioning endpoint
-        dashboards/               # dashboard CRUD + layout (Phase 5)
-    package.json
-  frontend/                       # React 19 + Vite + Tailwind 4 (Phase 5)
+        auth/                        # httpOnly cookie refresh token
+        devices/                     # CRUD + command endpoint
+        device-templates/            # typed datastreams
+        clients/
+        dashboards/                  # CRUD + layout JSONB + sharing
+        telemetry/
+        firmware/
+        provisioning/
+  frontend/
     src/
       features/
-        auth/                     # login, auth store, route guards
-        dashboard/                # dashboard CRUD, grid, layout
-        widgets/                  # widget registry, renderer, 9 MVP widgets
-      lib/
-        api.js                    # Axios instance + JWT interceptor
-        socket.js                 # SocketProvider + telemetry store
-      components/                 # Shadcn/ui shared components
-  .env.example
+        auth/                        # authStore: accessToken in memory
+        dashboard/
+          DashboardListPage.tsx       # fix: updatedAt nullable
+          DashboardEditorPage.tsx     # fix: ResizeObserver + -m-6
+          DashboardViewPage.tsx       # fix: ResizeObserver
+          dashboardStore.ts           # fix: sanitize y:Infinity before save
+          api.ts
+        devices/
+          DeviceDetailPage.tsx
+          DeviceListPage.tsx
+        widgets/
+          WidgetRenderer.tsx
+          WidgetConfigPanel.tsx       # Duplicate button con maxRelay+1
+          registry.ts
+          types/
+            ToggleSwitchWidget.tsx    # fix: localState + pending
+            ButtonWidget.tsx
+            GaugeWidget.tsx
+            ... (9 widgets total)
+      stores/
+        telemetryStore.ts            # flat key "deviceId:datastreamKey"
+        widgetConfigStore.ts
+      providers/SocketProvider.tsx   # telemetry:new → telemetryStore
+      components/AppShell.tsx        # sidebar + main con p-6
   .agent/
-    context.md                    # This file
+    context.md
+    dashboard-phase-6-archive.md
 ```
 
 ## Current State
 
-### Phase 1 — MQTT Ingestion (COMPLETE)
-- MQTT broker connection with auto-reconnect
-- Subscription to `devices/+/telemetry`
-- deviceId extraction from topic via regex
-- Structured telemetry object: `{ deviceId, data, receivedAt }`
-- Health endpoint: `GET /health`
+### Phases 1–4c (COMPLETE) — ver historia completa en dashboard-phase-6-archive.md
 
-### Phase 2 — Foundation (COMPLETE — PR #1)
-- PostgreSQL with Knex.js (8 migrations)
-- JWT auth (access + refresh tokens, bcrypt)
-- RLS multi-tenancy via `withTenant()`
-- 6 modular domains: auth, devices, device-templates, clients, installers, telemetry
-- 36 tests passing
+### Phase 5 — Dashboard Web (COMPLETE — PR merged)
+- 9 MVP widgets: Gauge, Number Display, Line Chart, Status Indicator, Toggle Switch, Button, Stat Card, Progress Bar, Map
+- Grid drag/resize con react-grid-layout
+- Config panel: device selector → datastream selector → type-specific settings
+- Auto-save con debounce 1500ms
+- Sharing dashboard con clientes
+- Socket.io → telemetryStore → widgets reactivos
 
-### Phase 3a — Typed Datastreams (COMPLETE — PR #2)
-- Device templates with typed datastream definitions
-- Telemetry validation against template schemas
+### Phase 5 — Runtime fixes (branch: feat/dashboard-editor — PR #27 abierto)
+Fixes aplicados en esta sesión:
 
-### Phase 3b — WebSocket Real-time (COMPLETE — PR #3)
-- Socket.io layer for real-time telemetry push to dashboards
+- **Grid layout**: `WidthProvider` → `ResizeObserver` con `useLayoutEffect` + `width` explícito pasado al `ResponsiveGridLayout`. Aplica en editor y view.
+- **Editor fullscreen**: `-m-6` en root div del editor para escapar `p-6` del AppShell + `overflow-hidden`
+- **Auto-save**: sanitizar `y: Infinity → 0` antes de enviar al backend — Joi rechaza non-integer en `y: integer().min(0)`
+- **ToggleSwitchWidget**: reemplazado `optimistic` (se reseteaba a null) por `localState` persistente + `pending` para bloquear doble-click. Telemetría toma prioridad si llega.
+- **Duplicate widget**: botón en WidgetConfigPanel — busca `maxRelay` en todo el layout y hace `maxRelay + 1`. Evita duplicados sin importar desde qué widget se duplica.
+- **Invalid Date**: guard `updatedAt ? ... : '—'` en DashboardListPage
 
-### Phase 3c — REST API Hardening (COMPLETE — PR #4)
-- Joi-based input validation on all POST/PUT endpoints (per-module schemas)
-- Pagination, filtering, sorting on all list endpoints (`{ data, meta }`)
-- Standardized error envelope (`{ error: { code, message, status, details? } }`)
-- Swagger/OpenAPI 3.0 docs at `/api-docs` (no auth required)
-- 142 tests, 0 ESLint errors
+### Branch: feat/relay-control (PR #25 — PENDIENTE DE MERGE)
+- Relés 1-7 funcionando físicamente
+- Firmware: keepalive 60s, heartbeat 30s, disable_clean_session
+- Backend heartbeat timeout: 90s (era 60s)
+- Contrato MQTT: `{ type:"relay", relay:number, state:"on"|"off" }`
 
-### Phase 4a — Device Backend Foundation (COMPLETE)
-- Device claiming flow (token-based, atomic UPDATE...RETURNING)
-- WiFi provisioning endpoint (unauthenticated, rate-limited)
-- MQTT device auth via EMQX HTTP callback
-- Heartbeat + online/offline tracking + Socket.io events
-- OTA firmware metadata CRUD + MQTT notify
+## Key Runtime Config
 
-### Phase 4b — ESP32 Firmware (COMPLETE)
-- Captive portal for WiFi config
-- C/ESP-IDF SDK consuming Phase 4a APIs
-- Secure token storage in NVS flash
-- OTA update client
-- State machine for device lifecycle
+- **Mac IP**: 192.168.18.58 | **ESP32 IP**: 192.168.18.65
+- **Device Access-001**: id=8bb9c9c7-19c9-4682-a9b7-8e217d388cd8, tenant_id=216bfcbf-e88f-4ea3-b46a-550db49af2ed
+- **DB**: postgresql://diegogarcia@localhost:5432/iotech_dev
+- **Backend**: `cd backend && node src/index.js` (port 3000)
+- **Frontend**: port 5173
+- **Miniterm**: `python3 -m serial.tools.miniterm --dtr 0 --rts 0 /dev/cu.usbserial-10 115200`
+- **Flash port**: /dev/cu.usbserial-10
+- **GPIO map**: relay1→23, relay2→22, relay3→21, relay4→19, relay5→18, relay6→5, relay7→17 (active LOW)
+- **Paleta**: `--brand-imperial:#01295F`, `--brand-cerulean:#437F97`, `--brand-olive:#849324`, `--brand-amber:#FFB30F`, `--brand-red:#FD151B`
+- **Cookie**: `refreshToken`, httpOnly, sameSite lax, maxAge 7d
+- **Socket event**: `telemetry:new` (socketServer.js line 73)
+- **Relay state**: string `"on"|"off"` — NO boolean
 
-### Phase 5 — Dashboard Web (COMPLETE — ALL 6/6 PHASES ✅, branch: feat/dashboard)
-Full SDD cycle done. Artifacts in engram (project: iotech): explore, widget-catalog, proposal, spec (36 reqs, 39 scenarios), design (9 ADs), tasks (41 tasks).
+## Next Steps
 
-Stack: React 19 + Vite + Tailwind 4 + Shadcn/ui + Zustand 5 + react-grid-layout + Recharts + Socket.io client + React Router 7 + Axios
-Location: frontend/ (new directory at project root)
-
-Key architecture decisions:
-- Feature-based layout (features/auth, features/dashboard, features/widgets)
-- Static widget registry Record<WidgetType, WidgetDefinition>
-- Access token in memory, refresh token httpOnly cookie
-- Layout as JSONB in dashboards table (full replace with debounce 1500ms)
-- Telemetry store flat key "deviceId:datastreamKey" — O(1) lookup
-- New endpoint POST /devices/:id/command for Toggle/Button
-- RLS on dashboards + dashboard_clients with withTenant()
-
-MVP Widgets (9): Gauge, Number Display, Line Chart, Status Indicator, Toggle Switch, Button, Stat Card, Progress Bar, Map
-Wave 2 (7): Multi-line Chart, Slider, Floor Plan, Timeline, Alert Badge, Thermostat, Tank Level
-Wave 3 (5): Camera Feed, GPS Tracker, Serial Monitor, Custom HTML, Weather Station
-
-Blynk-style widget config: tap widget → config panel with name, device selector, datastream selector, type-specific settings. All persisted in layout JSON.
-
-Implementation progress (41 tasks in 6 phases):
-1. ✅ Backend: DB, migrations, API dashboards, RLS, command endpoint (10 tasks)
-2. ✅ Backend TDD: 75 new tests — model, service, integration, migration, command (5 tasks)
-3. ✅ Frontend scaffold: Vite, stores, auth, routing, Axios interceptor (6 tasks)
-4. ✅ Dashboard UI: grid, 9 widgets, config panel, Socket.io, auto-save, sharing (8 tasks)
-5. ✅ Frontend TDD: ~95 new tests — stores, registry, config panel, CRUD, commands, Socket.io, access, sharing, extensibility (9 tasks)
-6. ✅ QA, conventions, cleanup (3 tasks) — DONE
-
-Total new tests: ~170 (75 backend + 95 frontend)
-Branch: feat/dashboard
-
-Runtime fixes applied (post-implementation):
-- Added CORS middleware (`cors` package) in `app.js`
-- Made `tenantId` optional in login schema + added `findUserByEmailOnly()` in auth model
-- Fixed `SET LOCAL` bind param issue in `tenant-knex.js` (template literal instead)
-- Made TimescaleDB extension conditional in migration 005
-- Refactored `installer_id` usage: all dashboard routes now use `req.user.userId` (JWT user ID) instead of `tenantId` (org UUID)
-- Fixed frontend API envelope extraction in `api.ts` (extract `.data` from response)
-- Fixed blank editor page: `dashboardStore.ts` now extracts `.widgets` from layout object, `api.ts` wraps widgets array in `{ widgets, gridConfig }` on save
-
-### Phase 4c — Serial (USB) Provisioning (COMPLETE — branch: feat/relay-control)
-
-- `serial_provisioning` ESP-IDF component: brace-counting JSON reader over UART, NVS writer
-- STATE_INIT tries serial provisioning before captive portal
-- Sends `wifi_ssid`, `wifi_password`, `backend_url`, `mqtt_url`, `device_token`, `tenant_id`, `device_id` directly (no HTTP claiming needed)
-- `claim_token[128]` (was 64) to fit 64-char hex tokens
-- Web Serial modal in dashboard: port selection → send loop 8s/300ms → auto-reconnect after EN/RESET
-- Backend `getProvisioningCredentials()` returns `tenant_id` + `device_id`
-- Frontend `ProvisioningModal` fully i18n (ES + EN)
-- Fixed React `insertBefore` crash: `startTransition` for WebSocket status updates, single `Badge` instance (no conditional mount/unmount), `ErrorBoundary` on device detail route
-- `clearCurrent()` moved to start of useEffect (not cleanup) to avoid race with WebSocket
-- `Promise.resolve().then(setSocket)` removed from SocketProvider
-- NVS-only erase (no re-flash): `esptool erase-region 0x9000 0x5000`
-- ESP32 works on any 5V source once provisioned — no PC needed
-
-Key files:
-- `firmware/components/serial_provisioning/serial_provisioning.c`
-- `firmware/components/nvs_storage/include/nvs_storage.h`
-- `backend/src/modules/devices/devices.service.js`
-- `frontend/src/providers/SocketProvider.tsx`
-- `frontend/src/features/devices/DeviceDetailPage.tsx`
-- `frontend/src/features/devices/DeviceListPage.tsx`
-- `frontend/src/features/devices/components/ProvisioningModal.tsx`
-- `frontend/src/components/ErrorBoundary.tsx`
-- `frontend/src/i18n/locales/es.json` + `en.json`
-- Phase 6: Automation & rules engine (if temp > X then action Y)
-- Phase 7: Production hardening (EMQX broker auth, rate limiting, CI/CD)
-- Phase 8: Mobile app for installers
-- Dashboard Admin: payments, permissions, subscription management (separate product)
+1. **Mobile (punto 4)** — responsive view mode en celular, ajustar grid
+2. **Merge PR #25** — feat/relay-control (firmware + heartbeat)
+3. **Merge PR #27** — feat/dashboard-editor (todos los fixes de esta sesión)
 
 ## API Overview
 
@@ -208,48 +146,25 @@ All errors return `{ error: { code, message, status, details? } }`.
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| POST | /api/auth/register | No | Register installer |
-| POST | /api/auth/login | No | Login |
-| POST | /api/auth/refresh | No | Refresh token |
-| POST | /api/auth/logout | No | Logout |
-| GET | /api/devices | Yes | List devices (paginated) |
-| POST | /api/devices | Yes | Create device |
-| GET | /api/devices/:id | Yes | Get device |
-| PUT | /api/devices/:id | Yes | Update device |
-| DELETE | /api/devices/:id | Yes | Delete device |
-| POST | /api/devices/:id/authenticate | Yes | Authenticate device |
-| GET | /api/device-templates | Yes | List templates (paginated) |
-| POST | /api/device-templates | Yes | Create template |
-| GET | /api/device-templates/:id | Yes | Get template |
-| PUT | /api/device-templates/:id | Yes | Update template |
-| DELETE | /api/device-templates/:id | Yes | Delete template |
-| GET | /api/clients | Yes | List clients (paginated) |
-| POST | /api/clients | Yes | Create client |
-| GET | /api/clients/:id | Yes | Get client |
-| PUT | /api/clients/:id | Yes | Update client |
-| DELETE | /api/clients/:id | Yes | Delete client |
-| GET | /api/installers | Yes | List installers (paginated) |
-| GET | /api/installers/:id | Yes | Get installer |
-| PUT | /api/installers/:id | Yes | Update installer |
-| POST | /api/devices/:id/claim | No | Claim device with token |
-| POST | /api/devices/:id/command | Yes | Send command to device via MQTT |
-| GET | /api/devices/:deviceId/telemetry | Yes | Query telemetry (paginated) |
-| POST | /api/provisioning | No | WiFi provisioning endpoint |
-| GET | /api/firmware | Yes | List firmware versions |
-| POST | /api/firmware | Yes | Create firmware version |
-| GET | /api/dashboards | Yes | List dashboards (paginated) |
+| POST | /api/auth/login | No | Login → sets refreshToken cookie |
+| POST | /api/auth/refresh | No | Refresh via cookie |
+| POST | /api/auth/logout | No | Logout + clear cookie |
+| GET | /api/devices | Yes | List devices |
+| POST | /api/devices/:id/command | Yes | Send relay command via MQTT |
+| GET | /api/device-templates/:id | Yes | Get template + datastreams |
+| GET | /api/dashboards | Yes | List dashboards |
 | POST | /api/dashboards | Yes | Create dashboard |
-| GET | /api/dashboards/:id | Yes | Get dashboard with layout |
-| PUT | /api/dashboards/:id | Yes | Update dashboard |
-| DELETE | /api/dashboards/:id | Yes | Delete dashboard |
-| PUT | /api/dashboards/:id/layout | Yes | Update dashboard layout JSON |
-| GET | /api-docs | No | Swagger UI |
+| GET | /api/dashboards/:id | Yes | Get dashboard + layout |
+| PUT | /api/dashboards/:id/layout | Yes | Save layout JSON |
+| POST | /api/dashboards/:id/share | Yes | Share with client |
+| DELETE | /api/dashboards/:id/share/:clientId | Yes | Revoke share |
 
 ## Rules
 
-- Use `.env` for all secrets — never commit secrets
+- Siempre dar el comando completo, nunca solo flags
+- Never commit secrets
 - Modular code — single responsibility per file
 - Validate all inputs with Joi schemas
 - Multi-tenant via RLS — always use `withTenant()`
 - Conventional commits only
-- Strict TDD — tests first
+- Save session summary to engram AND .agent/context.md at end of every session
