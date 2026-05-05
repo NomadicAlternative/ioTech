@@ -73,6 +73,14 @@ export function DashboardViewPage() {
     static: true,
   }))
 
+  // Mobile layout: stack vertically in single column
+  let mobileY = 0
+  const xsLayout: Layout = layout.map((e) => {
+    const item = { i: e.i, x: 0, y: mobileY, w: 1, h: e.h, static: true }
+    mobileY += e.h
+    return item
+  })
+
   return (
     <div className="space-y-4" ref={canvasRef}>
       {/* Header */}
@@ -106,11 +114,11 @@ export function DashboardViewPage() {
           )}
         </div>
       ) : (
-        <ResponsiveGridLayout
+          <ResponsiveGridLayout
             className="layout"
-            layouts={{ lg: gridLayout }}
-            breakpoints={{ lg: 1200, md: 996, sm: 768 }}
-            cols={{ lg: 12, md: 10, sm: 6 }}
+            layouts={{ lg: gridLayout, md: gridLayout, sm: gridLayout, xs: xsLayout }}
+            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }}
+            cols={{ lg: 12, md: 10, sm: 6, xs: 1 }}
             rowHeight={80}
             margin={[12, 12]}
             width={canvasWidth || 1200}
