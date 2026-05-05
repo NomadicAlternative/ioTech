@@ -52,7 +52,6 @@ export function DashboardEditorPage() {
   const [sharedClientIds, setSharedClientIds] = useState<string[]>([])
   const [sharingLoading, setSharingLoading] = useState(false)
   const [currentBreakpoint, setCurrentBreakpoint] = useState<string>('lg')
-  const [currentBreakpoint, setCurrentBreakpoint] = useState<string>('lg')
 
   useEffect(() => {
     if (!id) return
@@ -256,7 +255,7 @@ export function DashboardEditorPage() {
               margin={[12, 12]}
               width={canvasWidth || 1200}
               isDraggable={currentBreakpoint !== 'xs'}
-              isResizable={currentBreakpoint !== 'xs'
+              isResizable={currentBreakpoint !== 'xs'}
               onBreakpointChange={(bp) => setCurrentBreakpoint(bp)}
               onLayoutChange={(newLayout) => handleLayoutChange(newLayout)}
             >
