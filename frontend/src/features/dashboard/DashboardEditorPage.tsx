@@ -51,6 +51,8 @@ export function DashboardEditorPage() {
   const [clients, setClients] = useState<{ id: string; name: string; email: string }[]>([])
   const [sharedClientIds, setSharedClientIds] = useState<string[]>([])
   const [sharingLoading, setSharingLoading] = useState(false)
+  const [currentBreakpoint, setCurrentBreakpoint] = useState<string>('lg')
+  const [currentBreakpoint, setCurrentBreakpoint] = useState<string>('lg')
 
   useEffect(() => {
     if (!id) return
@@ -148,6 +150,14 @@ export function DashboardEditorPage() {
     minH: 2,
   }))
 
+  // Mobile layout: stack vertically in single column
+  let mobileY = 0
+  const xsLayout: Layout = layout.map((e) => {
+    const item = { i: e.i, x: 0, y: mobileY, w: 1, h: e.h, minW: 1, minH: 2 }
+    mobileY += e.h
+    return item
+  })
+
   // SC-DASH-005: Redirect clients away from the edit route → view mode.
   // Guard is placed here (after all hooks) to comply with Rules of Hooks.
   if (!isInstaller) {
@@ -239,14 +249,15 @@ export function DashboardEditorPage() {
           ) : (
             <ResponsiveGridLayout
               className="layout"
-              layouts={{ lg: gridLayout }}
-              breakpoints={{ lg: 1200, md: 996, sm: 768 }}
-              cols={{ lg: 12, md: 10, sm: 6 }}
+              layouts={{ lg: gridLayout, md: gridLayout, sm: gridLayout, xs: xsLayout }}
+          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }}
+          cols={{ lg: 12, md: 10, sm: 6, xs: 1 }}
               rowHeight={80}
               margin={[12, 12]}
               width={canvasWidth || 1200}
-              isDraggable
-              isResizable
+              isDraggable={currentBreakpoint !== 'xs'}
+              isResizable={currentBreakpoint !== 'xs'
+              onBreakpointChange={(bp) => setCurrentBreakpoint(bp)}
               onLayoutChange={(newLayout) => handleLayoutChange(newLayout)}
             >
               {layout.map((entry) => (
