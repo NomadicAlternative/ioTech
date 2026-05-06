@@ -11,11 +11,13 @@ import {
   LogOut,
   Globe,
   ShieldCheck,
+  Bot,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
   { to: '/app/dashboards', icon: LayoutDashboard, labelKey: 'nav.dashboards' },
   { to: '/app/devices',    icon: Cpu,             labelKey: 'nav.devices' },
+  { to: '/app/rules',      icon: Bot,             labelKey: 'nav.rules' },
   { to: '/app/templates',  icon: FileCode2,        labelKey: 'nav.templates' },
   { to: '/app/clients',    icon: Users,            labelKey: 'nav.clients' },
   { to: '/app/settings',   icon: Settings,         labelKey: 'nav.settings' },

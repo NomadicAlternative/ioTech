@@ -1,0 +1,407 @@
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useRulesStore } from './rulesStore'
+import type { Rule } from './rulesApi'
+
+// ─── Types ─────────────────────────────────────────────────────────────────────
+
+export interface RuleFormProps {
+  open: boolean
+  onClose: () => void
+  rule?: Rule | null
+}
+
+type TriggerType = 'threshold' | 'status'
+type ActionType = 'relay' | 'command'
+type Operator = 'gt' | 'gte' | 'lt' | 'lte' | 'eq' | 'neq'
+
+interface FormData {
+  name: string
+  description: string
+  enabled: boolean
+  cooldownMs: string
+  triggerType: TriggerType | ''
+  triggerField: string
+  triggerOperator: Operator | ''
+  triggerValue: string
+  triggerStatus: string
+  actionType: ActionType | ''
+  actionRelay: string
+  actionState: boolean
+}
+
+interface FormErrors {
+  name?: string
+  relay?: string
+}
+
+const OPERATORS: { value: Operator; label: string }[] = [
+  { value: 'gt', label: '>' },
+  { value: 'gte', label: '>=' },
+  { value: 'lt', label: '<' },
+  { value: 'lte', label: '<=' },
+  { value: 'eq', label: '=' },
+  { value: 'neq', label: '≠' },
+]
+
+const initialState: FormData = {
+  name: '',
+  description: '',
+  enabled: true,
+  cooldownMs: '0',
+  triggerType: '',
+  triggerField: '',
+  triggerOperator: '',
+  triggerValue: '',
+  triggerStatus: 'offline',
+  actionType: '',
+  actionRelay: '1',
+  actionState: true,
+}
+
+// ─── Component ─────────────────────────────────────────────────────────────────
+
+export function RuleForm({ open, onClose, rule }: RuleFormProps) {
+  const { t } = useTranslation()
+  const { createRule, updateRule } = useRulesStore()
+
+  const [form, setForm] = useState<FormData>(initialState)
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  const isEdit = !!rule
+
+  // Populate form when editing
+  useEffect(() => {
+    if (rule) {
+      const triggerConfig = rule.triggerConfig as Record<string, unknown>
+      const actionConfig = rule.actionConfig as Record<string, unknown>
+      setForm({
+        name: rule.name,
+        description: rule.description ?? '',
+        enabled: rule.enabled,
+        cooldownMs: String(rule.cooldownMs),
+        triggerType: rule.triggerType,
+        triggerField: String(triggerConfig.field ?? ''),
+        triggerOperator: String(triggerConfig.operator ?? '') as Operator | '',
+        triggerValue: String(triggerConfig.value ?? ''),
+        triggerStatus: String(triggerConfig.status ?? 'offline'),
+        actionType: rule.actionType,
+        actionRelay: String(actionConfig.relay ?? '1'),
+        actionState: actionConfig.state === true,
+      })
+    } else {
+      setForm(initialState)
+    }
+    setErrors({})
+    setSubmitError(null)
+  }, [rule, open])
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  function updateField<K extends keyof FormData>(key: K, value: FormData[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }))
+    // Clear error when field is modified
+    if (key === 'name' && errors.name) {
+      setErrors((prev) => ({ ...prev, name: undefined }))
+    }
+    if (key === 'actionRelay' && errors.relay) {
+      setErrors((prev) => ({ ...prev, relay: undefined }))
+    }
+  }
+
+  function validate(): boolean {
+    const newErrors: FormErrors = {}
+    if (!form.name.trim()) {
+      newErrors.name = t('rules.form.errors.nameRequired', 'Name is required')
+    }
+    const relayNum = parseInt(form.actionRelay, 10)
+    if (form.actionType === 'relay' && (isNaN(relayNum) || relayNum < 1 || relayNum > 8)) {
+      newErrors.relay = t('rules.form.errors.relayRange', 'Relay must be between 1 and 8')
+    }
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  async function handleSubmit() {
+    if (!validate()) return
+
+    setSubmitting(true)
+    setSubmitError(null)
+
+    try {
+      const payload: Record<string, unknown> = {
+        name: form.name.trim(),
+        description: form.description.trim() || null,
+        enabled: form.enabled,
+        cooldownMs: parseInt(form.cooldownMs, 10) || 0,
+        triggerType: form.triggerType,
+        triggerConfig: buildTriggerConfig(),
+        actionType: form.actionType,
+        actionConfig: buildActionConfig(),
+      }
+
+      if (isEdit && rule) {
+        await updateRule(rule.id, payload)
+      } else {
+        await createRule(payload as Parameters<typeof createRule>[0])
+      }
+      onClose()
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to save rule')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  function buildTriggerConfig(): Record<string, unknown> {
+    if (form.triggerType === 'threshold') {
+      return {
+        field: form.triggerField,
+        operator: form.triggerOperator,
+        value: parseFloat(form.triggerValue),
+      }
+    }
+    if (form.triggerType === 'status') {
+      return { status: form.triggerStatus }
+    }
+    return {}
+  }
+
+  function buildActionConfig(): Record<string, unknown> {
+    if (form.actionType === 'relay') {
+      return {
+        relay: parseInt(form.actionRelay, 10),
+        state: form.actionState,
+      }
+    }
+    return {}
+  }
+
+  // ── Render ──────────────────────────────────────────────────────────────────
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            {isEdit
+              ? t('rules.form.editTitle', 'Edit Automation Rule')
+              : t('rules.form.createTitle', 'Create Automation Rule')}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-5 py-2 max-h-[60vh] overflow-y-auto">
+          {/* Submit error */}
+          {submitError && (
+            <div className="rounded-md bg-destructive/10 text-destructive px-3 py-2 text-sm">
+              {submitError}
+            </div>
+          )}
+
+          {/* ── Basic fields ────────────────────────────────────────────────── */}
+          <div className="space-y-1">
+            <Label>{t('common.nameLabel', 'Name')}</Label>
+            <Input
+              value={form.name}
+              onChange={(e) => updateField('name', e.target.value)}
+              placeholder={t('rules.form.namePlaceholder', 'Rule name')}
+              autoFocus
+            />
+            {errors.name && (
+              <p className="text-destructive text-xs mt-1">{errors.name}</p>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <Label>{t('common.descLabel', 'Description')}</Label>
+            <Input
+              value={form.description}
+              onChange={(e) => updateField('description', e.target.value)}
+              placeholder={t('rules.form.descPlaceholder', 'Optional description')}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label>{t('common.enabled', 'Enabled')}</Label>
+            <Switch
+              checked={form.enabled}
+              onCheckedChange={(v) => updateField('enabled', v)}
+              size="sm"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label>{t('rules.form.cooldownMs', 'Cooldown (ms)')}</Label>
+            <Input
+              type="number"
+              min={0}
+              value={form.cooldownMs}
+              onChange={(e) => updateField('cooldownMs', e.target.value)}
+              placeholder="0"
+            />
+          </div>
+
+          {/* ── Trigger section ─────────────────────────────────────────────── */}
+          <div className="border rounded-lg p-4 space-y-3">
+            <h3 className="text-sm font-semibold">{t('rules.form.triggerSection', 'Trigger')}</h3>
+
+            <div className="space-y-1">
+              <Label>{t('rules.form.triggerType', 'Trigger Type')}</Label>
+              <Select
+                value={form.triggerType}
+                onValueChange={(v: TriggerType) => updateField('triggerType', v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('rules.form.selectTriggerType', 'Select trigger type')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="threshold">{t('rules.form.threshold', 'Threshold')}</SelectItem>
+                  <SelectItem value="status">{t('rules.form.status', 'Status')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {form.triggerType === 'threshold' && (
+              <>
+                <div className="space-y-1">
+                  <Label>{t('rules.form.field', 'Field')}</Label>
+                  <Input
+                    value={form.triggerField}
+                    onChange={(e) => updateField('triggerField', e.target.value)}
+                    placeholder="temperature"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('rules.form.operator', 'Operator')}</Label>
+                  <Select
+                    value={form.triggerOperator}
+                    onValueChange={(v: Operator) => updateField('triggerOperator', v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('rules.form.selectOperator', 'Select operator')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {OPERATORS.map((op) => (
+                        <SelectItem key={op.value} value={op.value}>
+                          {op.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('rules.form.value', 'Value')}</Label>
+                  <Input
+                    type="number"
+                    value={form.triggerValue}
+                    onChange={(e) => updateField('triggerValue', e.target.value)}
+                    placeholder="30"
+                  />
+                </div>
+              </>
+            )}
+
+            {form.triggerType === 'status' && (
+              <div className="space-y-1">
+                <Label>{t('rules.form.statusValue', 'Status')}</Label>
+                <Select
+                  value={form.triggerStatus}
+                  onValueChange={(v: string) => updateField('triggerStatus', v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('rules.form.selectStatus', 'Select status')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="offline">{t('rules.form.offline', 'Offline')}</SelectItem>
+                    <SelectItem value="online">{t('rules.form.online', 'Online')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          {/* ── Action section ──────────────────────────────────────────────── */}
+          <div className="border rounded-lg p-4 space-y-3">
+            <h3 className="text-sm font-semibold">{t('rules.form.actionSection', 'Action')}</h3>
+
+            <div className="space-y-1">
+              <Label>{t('rules.form.actionType', 'Action Type')}</Label>
+              <Select
+                value={form.actionType}
+                onValueChange={(v: ActionType) => updateField('actionType', v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('rules.form.selectActionType', 'Select action type')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="relay">{t('rules.form.relay', 'Relay')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {form.actionType === 'relay' && (
+              <>
+                <div className="space-y-1">
+                  <Label>{t('rules.form.relayNumber', 'Relay Number')}</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={8}
+                    value={form.actionRelay}
+                    onChange={(e) => updateField('actionRelay', e.target.value)}
+                    placeholder="1"
+                    aria-label="Relay number"
+                  />
+                  {errors.relay && (
+                    <p className="text-destructive text-xs mt-1">{errors.relay}</p>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>{t('rules.form.relayState', 'State')}</Label>
+                  <Switch
+                    checked={form.actionState}
+                    onCheckedChange={(v) => updateField('actionState', v)}
+                    size="sm"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            {t('common.cancel', 'Cancel')}
+          </Button>
+          <Button onClick={handleSubmit} disabled={submitting}>
+            {submitting
+              ? t('common.saving', 'Saving...')
+              : isEdit
+                ? t('common.save', 'Save')
+                : t('common.create', 'Create')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
