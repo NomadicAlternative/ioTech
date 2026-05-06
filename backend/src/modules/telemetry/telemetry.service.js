@@ -2,6 +2,9 @@
 
 const db = require('../../shared/db/knex');
 const telemetryModel = require('./telemetry.model');
+const rulesModel = require('../rules/rules.model');
+const rulesEngine = require('../rules/rulesEngine');
+const devicesService = require('../devices/devices.service');
 const { NotFoundError, ValidationError } = require('../../shared/errors');
 const logger = require('../../shared/logger');
 
@@ -63,6 +66,48 @@ function validatePayloadAgainstDatastreams(payload, datastreams, _deviceId) {
   }
 
   return { valid: true };
+}
+
+// ─── _evaluateThresholdRules() (fire-and-forget helper) ───────────────────────
+
+/**
+ * Fetch threshold rules for the tenant and evaluate them against telemetry data.
+ * For matching rules, execute the action and update last_fired_at.
+ *
+ * This is fire-and-forget — errors are caught internally.
+ *
+ * @param {string} tenantId
+ * @param {string} deviceId
+ * @param {object} telemetryData
+ * @returns {Promise<void>}
+ */
+async function _evaluateThresholdRules(tenantId, deviceId, telemetryData) {
+  let rules;
+  try {
+    rules = await rulesModel.findAllByTriggerType(tenantId, 'threshold');
+  } catch (err) {
+    logger.error(`[telemetry.service] Failed to fetch rules for device ${deviceId}: ${err.message}`, err);
+    return;
+  }
+
+  if (!rules || rules.length === 0) return;
+
+  const matches = rulesEngine.evaluateThresholdRules(tenantId, deviceId, telemetryData, rules);
+  if (!matches || matches.length === 0) return;
+
+  for (const match of matches) {
+    try {
+      const actionPayload = await rulesEngine.executeAction(match.rule, tenantId);
+      await devicesService.sendCommand(tenantId, deviceId, actionPayload);
+      await rulesModel.updateLastFired(match.rule.id, new Date());
+      logger.info(
+        `[telemetry.service] Rule fired: ${match.rule.name} (${match.rule.id}) for device ${deviceId}`,
+        { matchedField: match.matchedField, matchedValue: match.matchedValue }
+      );
+    } catch (err) {
+      logger.error(`[telemetry.service] Rule action failed for ${match.rule.name}: ${err.message}`, err);
+    }
+  }
 }
 
 // ─── ingest() ────────────────────────────────────────────────────────────────
@@ -127,6 +172,12 @@ async function ingest(tenantId, deviceId, data, receivedAt) {
   });
 
   logger.debug(`[telemetry.service] Ingested telemetry for device ${deviceId}`, { rowId: row.id });
+
+  // ── Fire-and-forget: evaluate automation rules ────────────────────────────
+  _evaluateThresholdRules(tenantId || device.tenant_id, deviceId, data).catch((err) => {
+    logger.error(`[telemetry.service] Rules evaluation error for device ${deviceId}: ${err.message}`, err);
+  });
+
   return row;
 }
 

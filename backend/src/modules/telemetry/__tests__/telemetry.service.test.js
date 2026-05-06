@@ -11,6 +11,21 @@
 jest.mock('../telemetry.model');
 const telemetryModel = require('../telemetry.model');
 
+// ─── Mock: rules.model (for automation rule evaluation hook) ─────────────────
+jest.mock('../../rules/rules.model', () => ({
+  findAllByTriggerType: jest.fn(),
+  updateLastFired: jest.fn(),
+}));
+const rulesModel = require('../../rules/rules.model');
+
+// ─── Mock: rulesEngine (pure function module) ──────────────────────────────────
+jest.mock('../../rules/rulesEngine');
+const rulesEngine = require('../../rules/rulesEngine');
+
+// ─── Mock: devices.service (for rule action execution) ────────────────────────
+jest.mock('../../devices/devices.service');
+const devicesService = require('../../devices/devices.service');
+
 // ─── Mock: shared/db/knex ─────────────────────────────────────────────────────
 // telemetry.service uses db directly for device lookups (outside withTenant)
 //
@@ -58,6 +73,14 @@ beforeAll(() => {
 });
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * Flush the microtask/promise queue.
+ * Used after fire-and-forget calls to let async continuations settle.
+ */
+function flushPromises() {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
 
 const TENANT_ID = 'tenant-uuid-1';
 const DEVICE_ID = 'device-uuid-1';
@@ -269,6 +292,139 @@ describe('telemetryService.ingest() — datastream validation', () => {
 
     expect(result).not.toBeNull();
     expect(telemetryModel.insert).toHaveBeenCalled();
+  });
+});
+
+// ─── ingest() — rules engine hook (Task 2.1) ─────────────────────────────────
+
+describe('telemetryService.ingest() — rules engine hook', () => {
+  const logger = require('../../../shared/logger');
+
+  const THRESHOLD_RULES = [
+    {
+      id: 'rule-temp-1',
+      tenant_id: TENANT_ID,
+      name: 'High Temp Alert',
+      enabled: true,
+      trigger_type: 'threshold',
+      trigger_config: { field: 'temperature', operator: 'gt', value: 30 },
+      action_type: 'relay',
+      action_config: { relay: 1, state: true },
+      cooldown_ms: 60000,
+      last_fired_at: null,
+    },
+  ];
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    chainableMock.where.mockReturnThis();
+    chainableMock.update.mockResolvedValue(1);
+    mockFirst.mockResolvedValue(makeDevice());
+    telemetryModel.insert.mockResolvedValue(makeTelemetryRow());
+
+    // Default: no rules exist
+    rulesModel.findAllByTriggerType.mockResolvedValue([]);
+    rulesEngine.evaluateThresholdRules.mockReturnValue([]);
+    rulesEngine.executeAction.mockResolvedValue({});
+    devicesService.sendCommand.mockResolvedValue({ ok: true, topic: 'test/topic' });
+    rulesModel.updateLastFired.mockResolvedValue({});
+  });
+
+  it('fires threshold rules engine after successful ingest when rules exist', async () => {
+    rulesModel.findAllByTriggerType.mockResolvedValue(THRESHOLD_RULES);
+    rulesEngine.evaluateThresholdRules.mockReturnValue([
+      { rule: THRESHOLD_RULES[0], matchedValue: 35, matchedField: 'temperature' },
+    ]);
+    rulesEngine.executeAction.mockResolvedValue({ action: 'relay', relay: 1, state: true });
+
+    const result = await telemetryService.ingest(TENANT_ID, DEVICE_ID, { temperature: 35 });
+
+    // Flush fire-and-forget promise
+    await new Promise(resolve => setImmediate(resolve));
+
+    // Ingest should still succeed
+    expect(result).not.toBeNull();
+    expect(telemetryModel.insert).toHaveBeenCalled();
+
+    // Rules were fetched for the correct tenant and trigger type
+    expect(rulesModel.findAllByTriggerType).toHaveBeenCalledWith(TENANT_ID, 'threshold');
+    expect(rulesEngine.evaluateThresholdRules).toHaveBeenCalledWith(
+      TENANT_ID,
+      DEVICE_ID,
+      { temperature: 35 },
+      THRESHOLD_RULES
+    );
+
+    // Action was executed and command sent
+    expect(devicesService.sendCommand).toHaveBeenCalledWith(TENANT_ID, DEVICE_ID, {
+      action: 'relay',
+      relay: 1,
+      state: true,
+    });
+
+    // last_fired_at was updated
+    expect(rulesModel.updateLastFired).toHaveBeenCalledWith(
+      'rule-temp-1',
+      expect.any(Date)
+    );
+  });
+
+  it('does NOT evaluate rules when telemetry is silently dropped', async () => {
+    mockFirst.mockResolvedValue(null); // device inactive
+
+    const result = await telemetryService.ingest(TENANT_ID, DEVICE_ID, { temperature: 35 });
+
+    expect(result).toBeNull();
+    expect(telemetryModel.insert).not.toHaveBeenCalled();
+    expect(rulesModel.findAllByTriggerType).not.toHaveBeenCalled();
+    expect(rulesEngine.evaluateThresholdRules).not.toHaveBeenCalled();
+  });
+
+  it('does NOT evaluate rules when no threshold rules exist for tenant', async () => {
+    rulesModel.findAllByTriggerType.mockResolvedValue([]);
+
+    await telemetryService.ingest(TENANT_ID, DEVICE_ID, { temperature: 25 });
+
+    // Flush fire-and-forget promise
+    await new Promise(resolve => setImmediate(resolve));
+
+    expect(rulesModel.findAllByTriggerType).toHaveBeenCalledWith(TENANT_ID, 'threshold');
+    expect(rulesEngine.evaluateThresholdRules).not.toHaveBeenCalled();
+    expect(devicesService.sendCommand).not.toHaveBeenCalled();
+  });
+
+  it('handles rules engine errors gracefully without crashing telemetry', async () => {
+    rulesModel.findAllByTriggerType.mockRejectedValue(new Error('DB connection lost'));
+
+    const result = await telemetryService.ingest(TENANT_ID, DEVICE_ID, { temperature: 35 });
+
+    // Flush fire-and-forget promise
+    await new Promise(resolve => setImmediate(resolve));
+
+    expect(result).not.toBeNull();
+    expect(telemetryModel.insert).toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to fetch rules'),
+      expect.any(Error)
+    );
+  });
+
+  it('handles executeAction errors gracefully without crashing telemetry', async () => {
+    rulesModel.findAllByTriggerType.mockResolvedValue(THRESHOLD_RULES);
+    rulesEngine.evaluateThresholdRules.mockReturnValue([
+      { rule: THRESHOLD_RULES[0], matchedValue: 40, matchedField: 'temperature' },
+    ]);
+    rulesEngine.executeAction.mockResolvedValue({ action: 'relay', relay: 1, state: true });
+    devicesService.sendCommand.mockRejectedValue(new Error('MQTT not available'));
+
+    const result = await telemetryService.ingest(TENANT_ID, DEVICE_ID, { temperature: 40 });
+    await new Promise(resolve => setImmediate(resolve));
+
+    expect(result).not.toBeNull();
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Rule action failed'),
+      expect.any(Error)
+    );
   });
 });
 

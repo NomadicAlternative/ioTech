@@ -1,6 +1,9 @@
 'use strict';
 
 const devicesModel = require('../../modules/devices/devices.model');
+const rulesModel = require('../../modules/rules/rules.model');
+const rulesEngine = require('../../modules/rules/rulesEngine');
+const devicesService = require('../../modules/devices/devices.service');
 const logger = require('../../shared/logger');
 const { getSocketService } = require('../../socket/socketServer');
 
@@ -12,6 +15,46 @@ const OFFLINE_TIMEOUT_MS = 90_000;
  * Exported for testing only — do not mutate externally.
  */
 const _timers = new Map();
+
+/**
+ * Fetch status rules for the tenant and evaluate them against the device status.
+ * For matching rules, execute the action and update last_fired_at.
+ *
+ * This is fire-and-forget — errors are caught internally.
+ *
+ * @param {string} tenantId
+ * @param {string} deviceId
+ * @param {string} status
+ * @returns {Promise<void>}
+ */
+async function _evaluateStatusRules(tenantId, deviceId, status) {
+  let rules;
+  try {
+    rules = await rulesModel.findAllByTriggerType(tenantId, 'status');
+  } catch (err) {
+    logger.error(`[heartbeat] Failed to fetch status rules for device ${deviceId}: ${err.message}`, err);
+    return;
+  }
+
+  if (!rules || rules.length === 0) return;
+
+  const matches = rulesEngine.evaluateStatusRules(tenantId, deviceId, status, rules);
+  if (!matches || matches.length === 0) return;
+
+  for (const match of matches) {
+    try {
+      const actionPayload = await rulesEngine.executeAction(match.rule, tenantId);
+      await devicesService.sendCommand(tenantId, deviceId, actionPayload);
+      await rulesModel.updateLastFired(match.rule.id, new Date());
+      logger.info(
+        `[heartbeat] Rule fired: ${match.rule.name} (${match.rule.id}) for device ${deviceId}`,
+        { matchedStatus: match.matchedStatus }
+      );
+    } catch (err) {
+      logger.error(`[heartbeat] Rule action failed for ${match.rule.name}: ${err.message}`, err);
+    }
+  }
+}
 
 /**
  * Handle a device heartbeat message.
@@ -46,6 +89,11 @@ async function handleHeartbeat(tenantId, deviceId, payload) {
 
   // Reset the offline timer for this device
   _resetOfflineTimer(tenantId, deviceId);
+
+  // ── Fire-and-forget: evaluate status automation rules ────────────────────
+  _evaluateStatusRules(tenantId, deviceId, 'online').catch((err) => {
+    logger.error(`[heartbeat] Status rules evaluation error for device ${deviceId}: ${err.message}`, err);
+  });
 }
 
 /**
