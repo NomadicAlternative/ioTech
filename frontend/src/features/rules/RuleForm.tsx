@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useRulesStore } from './rulesStore'
+import { useDeviceStore } from '@/features/devices/deviceStore'
 import type { Rule } from './rulesApi'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -39,11 +40,13 @@ interface FormData {
   enabled: boolean
   cooldownMs: string
   triggerType: TriggerType | ''
+  triggerDeviceId: string
   triggerField: string
   triggerOperator: Operator | ''
   triggerValue: string
   triggerStatus: string
   actionType: ActionType | ''
+  actionDeviceId: string
   actionRelay: string
   actionState: boolean
 }
@@ -68,11 +71,13 @@ const initialState: FormData = {
   enabled: true,
   cooldownMs: '0',
   triggerType: '',
+  triggerDeviceId: '',
   triggerField: '',
   triggerOperator: '',
   triggerValue: '',
   triggerStatus: 'offline',
   actionType: '',
+  actionDeviceId: '',
   actionRelay: '1',
   actionState: true,
 }
@@ -82,6 +87,7 @@ const initialState: FormData = {
 export function RuleForm({ open, onClose, rule }: RuleFormProps) {
   const { t } = useTranslation()
   const { createRule, updateRule } = useRulesStore()
+  const { devices, fetchDevices } = useDeviceStore()
 
   const [form, setForm] = useState<FormData>(initialState)
   const [errors, setErrors] = useState<FormErrors>({})
@@ -89,6 +95,13 @@ export function RuleForm({ open, onClose, rule }: RuleFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const isEdit = !!rule
+
+  // Load devices for selectors
+  useEffect(() => {
+    if (open) {
+      fetchDevices()
+    }
+  }, [open])
 
   // Populate form when editing
   useEffect(() => {
@@ -101,11 +114,13 @@ export function RuleForm({ open, onClose, rule }: RuleFormProps) {
         enabled: rule.enabled,
         cooldownMs: String(rule.cooldownMs),
         triggerType: rule.triggerType,
-        triggerField: String(triggerConfig.field ?? ''),
+        triggerDeviceId: String(triggerConfig.deviceId ?? ''),
+        triggerField: String(triggerConfig.datastreamKey ?? triggerConfig.field ?? ''),
         triggerOperator: String(triggerConfig.operator ?? '') as Operator | '',
         triggerValue: String(triggerConfig.value ?? ''),
         triggerStatus: String(triggerConfig.status ?? 'offline'),
         actionType: rule.actionType,
+        actionDeviceId: String(actionConfig.deviceId ?? ''),
         actionRelay: String(actionConfig.relay ?? '1'),
         actionState: actionConfig.state === true,
       })
@@ -176,13 +191,17 @@ export function RuleForm({ open, onClose, rule }: RuleFormProps) {
   function buildTriggerConfig(): Record<string, unknown> {
     if (form.triggerType === 'threshold') {
       return {
-        field: form.triggerField,
+        deviceId: form.triggerDeviceId || undefined,
+        datastreamKey: form.triggerField,
         operator: form.triggerOperator,
         value: parseFloat(form.triggerValue),
       }
     }
     if (form.triggerType === 'status') {
-      return { status: form.triggerStatus }
+      return {
+        deviceId: form.triggerDeviceId || undefined,
+        status: form.triggerStatus,
+      }
     }
     return {}
   }
@@ -190,6 +209,7 @@ export function RuleForm({ open, onClose, rule }: RuleFormProps) {
   function buildActionConfig(): Record<string, unknown> {
     if (form.actionType === 'relay') {
       return {
+        deviceId: form.actionDeviceId || undefined,
         relay: parseInt(form.actionRelay, 10),
         state: form.actionState,
       }
@@ -284,7 +304,25 @@ export function RuleForm({ open, onClose, rule }: RuleFormProps) {
             {form.triggerType === 'threshold' && (
               <>
                 <div className="space-y-1">
-                  <Label>{t('rules.form.field', 'Field')}</Label>
+                  <Label>{t('rules.form.triggerDevice', 'Trigger Device')}</Label>
+                  <Select
+                    value={form.triggerDeviceId}
+                    onValueChange={(v: string) => updateField('triggerDeviceId', v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('rules.form.selectDevice', 'Select device')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {devices.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.name || d.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('rules.form.datastreamKey', 'Datastream Key')}</Label>
                   <Input
                     value={form.triggerField}
                     onChange={(e) => updateField('triggerField', e.target.value)}
@@ -322,21 +360,41 @@ export function RuleForm({ open, onClose, rule }: RuleFormProps) {
             )}
 
             {form.triggerType === 'status' && (
-              <div className="space-y-1">
-                <Label>{t('rules.form.statusValue', 'Status')}</Label>
-                <Select
-                  value={form.triggerStatus}
-                  onValueChange={(v: string) => updateField('triggerStatus', v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('rules.form.selectStatus', 'Select status')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="offline">{t('rules.form.offline', 'Offline')}</SelectItem>
-                    <SelectItem value="online">{t('rules.form.online', 'Online')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <>
+                <div className="space-y-1">
+                  <Label>{t('rules.form.triggerDevice', 'Trigger Device')}</Label>
+                  <Select
+                    value={form.triggerDeviceId}
+                    onValueChange={(v: string) => updateField('triggerDeviceId', v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('rules.form.selectDevice', 'Select device')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {devices.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.name || d.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('rules.form.statusValue', 'Status')}</Label>
+                  <Select
+                    value={form.triggerStatus}
+                    onValueChange={(v: string) => updateField('triggerStatus', v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('rules.form.selectStatus', 'Select status')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="offline">{t('rules.form.offline', 'Offline')}</SelectItem>
+                      <SelectItem value="online">{t('rules.form.online', 'Online')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
           </div>
 
@@ -361,6 +419,24 @@ export function RuleForm({ open, onClose, rule }: RuleFormProps) {
 
             {form.actionType === 'relay' && (
               <>
+                <div className="space-y-1">
+                  <Label>{t('rules.form.actionDevice', 'Target Device')}</Label>
+                  <Select
+                    value={form.actionDeviceId}
+                    onValueChange={(v: string) => updateField('actionDeviceId', v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('rules.form.selectDevice', 'Select device')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {devices.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.name || d.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="space-y-1">
                   <Label>{t('rules.form.relayNumber', 'Relay Number')}</Label>
                   <Input
