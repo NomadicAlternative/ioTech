@@ -126,7 +126,7 @@ function evaluateThresholdRules(tenantId, deviceId, telemetryData, rules) {
     if (rule.trigger_type !== 'threshold') continue;
     if (!rule.enabled) continue;
 
-    const { field, operator, value: threshold } = rule.trigger_config;
+    const { datastreamKey: field, operator, value: threshold } = rule.trigger_config;
 
     // Skip if the telemetry field doesn't exist
     if (!(field in telemetryData)) continue;

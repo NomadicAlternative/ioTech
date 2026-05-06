@@ -98,7 +98,7 @@ describe('rules.routes', () => {
     const VALID_BODY = {
       name: 'New Rule',
       triggerType: 'threshold',
-      triggerConfig: { field: 'temp', operator: 'gt', value: 25 },
+      triggerConfig: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', datastreamKey: 'temp', operator: 'gt', value: 25 },
       actionType: 'relay',
       actionConfig: { relay: 1, state: true },
     };
