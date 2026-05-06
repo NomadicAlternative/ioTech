@@ -126,8 +126,8 @@ async function _evaluateThresholdRules(tenantId, deviceId, telemetryData) {
 async function ingest(tenantId, deviceId, data, receivedAt) {
   if (!deviceId) throw new ValidationError('deviceId is required for telemetry ingestion');
 
-  // Verify device exists and is active (avoids persisting data for ghost devices)
-  const device = await db('devices').where({ id: deviceId, status: 'active' }).first();
+  // Verify device exists and is active/online (avoids persisting data for ghost devices)
+  const device = await db('devices').where({ id: deviceId }).whereIn('status', ['active', 'online']).first();
 
   if (!device) {
     logger.warn(`[telemetry.service] Ignoring telemetry for unknown/inactive device: ${deviceId}`);

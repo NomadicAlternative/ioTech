@@ -14,6 +14,17 @@ vi.mock('react-i18next', () => ({
   }),
 }))
 
+// Mock device store
+vi.mock('@/features/devices/deviceStore', () => ({
+  useDeviceStore: () => ({
+    devices: [
+      { id: 'dev-1', name: 'Device 1' },
+      { id: 'dev-2', name: 'Device 2' },
+    ],
+    fetchDevices: vi.fn(),
+  }),
+}))
+
 import * as rulesApi from '../rulesApi'
 const mockApi = vi.mocked(rulesApi)
 
@@ -117,9 +128,9 @@ const EXISTING_RULE: Rule = {
   description: 'Turn on fan when temp > 30',
   enabled: true,
   triggerType: 'threshold',
-  triggerConfig: { field: 'temperature', operator: 'gt', value: 30 },
+  triggerConfig: { deviceId: 'dev-1', datastreamKey: 'temperature', operator: 'gt', value: 30 },
   actionType: 'relay',
-  actionConfig: { relay: 1, state: true },
+  actionConfig: { deviceId: 'dev-1', relay: 1, state: true },
   cooldownMs: 60000,
   lastFiredAt: null,
   createdAt: '2025-01-01T00:00:00Z',
@@ -169,7 +180,8 @@ describe('RuleForm', () => {
         if (cb) cb('threshold')
       })
 
-      expect(await screen.findByText('Field')).toBeInTheDocument()
+      expect(await screen.findByText('Trigger Device')).toBeInTheDocument()
+      expect(await screen.findByText('Datastream Key')).toBeInTheDocument()
       expect(await screen.findByText('Operator')).toBeInTheDocument()
       expect(await screen.findByText('Value')).toBeInTheDocument()
     })
