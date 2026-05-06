@@ -21,7 +21,8 @@ function validateConditionalConfig(value, helpers) {
   if (triggerType && triggerConfig !== undefined) {
     if (triggerType === 'threshold') {
       const { error } = Joi.object({
-        field: Joi.string().min(1).max(120).required(),
+        deviceId: Joi.string().uuid().required(),
+        datastreamKey: Joi.string().min(1).max(120).required(),
         operator: Joi.string()
           .valid(...VALID_OPERATORS)
           .required(),
@@ -36,7 +37,8 @@ function validateConditionalConfig(value, helpers) {
 
     if (triggerType === 'status') {
       const { error } = Joi.object({
-        status: Joi.string().min(1).max(120).required(),
+        deviceId: Joi.string().uuid().required(),
+        status: Joi.string().valid('online', 'offline').required(),
       }).validate(triggerConfig);
 
       if (error) {
@@ -50,6 +52,7 @@ function validateConditionalConfig(value, helpers) {
   if (actionType && actionConfig !== undefined) {
     if (actionType === 'relay') {
       const { error } = Joi.object({
+        deviceId: Joi.string().uuid().required(),
         relay: Joi.number().integer().min(1).max(8).required(),
         state: Joi.boolean().required(),
       }).validate(actionConfig);

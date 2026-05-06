@@ -34,7 +34,7 @@ function makeRuleRow(overrides = {}) {
     description: 'Alert when temp exceeds threshold',
     enabled: true,
     trigger_type: 'threshold',
-    trigger_config: { field: 'temperature', operator: 'gt', value: 30 },
+    trigger_config: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', datastreamKey: 'temperature', operator: 'gt', value: 30 },
     action_type: 'relay',
     action_config: { relay: 1, state: true },
     cooldown_ms: 60000,
@@ -52,7 +52,7 @@ function makeRuleObject(overrides = {}) {
     description: 'Alert when temp exceeds threshold',
     enabled: true,
     triggerType: 'threshold',
-    triggerConfig: { field: 'temperature', operator: 'gt', value: 30 },
+    triggerConfig: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', datastreamKey: 'temperature', operator: 'gt', value: 30 },
     actionType: 'relay',
     actionConfig: { relay: 1, state: true },
     cooldownMs: 60000,
@@ -118,7 +118,7 @@ describe('rulesService.create()', () => {
   const CREATE_DATA = {
     name: 'New Rule',
     triggerType: 'threshold',
-    triggerConfig: { field: 'temp', operator: 'gt', value: 25 },
+    triggerConfig: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', datastreamKey: 'temp', operator: 'gt', value: 25 },
     actionType: 'relay',
     actionConfig: { relay: 1, state: true },
   };
@@ -135,7 +135,7 @@ describe('rulesService.create()', () => {
     expect(rulesModel.insert).toHaveBeenCalledTimes(1);
     const insertData = rulesModel.insert.mock.calls[0][0];
     expect(insertData.trigger_type).toBe('threshold');
-    expect(insertData.trigger_config).toEqual({ field: 'temp', operator: 'gt', value: 25 });
+    expect(insertData.trigger_config).toEqual({ deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', datastreamKey: 'temp', operator: 'gt', value: 25 });
     expect(insertData.tenant_id).toBe(TENANT_ID);
     expect(result).toMatchObject({ name: 'New Rule' });
   });

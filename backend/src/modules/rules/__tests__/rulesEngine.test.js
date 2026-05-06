@@ -124,7 +124,7 @@ describe('rulesEngine', () => {
         name: 'High Temp Alert',
         enabled: true,
         trigger_type: 'threshold',
-        trigger_config: { field: 'temperature', operator: 'gt', value: 30 },
+        trigger_config: { datastreamKey: 'temperature', operator: 'gt', value: 30 },
         action_type: 'relay',
         action_config: { relay: 1, state: true },
         cooldown_ms: 60000,
@@ -162,7 +162,7 @@ describe('rulesEngine', () => {
 
     it('filters out rules whose trigger field is not in telemetry', () => {
       const rules = [makeRule({
-        trigger_config: { field: 'nonexistent', operator: 'gt', value: 10 },
+        trigger_config: { datastreamKey: 'nonexistent', operator: 'gt', value: 10 },
       })];
       const result = evaluateThresholdRules(TENANT_ID, DEVICE_ID, TELEMETRY, rules);
       expect(result).toHaveLength(0);
@@ -170,14 +170,14 @@ describe('rulesEngine', () => {
 
     it('filters out rules where comparison fails', () => {
       const rules = [makeRule({
-        trigger_config: { field: 'temperature', operator: 'lt', value: 40 },
+        trigger_config: { datastreamKey: 'temperature', operator: 'lt', value: 40 },
       })];
       // 35 < 40 → true, so it should match... wait, that means the condition IS met
       // Let me re-check: we want the rule to fire when the condition is met.
       // "lt" with value=40 and telemetry=35 → 35 < 40 is TRUE → should match
       // Actually let me reconsider the test: we want a case where it does NOT match
       const rules2 = [makeRule({
-        trigger_config: { field: 'temperature', operator: 'lt', value: 30 },
+        trigger_config: { datastreamKey: 'temperature', operator: 'lt', value: 30 },
       })];
       // 35 < 30 → false → should not match
       const result = evaluateThresholdRules(TENANT_ID, DEVICE_ID, TELEMETRY, rules2);
@@ -202,9 +202,9 @@ describe('rulesEngine', () => {
 
     it('handles multiple rules for the same telemetry field', () => {
       const rules = [
-        makeRule({ id: 'rule-1', trigger_config: { field: 'temperature', operator: 'gt', value: 30 } }),
-        makeRule({ id: 'rule-2', trigger_config: { field: 'humidity', operator: 'gt', value: 70 } }),
-        makeRule({ id: 'rule-3', trigger_config: { field: 'temperature', operator: 'gt', value: 50 } }),
+        makeRule({ id: 'rule-1', trigger_config: { datastreamKey: 'temperature', operator: 'gt', value: 30 } }),
+        makeRule({ id: 'rule-2', trigger_config: { datastreamKey: 'humidity', operator: 'gt', value: 70 } }),
+        makeRule({ id: 'rule-3', trigger_config: { datastreamKey: 'temperature', operator: 'gt', value: 50 } }),
       ];
 
       const result = evaluateThresholdRules(TENANT_ID, DEVICE_ID, TELEMETRY, rules);
@@ -335,7 +335,7 @@ describe('rulesEngine', () => {
         name: 'High Temp',
         enabled: true,
         trigger_type: 'threshold',
-        trigger_config: { field: 'temperature', operator: 'gt', value: 30 },
+        trigger_config: { datastreamKey: 'temperature', operator: 'gt', value: 30 },
         action_type: 'relay',
         action_config: { relay: 1, state: true },
         cooldown_ms: 60000,

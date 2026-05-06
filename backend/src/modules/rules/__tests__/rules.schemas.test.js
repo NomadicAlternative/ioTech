@@ -17,9 +17,9 @@ describe('rules.schemas', () => {
     const MIN_CREATE = {
       name: 'Temp Alert',
       triggerType: 'threshold',
-      triggerConfig: { field: 'temperature', operator: 'gt', value: 30 },
+      triggerConfig: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', datastreamKey: 'temperature', operator: 'gt', value: 30 },
       actionType: 'relay',
-      actionConfig: { relay: 1, state: true },
+      actionConfig: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', relay: 1, state: true },
     };
 
     it('accepts a valid create payload', () => {
@@ -68,7 +68,7 @@ describe('rules.schemas', () => {
     it('requires triggerConfig.operator when triggerType is "threshold"', () => {
       const { error } = schemas.create.validate({
         ...MIN_CREATE,
-        triggerConfig: { field: 'temperature', value: 30 },
+        triggerConfig: { datastreamKey: 'temperature', value: 30 },
       });
       expect(error).toBeDefined();
     });
@@ -76,7 +76,7 @@ describe('rules.schemas', () => {
     it('requires triggerConfig.value when triggerType is "threshold"', () => {
       const { error } = schemas.create.validate({
         ...MIN_CREATE,
-        triggerConfig: { field: 'temperature', operator: 'gt' },
+        triggerConfig: { datastreamKey: 'temperature', operator: 'gt' },
       });
       expect(error).toBeDefined();
     });
@@ -84,7 +84,7 @@ describe('rules.schemas', () => {
     it('rejects invalid operator in triggerConfig for threshold', () => {
       const { error } = schemas.create.validate({
         ...MIN_CREATE,
-        triggerConfig: { field: 'temp', operator: 'invalid', value: 30 },
+        triggerConfig: { datastreamKey: 'temp', operator: 'invalid', value: 30 },
       });
       expect(error).toBeDefined();
     });
@@ -92,7 +92,7 @@ describe('rules.schemas', () => {
     it('rejects non-numeric value in triggerConfig for threshold', () => {
       const { error } = schemas.create.validate({
         ...MIN_CREATE,
-        triggerConfig: { field: 'temp', operator: 'gt', value: 'hot' },
+        triggerConfig: { datastreamKey: 'temp', operator: 'gt', value: 'hot' },
       });
       expect(error).toBeDefined();
     });
@@ -105,7 +105,7 @@ describe('rules.schemas', () => {
         triggerType: 'status',
         triggerConfig: {},
         actionType: 'relay',
-        actionConfig: { relay: 1, state: true },
+        actionConfig: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', relay: 1, state: true },
       });
       expect(error).toBeDefined();
     });
@@ -114,9 +114,9 @@ describe('rules.schemas', () => {
       const { error } = schemas.create.validate({
         name: 'Status Alert',
         triggerType: 'status',
-        triggerConfig: { status: 'online' },
+        triggerConfig: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', status: 'online' },
         actionType: 'relay',
-        actionConfig: { relay: 1, state: true },
+        actionConfig: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', relay: 1, state: true },
       });
       expect(error).toBeUndefined();
     });
@@ -126,7 +126,7 @@ describe('rules.schemas', () => {
     it('requires actionConfig.relay when actionType is "relay"', () => {
       const { error } = schemas.create.validate({
         ...MIN_CREATE,
-        actionConfig: { state: true },
+        actionConfig: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', state: true },
       });
       expect(error).toBeDefined();
     });
@@ -134,7 +134,7 @@ describe('rules.schemas', () => {
     it('requires actionConfig.state when actionType is "relay"', () => {
       const { error } = schemas.create.validate({
         ...MIN_CREATE,
-        actionConfig: { relay: 1 },
+        actionConfig: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', relay: 1 },
       });
       expect(error).toBeDefined();
     });
@@ -142,7 +142,7 @@ describe('rules.schemas', () => {
     it('rejects relay < 1', () => {
       const { error } = schemas.create.validate({
         ...MIN_CREATE,
-        actionConfig: { relay: 0, state: true },
+        actionConfig: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', relay: 0, state: true },
       });
       expect(error).toBeDefined();
     });
@@ -150,7 +150,7 @@ describe('rules.schemas', () => {
     it('rejects relay > 8', () => {
       const { error } = schemas.create.validate({
         ...MIN_CREATE,
-        actionConfig: { relay: 9, state: true },
+        actionConfig: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', relay: 9, state: true },
       });
       expect(error).toBeDefined();
     });
@@ -158,7 +158,7 @@ describe('rules.schemas', () => {
     it('rejects invalid relay state (must be boolean)', () => {
       const { error } = schemas.create.validate({
         ...MIN_CREATE,
-        actionConfig: { relay: 1, state: 'maybe' },
+        actionConfig: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', relay: 1, state: 'maybe' },
       });
       expect(error).toBeDefined();
     });
@@ -229,7 +229,7 @@ describe('rules.schemas', () => {
     it('validates actionConfig conditionally when actionType is changed to relay', () => {
       const { error } = schemas.update.validate({
         actionType: 'relay',
-        actionConfig: { relay: 1 },
+        actionConfig: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', relay: 1 },
       });
       expect(error).toBeDefined(); // missing state
     });
@@ -237,7 +237,7 @@ describe('rules.schemas', () => {
     it('accepts valid update with relay action', () => {
       const { error } = schemas.update.validate({
         actionType: 'relay',
-        actionConfig: { relay: 2, state: false },
+        actionConfig: { deviceId: '8bb9c9c7-19c9-4682-a9b7-8e217d388cd8', relay: 2, state: false },
       });
       expect(error).toBeUndefined();
     });
