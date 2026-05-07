@@ -4,17 +4,16 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useAuthStore } from '@/features/auth/authStore'
+import { ProvisioningModal } from './ProvisioningModal'
 import {
-  Usb, Wifi, CheckCircle2, AlertTriangle, Loader2,
-  Cpu, Download, Zap, ArrowRight, RotateCcw,
+  CheckCircle2, AlertTriangle, Loader2,
+  Cpu, Zap, RotateCcw,
 } from 'lucide-react'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
-type Step = 'start' | 'building' | 'flashing' | 'reset' | 'wifi' | 'provision' | 'done' | 'error'
+type Phase = 'idle' | 'building' | 'flashing' | 'done' | 'error'
 
 interface Props {
   deviceId: string
@@ -23,39 +22,17 @@ interface Props {
   onClose: () => void
 }
 
-// ─── Steps definition ──────────────────────────────────────────────────────
-
-interface StepDef {
-  key: Step
-  icon: typeof Cpu
-  title: string
-  desc: string
-}
-
-const STEPS: StepDef[] = [
-  { key: 'start', icon: Cpu, title: 'Connect ESP32', desc: 'Connect the ESP32 to a USB port on this computer' },
-  { key: 'building', icon: Download, title: 'Building firmware', desc: 'Compiling the latest firmware...' },
-  { key: 'flashing', icon: Zap, title: 'Flashing', desc: 'Writing firmware to ESP32...' },
-  { key: 'reset', icon: RotateCcw, title: 'Reset device', desc: 'Press the EN/RESET button on the ESP32' },
-  { key: 'wifi', icon: Wifi, title: 'WiFi Setup', desc: 'Enter the WiFi credentials for the device' },
-  { key: 'provision', icon: Usb, title: 'Serial Setup', desc: 'Sending configuration via USB...' },
-  { key: 'done', icon: CheckCircle2, title: 'Complete!', desc: 'Device is configured and connected' },
-]
-
 // ─── Component ─────────────────────────────────────────────────────────────
 
 export function FlashDeviceWizard({ deviceId, deviceName, open, onClose }: Props) {
   const { t } = useTranslation()
   const token = useAuthStore((s) => s.accessToken)
-  const [step, setStep] = useState<Step>('start')
+  const [phase, setPhase] = useState<Phase>('idle')
   const [logs, setLogs] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [wifiSsid, setWifiSsid] = useState('')
-  const [wifiPassword, setWifiPassword] = useState('')
-  const [credentials, setCredentials] = useState<Record<string, unknown> | null>(null)
+  const [showProvisioning, setShowProvisioning] = useState(false)
   const logsRef = useRef<HTMLDivElement>(null)
 
-  // Auto-scroll logs
   useEffect(() => {
     if (logsRef.current) {
       logsRef.current.scrollTop = logsRef.current.scrollHeight
@@ -63,23 +40,22 @@ export function FlashDeviceWizard({ deviceId, deviceName, open, onClose }: Props
   }, [logs])
 
   function reset() {
-    setStep('start')
+    setPhase('idle')
     setLogs([])
     setError(null)
-    setWifiSsid('')
-    setWifiPassword('')
-    setCredentials(null)
+    setShowProvisioning(false)
   }
 
   function handleClose() {
+    if (phase === 'building' || phase === 'flashing') return // don't close during flash
     reset()
     onClose()
   }
 
-  // ── SSE Flash via fetch stream ────────────────────────────────────────
+  // ── Start flash ────────────────────────────────────────────────────────
 
   async function startFlash() {
-    setStep('building')
+    setPhase('building')
     setLogs([])
     setError(null)
 
@@ -94,7 +70,7 @@ export function FlashDeviceWizard({ deviceId, deviceName, open, onClose }: Props
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: { message: 'Flash request failed' } }))
-        throw new Error(err.error?.message || 'Flash request failed')
+        throw new Error(err.error?.message || `HTTP ${res.status}`)
       }
 
       const reader = res.body?.getReader()
@@ -108,286 +84,205 @@ export function FlashDeviceWizard({ deviceId, deviceName, open, onClose }: Props
         if (done) break
 
         buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ''
 
-        for (const line of lines) {
-          if (line.startsWith('event: ')) {
-            const eventType = line.slice(7).trim()
-            continue
+        // Parse complete SSE events from buffer
+        while (buffer.includes('\n\n')) {
+          const idx = buffer.indexOf('\n\n')
+          const eventBlock = buffer.slice(0, idx)
+          buffer = buffer.slice(idx + 2)
+
+          let eventType = 'message'
+          let eventData = ''
+
+          for (const line of eventBlock.split('\n')) {
+            if (line.startsWith('event: ')) {
+              eventType = line.slice(7).trim()
+            } else if (line.startsWith('data: ')) {
+              eventData = line.slice(6)
+            }
           }
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6))
-              handleSSEEvent(data)
-            } catch {
-              // skip malformed
+
+          if (!eventData) continue
+
+          try {
+            const data = JSON.parse(eventData)
+
+            if (eventType === 'progress') {
+              if (data.line) {
+                setLogs((prev) => [...prev, data.line])
+              }
+              if (data.step === 'flash') {
+                setPhase('flashing')
+              }
+            } else if (eventType === 'done') {
+              setPhase('done')
+              setLogs((prev) => [...prev, '✅ Flash complete! Device is ready.'])
+            } else if (eventType === 'error') {
+              throw new Error(data.message || 'Flash failed')
+            }
+          } catch (parseErr) {
+            if (parseErr instanceof Error && parseErr.message !== 'Unexpected end of JSON input') {
+              throw parseErr
             }
           }
         }
       }
+
+      // If we got here without explicit done event, check if flash completed
+      if (phase !== 'done' && phase !== 'error') {
+        setPhase('done')
+      }
     } catch (err) {
-      setStep('error')
+      setPhase('error')
       setError(err instanceof Error ? err.message : 'Unknown error')
     }
   }
 
-  function handleSSEEvent(data: Record<string, unknown>) {
-    if (data.step && data.line) {
-      setLogs((prev) => [...prev, `[${data.step}] ${data.line}`])
-
-      // Auto-advance step based on content
-      if (data.line?.includes('Flash complete!') || data.line?.includes('rebooting')) {
-        setStep('reset')
-      }
-      if (data.line?.includes('Building firmware') || data.step === 'build') {
-        setStep('building')
-      }
-      if (data.step === 'flash') {
-        setStep('flashing')
-      }
-    }
-
-    if (data.error || data.message?.includes('failed')) {
-      setStep('error')
-      setError(data.error || data.message)
-    }
-
-    if (data.credentials) {
-      setCredentials(data.credentials)
-      setStep('wifi')
-    }
-  }
-
-  function handleWifiSubmit() {
-    if (!wifiSsid.trim()) return
-    setStep('provision')
-  }
-
-  // ── Render helpers ─────────────────────────────────────────────────────
-
-  const currentStepIdx = STEPS.findIndex((s) => s.key === step)
-
-  function StepIcon({ def, active, done }: { def: StepDef; active: boolean; done: boolean }) {
-    if (done) return <CheckCircle2 className="w-5 h-5 text-green-500" />
-    if (active) return <def.icon className="w-5 h-5 text-primary animate-pulse" />
-    return <def.icon className="w-5 h-5 text-muted-foreground/40" />
-  }
+  // ── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose() }}>
-      <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-amber-500" />
-            Flash & Provision: {deviceName}
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open && !showProvisioning} onOpenChange={(o) => { if (!o) handleClose() }}>
+        <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-amber-500" />
+              Flash Device: {deviceName}
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-6 py-2">
-          {/* ── Stepper ─────────────────────────────────────────────────── */}
-          <div className="flex items-center gap-1">
-            {STEPS.slice(0, 5).map((s, i) => (
-              <div key={s.key} className="flex items-center gap-1 flex-1">
-                <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold transition-colors ${
-                    i < currentStepIdx
-                      ? 'bg-green-500 text-white'
-                      : i === currentStepIdx
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground'
-                  }`}
-                  title={s.title}
-                >
-                  {i < currentStepIdx ? '✓' : i + 1}
-                </div>
-                {i < 4 && (
-                  <div
-                    className={`flex-1 h-0.5 ${
-                      i < currentStepIdx ? 'bg-green-500' : 'bg-muted'
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* ── Step content ────────────────────────────────────────────── */}
-          <div className="min-h-[200px]">
-            {/* Start */}
-            {step === 'start' && (
-              <div className="text-center space-y-4 py-8">
-                <Cpu className="w-16 h-16 text-muted-foreground mx-auto" />
+          <div className="space-y-6 py-2 min-h-[250px]">
+            {/* Idle — start screen */}
+            {phase === 'idle' && (
+              <div className="text-center space-y-6 py-8">
+                <Cpu className="w-20 h-20 text-muted-foreground mx-auto" />
                 <div>
-                  <h3 className="text-lg font-semibold">{t('flash.step1Title', 'Connect the ESP32')}</h3>
-                  <p className="text-muted-foreground mt-1 max-w-md mx-auto">
-                    {t('flash.step1Desc', 'Plug the ESP32 into a USB port on this computer. Make sure the cable supports data transfer.')}
-                  </p>
+                  <h3 className="text-xl font-bold">{t('flash.ready', 'Ready to Flash')}</h3>
+                  <div className="mt-4 space-y-2 text-left max-w-md mx-auto text-sm text-muted-foreground">
+                    <p>1. 🔌 {t('flash.instruction1', 'Connect the ESP32 via USB')}</p>
+                    <p>2. ⚡ {t('flash.instruction2', 'Click Start Flash — the wizard compiles and uploads firmware')}</p>
+                    <p>3. 🔄 {t('flash.instruction3', 'Press EN/RESET on the ESP32 when prompted')}</p>
+                    <p>4. 📡 {t('flash.instruction4', 'Enter WiFi credentials so the device can connect')}</p>
+                  </div>
                 </div>
                 <Button size="lg" onClick={startFlash} className="gap-2">
                   <Zap className="w-4 h-4" />
-                  {t('flash.startButton', 'Start Flash')}
+                  {t('flash.start', 'Start Flash')}
                 </Button>
               </div>
             )}
 
             {/* Building / Flashing */}
-            {(step === 'building' || step === 'flashing') && (
+            {(phase === 'building' || phase === 'flashing') && (
               <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                  <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                  <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
                   <div>
-                    <p className="font-medium">
-                      {step === 'building'
+                    <p className="font-semibold">
+                      {phase === 'building'
                         ? t('flash.building', 'Building firmware...')
                         : t('flash.flashing', 'Flashing ESP32...')}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {step === 'building'
-                        ? t('flash.buildingDesc', 'Compiling the latest firmware version')
-                        : t('flash.flashingDesc', 'Writing firmware to device memory')}
+                      {t('flash.pleaseWait', 'Please wait — do not disconnect the device')}
                     </p>
                   </div>
                 </div>
+
                 <div
                   ref={logsRef}
-                  className="bg-black text-green-400 rounded-lg p-3 h-40 overflow-y-auto font-mono text-xs space-y-0.5"
+                  className="bg-gray-950 text-green-400 rounded-lg p-3 h-48 overflow-y-auto font-mono text-xs"
                 >
                   {logs.length === 0 && (
-                    <p className="text-green-600 animate-pulse">Waiting for output...</p>
+                    <p className="text-green-600 animate-pulse">Starting...</p>
                   )}
                   {logs.map((log, i) => (
-                    <p key={i} className="whitespace-pre-wrap break-all">{log}</p>
+                    <p key={i} className="whitespace-pre-wrap break-all leading-relaxed">
+                      {log.startsWith('⚠') ? (
+                        <span className="text-yellow-400">{log}</span>
+                      ) : log.startsWith('✅') ? (
+                        <span className="text-green-300">{log}</span>
+                      ) : log.startsWith('❌') ? (
+                        <span className="text-red-400">{log}</span>
+                      ) : (
+                        <span className="text-green-500/80">{log}</span>
+                      )}
+                    </p>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Reset */}
-            {step === 'reset' && (
-              <div className="text-center space-y-4 py-8">
-                <RotateCcw className="w-16 h-16 text-amber-500 mx-auto animate-spin" />
-                <div>
-                  <h3 className="text-lg font-semibold">{t('flash.resetTitle', 'Press EN/RESET')}</h3>
-                  <p className="text-muted-foreground mt-1 max-w-md mx-auto">
-                    {t('flash.resetDesc', 'Press the EN or RESET button on the ESP32 board. This reboots the device so it can receive the configuration via USB.')}
-                  </p>
-                </div>
-                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 rounded-lg p-3">
-                  <p className="text-sm text-amber-800 dark:text-amber-200">
-                    ⚠️ {t('flash.resetHint', 'Do this NOW — the device only waits ~10 seconds for configuration.')}
-                  </p>
-                </div>
-                <Button size="lg" onClick={() => setStep('wifi')} className="gap-2">
-                  <ArrowRight className="w-4 h-4" />
-                  {t('flash.continueButton', 'Done, continue')}
-                </Button>
-              </div>
-            )}
-
-            {/* WiFi form */}
-            {step === 'wifi' && (
-              <div className="space-y-4 py-4">
-                <Wifi className="w-12 h-12 text-primary mx-auto" />
-                <h3 className="text-lg font-semibold text-center">{t('flash.wifiTitle', 'WiFi Credentials')}</h3>
-                <p className="text-muted-foreground text-center text-sm">
-                  {t('flash.wifiDesc', 'Enter the WiFi network the ESP32 should connect to.')}
-                </p>
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <Label>{t('flash.ssidLabel', 'Network name (SSID)')}</Label>
-                    <Input
-                      value={wifiSsid}
-                      onChange={(e) => setWifiSsid(e.target.value)}
-                      placeholder="MyWiFiNetwork"
-                      autoFocus
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{t('flash.passwordLabel', 'Password')}</Label>
-                    <Input
-                      type="password"
-                      value={wifiPassword}
-                      onChange={(e) => setWifiPassword(e.target.value)}
-                      placeholder="••••••••"
-                    />
-                  </div>
-                </div>
-                <Button
-                  className="w-full gap-2"
-                  size="lg"
-                  onClick={handleWifiSubmit}
-                  disabled={!wifiSsid.trim()}
-                >
-                  <Usb className="w-4 h-4" />
-                  {t('flash.connectSerialButton', 'Connect via USB Serial')}
-                </Button>
-              </div>
-            )}
-
-            {/* Provision — Web Serial flow */}
-            {step === 'provision' && (
-              <div className="text-center space-y-4 py-8">
-                <Loader2 className="w-16 h-16 text-primary mx-auto animate-spin" />
-                <div>
-                  <h3 className="text-lg font-semibold">{t('flash.provisioning', 'Sending configuration...')}</h3>
-                  <p className="text-muted-foreground mt-1">
-                    {t('flash.provisioningDesc', 'Select the serial port and click Connect. The configuration will be sent to the ESP32.')}
-                  </p>
-                </div>
-                {credentials && (
-                  <div className="bg-muted rounded-lg p-3 text-left text-xs font-mono space-y-1">
-                    <p>device_token: {String(credentials.device_token).slice(0, 12)}...</p>
-                    <p>tenant_id: {String(credentials.tenant_id)}</p>
-                    <p>device_id: {String(credentials.device_id).slice(0, 12)}...</p>
-                  </div>
-                )}
-                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 rounded-lg p-3">
-                  <p className="text-sm text-amber-800 dark:text-amber-200">
-                    ⚠️ {t('flash.serialHint', 'Web Serial API requires Chrome or Edge. Select the port that matches your ESP32.')}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Done */}
-            {step === 'done' && (
-              <div className="text-center space-y-4 py-8">
+            {/* Done — show instructions + open provisioning */}
+            {phase === 'done' && (
+              <div className="text-center space-y-6 py-4">
                 <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto" />
                 <div>
-                  <h3 className="text-lg font-semibold">{t('flash.doneTitle', 'Device Configured!')}</h3>
-                  <p className="text-muted-foreground mt-1 max-w-md mx-auto">
-                    {t('flash.doneDesc', 'The ESP32 is now connected to WiFi and MQTT. It will appear online in your device list shortly.')}
+                  <h3 className="text-xl font-bold text-green-700 dark:text-green-400">
+                    {t('flash.flashComplete', 'Flash Complete!')}
+                  </h3>
+                  <p className="text-muted-foreground mt-2 text-sm">
+                    {t('flash.flashCompleteDesc', 'Firmware successfully uploaded to ESP32.')}
                   </p>
                 </div>
-                <Button onClick={handleClose} className="gap-2">
-                  <CheckCircle2 className="w-4 h-4" />
-                  {t('common.done', 'Done')}
-                </Button>
+
+                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 rounded-lg p-4 text-left">
+                  <div className="flex items-start gap-3">
+                    <RotateCcw className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                    <div className="text-sm text-amber-800 dark:text-amber-200">
+                      <p className="font-semibold mb-1">{t('flash.pressReset', '⚠️ Press EN/RESET on the ESP32 NOW')}</p>
+                      <p>{t('flash.pressResetDesc', 'The device reboots and waits ~10 seconds to receive configuration via USB. Do this BEFORE clicking Continue.')}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 justify-center">
+                  <Button variant="outline" onClick={handleClose}>
+                    {t('common.cancel', 'Cancel')}
+                  </Button>
+                  <Button size="lg" className="gap-2" onClick={() => setShowProvisioning(true)}>
+                    <CheckCircle2 className="w-4 h-4" />
+                    {t('flash.continueToProvision', 'Continue — Configure WiFi')}
+                  </Button>
+                </div>
               </div>
             )}
 
             {/* Error */}
-            {step === 'error' && (
+            {phase === 'error' && (
               <div className="text-center space-y-4 py-8">
                 <AlertTriangle className="w-16 h-16 text-destructive mx-auto" />
                 <div>
-                  <h3 className="text-lg font-semibold">{t('flash.errorTitle', 'Something went wrong')}</h3>
-                  <p className="text-destructive mt-1">{error}</p>
+                  <h3 className="text-lg font-semibold">{t('flash.error', 'Flash Failed')}</h3>
+                  <p className="text-destructive text-sm mt-1">{error}</p>
+                  {logs.length > 0 && (
+                    <div className="bg-gray-950 text-red-400 rounded-lg p-3 h-32 overflow-y-auto font-mono text-xs mt-3 text-left">
+                      {logs.slice(-20).map((log, i) => (
+                        <p key={i} className="whitespace-pre-wrap break-all">{log}</p>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-2 justify-center">
-                  <Button variant="outline" onClick={() => setStep('start')}>
-                    {t('common.retry', 'Retry')}
-                  </Button>
-                  <Button variant="outline" onClick={handleClose}>
-                    {t('common.cancel', 'Cancel')}
-                  </Button>
+                  <Button onClick={() => startFlash()}>{t('common.retry', 'Retry')}</Button>
+                  <Button variant="outline" onClick={handleClose}>{t('common.cancel', 'Cancel')}</Button>
                 </div>
               </div>
             )}
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* Provisioning modal — opens after flash is done */}
+      <ProvisioningModal
+        deviceId={deviceId}
+        deviceName={deviceName}
+        open={showProvisioning}
+        onClose={() => {
+          setShowProvisioning(false)
+          handleClose()
+        }}
+      />
+    </>
   )
 }

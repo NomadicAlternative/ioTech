@@ -32,11 +32,11 @@ echo "   ✅ Puerto: $PORT"
 # ── 2. Build firmware ──────────────────────────────────────────────
 echo "🔧 Compilando firmware..."
 cd "$FIRMWARE_DIR"
-$PIO run -e esp32dev --quiet 2>&1 | tail -1
+$PIO run -e esp32dev 2>&1 | tail -3
 
 # ── 3. Flash ────────────────────────────────────────────────────────
 echo "⚡ Flasheando ESP32 en $PORT ..."
-$PIO run -e esp32dev --target upload --upload-port "$PORT" --quiet 2>&1 | tail -1
+$PIO run -e esp32dev --target upload --upload-port "$PORT" 2>&1 | tail -5
 
 # ── 4. Fetch device credentials ─────────────────────────────────────
 echo "🔑 Obteniendo credenciales del device $DEVICE_ID ..."
