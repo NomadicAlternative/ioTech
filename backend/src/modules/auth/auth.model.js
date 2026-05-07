@@ -88,8 +88,28 @@ async function deleteRefreshToken(token) {
   return db('refresh_tokens').where({ token }).delete();
 }
 
+/**
+ * Insert a new tenant (installer).
+ * Used during installer self-registration.
+ * @param {{ id: string, name: string, email: string, contactEmail?: string, metadata?: object }} data
+ * @returns {Promise<object>} inserted tenant row
+ */
+async function createTenant(data) {
+  const [tenant] = await db('tenants')
+    .insert({
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      contact_email: data.contactEmail || null,
+      metadata: JSON.stringify(data.metadata || {}),
+    })
+    .returning(['id', 'name', 'email', 'contact_email', 'metadata', 'created_at']);
+  return tenant;
+}
+
 module.exports = {
   createUser,
+  createTenant,
   findUserByEmail,
   findUserByEmailOnly,
   findUserById,
