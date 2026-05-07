@@ -61,7 +61,7 @@ async function createTenant({ name, email, password }) {
 
   return {
     tenant: { id: tenantId, name, email },
-    user: { id: userId, email, role: 'admin' },
+    credentials: { email, password },  // Only returned on creation — show to super-admin
   };
 }
 

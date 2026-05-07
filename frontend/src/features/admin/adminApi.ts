@@ -21,7 +21,7 @@ export async function fetchTenants(): Promise<Tenant[]> {
   return res.data.data
 }
 
-export async function createTenant(data: CreateTenantPayload): Promise<{ tenant: Tenant; user: Record<string, unknown> }> {
-  const res = await api.post<{ data: { tenant: Tenant; user: Record<string, unknown> } }>('/api/admin/tenants', data)
+export async function createTenant(data: CreateTenantPayload): Promise<{ tenant: Tenant; credentials: { email: string; password: string } }> {
+  const res = await api.post<{ data: { tenant: Tenant; credentials: { email: string; password: string } } }>('/api/admin/tenants', data)
   return res.data.data
 }

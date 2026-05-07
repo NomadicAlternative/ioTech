@@ -6,7 +6,7 @@ interface AdminStore {
   loading: boolean
   error: string | null
   fetchTenants: () => Promise<void>
-  addTenant: (payload: CreateTenantPayload) => Promise<void>
+  addTenant: (payload: CreateTenantPayload) => Promise<{ email: string; password: string }>
 }
 
 export const useAdminStore = create<AdminStore>((set) => ({
@@ -26,9 +26,9 @@ export const useAdminStore = create<AdminStore>((set) => ({
 
   addTenant: async (payload) => {
     set({ error: null })
-    await createTenant(payload)
-    // Refresh list after creation
+    const result = await createTenant(payload)
     const data = await fetchTenants()
     set({ tenants: data })
+    return result.credentials
   },
 }))

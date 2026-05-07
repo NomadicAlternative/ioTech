@@ -21,6 +21,8 @@ export function TenantsPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [created, setCreated] = useState<{ email: string; password: string } | null>(null)
+  const [credentialOpen, setCredentialOpen] = useState(false)
 
   useEffect(() => { fetchTenants() }, [])
 
@@ -29,7 +31,9 @@ export function TenantsPage() {
     setSubmitting(true)
     setSubmitError(null)
     try {
-      await addTenant({ name: name.trim(), email: email.trim(), password })
+      const creds = await addTenant({ name: name.trim(), email: email.trim(), password })
+      setCreated(creds)
+      setCredentialOpen(true)
       setOpen(false)
       setName('')
       setEmail('')
@@ -148,6 +152,48 @@ export function TenantsPage() {
               {submitting ? t('common.creating', 'Creating...') : t('common.create', 'Create')}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Credentials dialog — shown after tenant creation */}
+      <Dialog open={credentialOpen} onOpenChange={(o) => { if (!o) { setCredentialOpen(false); setCreated(null) } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('admin.tenantCreated', 'Tenant Created')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 rounded-lg p-4 text-center">
+              <p className="text-sm text-green-800 dark:text-green-200 mb-3">
+                {t('admin.credentialsNote', 'Share these credentials with the installer. They will NOT be shown again.')}
+              </p>
+              <div className="space-y-2 text-left">
+                <div className="flex items-center justify-between bg-white dark:bg-gray-900 rounded px-3 py-2 border">
+                  <span className="text-xs text-muted-foreground">Email</span>
+                  <span className="text-sm font-mono font-semibold">{created?.email}</span>
+                </div>
+                <div className="flex items-center justify-between bg-white dark:bg-gray-900 rounded px-3 py-2 border">
+                  <span className="text-xs text-muted-foreground">Password</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-mono font-semibold">{created?.password}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`Email: ${created?.email}\nPassword: ${created?.password}`)
+                        setCopiedId('creds')
+                        setTimeout(() => setCopiedId(null), 2000)
+                      }}
+                    >
+                      {copiedId === 'creds' ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <Button className="w-full" onClick={() => { setCredentialOpen(false); setCreated(null); setPassword('') }}>
+              {t('common.done', 'Done')}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
