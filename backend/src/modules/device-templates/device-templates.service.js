@@ -77,7 +77,7 @@ async function create(tenantId, data) {
     name: data.name,
     description: data.description || null,
     schema: data.schema || {},
-    datastreams,
+    datastreams: JSON.stringify(datastreams),
     created_at: new Date(),
     updated_at: new Date(),
   });
@@ -94,6 +94,9 @@ async function update(tenantId, id, data) {
   }
 
   const { tenant_id: _tenantId, created_at: _createdAt, ...safeData } = data;
+  if (data.datastreams !== undefined) {
+    safeData.datastreams = JSON.stringify(data.datastreams);
+  }
   const updated = await templatesModel.update(id, safeData);
   if (!updated) throw new NotFoundError(`Template not found after update: ${id}`);
 
