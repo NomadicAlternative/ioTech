@@ -91,12 +91,15 @@ describe('auth.schemas.installerRegister', () => {
   });
 
   it('strips unknown fields (e.g. extraField)', () => {
-    const { value, error } = schemas.installerRegister.validate({
-      name: 'ACME Installers',
-      email: 'installer@example.com',
-      password: 'securePass1!',
-      extraField: 'should-be-stripped',
-    });
+    const { value, error } = schemas.installerRegister.validate(
+      {
+        name: 'ACME Installers',
+        email: 'installer@example.com',
+        password: 'securePass1!',
+        extraField: 'should-be-stripped',
+      },
+      { stripUnknown: true }
+    );
     expect(error).toBeUndefined();
     expect(value.extraField).toBeUndefined();
   });

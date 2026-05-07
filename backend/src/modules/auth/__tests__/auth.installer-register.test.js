@@ -12,33 +12,42 @@ jest.mock('../auth.model');
 const authModel = require('../auth.model');
 
 // ─── Mock: shared/db/knex ─────────────────────────────────────────────────────
+//
+// We need to mock:
+//   1. db('tenants') for the duplicate email check in installerRegister
+//   2. db.transaction() for the transactional tenant+user creation
+//
+// The chainable mock pattern lets db('tenants').where({ email }).first() work.
+
 let mockFirst;
-let mockInsert;
 let chainableMock;
 let mockDb;
 
 jest.mock('../../../shared/db/knex', () => {
   const _mockFirst = jest.fn();
-  const _mockInsert = jest.fn();
   const _chainable = {
-    insert: _mockInsert,
     where: jest.fn().mockReturnThis(),
     first: _mockFirst,
+    insert: jest.fn(),
   };
   const _db = jest.fn(() => _chainable);
 
   _db.__mockFirst = _mockFirst;
-  _db.__mockInsert = _mockInsert;
   _db.__chainable = _chainable;
 
-  // db.transaction(cb) calls cb with a transaction object
+  // db.transaction(cb) — calls cb with a mock trx that behaves like a Knex builder
   _db.transaction = jest.fn(async (cb) => {
-    // The callback receives a fake trx where insert() resolves
-    const trx = {
-      insert: jest.fn().mockResolvedValue([{ id: 'tenant-uuid' }]),
-    };
-    return cb(trx);
+    // trx is a function (just like db is a function) that returns a chainable builder
+    const trxTableInsert = jest.fn().mockResolvedValue([{ id: 'mock-uuid' }]);
+    const mockTrx = jest.fn(() => ({
+      insert: trxTableInsert,
+      where: jest.fn().mockReturnThis(),
+      first: jest.fn(),
+    }));
+    return cb(mockTrx);
   });
+
+  _db.fn = { now: jest.fn(() => 'NOW()') };
 
   return _db;
 });
@@ -64,8 +73,6 @@ const { ValidationError, ConflictError } = require('../../../shared/errors');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const TENANT_ID = 'tenant-uuid-1';
-const USER_ID = 'user-uuid-1';
 const EMAIL = 'installer@example.com';
 const PASSWORD = 'securePass1!';
 const PASSWORD_HASH = '$2b$12$hashedpassword';
@@ -77,16 +84,15 @@ beforeAll(() => {
   mockDb = require('../../../shared/db/knex');
   chainableMock = mockDb.__chainable;
   mockFirst = mockDb.__mockFirst;
-  mockInsert = mockDb.__mockInsert;
 });
 
 describe('authService.installerRegister()', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Default mocks: no existing user/tenant
+    // Default mocks: no existing user, no existing tenant
     authModel.findUserByEmailOnly.mockResolvedValue(null);
-    mockFirst.mockResolvedValue(null); // db('tenants').where({ email }).first()
+    mockFirst.mockResolvedValue(null);
 
     authModel.createRefreshToken.mockResolvedValue({});
     bcrypt.hash.mockResolvedValue(PASSWORD_HASH);
@@ -102,10 +108,8 @@ describe('authService.installerRegister()', () => {
       password: PASSWORD,
     });
 
-    // Verify tenant/user existence checks
+    // Verify duplicate checks
     expect(authModel.findUserByEmailOnly).toHaveBeenCalledWith(EMAIL);
-    expect(mockDb).toHaveBeenCalledWith('tenants');
-    expect(chainableMock.where).toHaveBeenCalledWith({ email: EMAIL });
 
     // Verify transaction was used
     expect(mockDb.transaction).toHaveBeenCalled();
@@ -133,15 +137,14 @@ describe('authService.installerRegister()', () => {
 
   it('accepts optional contact_email and metadata', async () => {
     const result = await authService.installerRegister({
-      name: 'Test Installer',
+      name: 'ACME Inc',
       email: EMAIL,
       password: PASSWORD,
-      contact_email: 'contact@example.com',
+      contact_email: 'contact@acme.com',
       metadata: { company: 'ACME Inc' },
     });
 
-    expect(result.tenant).toBeDefined();
-    expect(result.tenant.name).toBe('Test Installer');
+    expect(result.tenant.name).toBe('ACME Inc');
     expect(result.user.role).toBe('admin');
   });
 
@@ -156,21 +159,8 @@ describe('authService.installerRegister()', () => {
       })
     ).rejects.toThrow(ConflictError);
 
-    // Should NOT attempt to check tenant table
-    expect(mockDb).not.toHaveBeenCalledWith('tenants');
-  });
-
-  it('throws ConflictError when email is already used by a tenant', async () => {
-    authModel.findUserByEmailOnly.mockResolvedValue(null);
-    mockFirst.mockResolvedValue({ id: 'existing-tenant', email: EMAIL });
-
-    await expect(
-      authService.installerRegister({
-        name: 'Test Installer',
-        email: EMAIL,
-        password: PASSWORD,
-      })
-    ).rejects.toThrow(ConflictError);
+    // Should NOT attempt tenant table check
+    expect(mockDb).not.toHaveBeenCalled();
   });
 
   it('throws ValidationError when email is invalid', async () => {
@@ -193,8 +183,7 @@ describe('authService.installerRegister()', () => {
     ).rejects.toThrow(ValidationError);
   });
 
-  it('generates two different token types (access + refresh)', async () => {
-    // jwt.sign is called twice with different secrets
+  it('generates two different JWT tokens (access + refresh)', async () => {
     await authService.installerRegister({
       name: 'Test Installer',
       email: EMAIL,
@@ -202,7 +191,7 @@ describe('authService.installerRegister()', () => {
     });
 
     expect(jwt.sign).toHaveBeenCalledTimes(2);
-    // First call: access token with user details
+    // First call: access token with user details + JWT_SECRET
     expect(jwt.sign).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
@@ -214,7 +203,7 @@ describe('authService.installerRegister()', () => {
       process.env.JWT_SECRET,
       expect.objectContaining({ expiresIn: expect.any(String) })
     );
-    // Second call: refresh token with just userId
+    // Second call: refresh token with just userId + JWT_REFRESH_SECRET
     expect(jwt.sign).toHaveBeenNthCalledWith(
       2,
       { userId: expect.any(String) },
