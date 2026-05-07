@@ -29,6 +29,7 @@ export function TenantsPage() {
   const [resetting, setResetting] = useState(false)
   const [showPw, setShowPw] = useState(false)
   const [showResetPw, setShowResetPw] = useState(false)
+  const [revealPw, setRevealPw] = useState(false)
 
   useEffect(() => { fetchTenants() }, [])
 
@@ -188,7 +189,7 @@ export function TenantsPage() {
       </Dialog>
 
       {/* Credentials dialog — shown after tenant creation */}
-      <Dialog open={credentialOpen} onOpenChange={(o) => { if (!o) { setCredentialOpen(false); setCreated(null) } }}>
+      <Dialog open={credentialOpen} onOpenChange={(o) => { if (!o) { setCredentialOpen(false); setCreated(null); setRevealPw(false) } }}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>{t('admin.tenantCreated', 'Tenant Created')}</DialogTitle>
@@ -205,11 +206,23 @@ export function TenantsPage() {
                 </div>
                 <div className="flex items-center justify-between bg-white dark:bg-gray-900 rounded px-3 py-2 border">
                   <span className="text-xs text-muted-foreground">Password</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-mono font-semibold">{created?.password}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-mono font-semibold">
+                      {revealPw ? created?.password : '••••••••'}
+                    </span>
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-6 w-6"
+                      onClick={() => setRevealPw(!revealPw)}
+                      type="button"
+                    >
+                      {revealPw ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
                       onClick={() => {
                         navigator.clipboard.writeText(`Email: ${created?.email}\nPassword: ${created?.password}`)
                         setCopiedId('creds')
@@ -267,7 +280,17 @@ export function TenantsPage() {
                 <p className="text-xs text-green-800 dark:text-green-200 mb-2">
                   {t('admin.newCredentials', 'New credentials — share with installer:')}
                 </p>
-                <p className="text-sm font-mono font-semibold">{created.email} / {created.password}</p>
+                <p className="text-sm font-mono font-semibold">{created.email} / <span>{revealPw ? created.password : '••••••••'}</span></p>
+                <div className="flex items-center justify-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => setRevealPw(!revealPw)}
+                    type="button"
+                  >
+                    {revealPw ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </Button>
                 <Button
                   variant="ghost"
                   size="sm"
