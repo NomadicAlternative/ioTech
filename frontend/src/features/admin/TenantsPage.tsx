@@ -224,7 +224,8 @@ export function TenantsPage() {
                       size="icon"
                       className="h-6 w-6"
                       onClick={() => {
-                        navigator.clipboard.writeText(`Email: ${created?.email}\nPassword: ${created?.password}`)
+                        if (!created) return
+                        navigator.clipboard.writeText('Email: ' + created.email + '\nPassword: ' + created.password)
                         setCopiedId('creds')
                         setTimeout(() => setCopiedId(null), 2000)
                       }}
@@ -296,7 +297,7 @@ export function TenantsPage() {
                   size="sm"
                   className="mt-1 gap-1"
                   onClick={() => {
-                    navigator.clipboard.writeText(`Email: ${created.email}\nPassword: ${created.password}`)
+                    navigator.clipboard.writeText('Email: ' + created.email + '\nPassword: ' + created.password)
                     setCopiedId('reset')
                     setTimeout(() => setCopiedId(null), 2000)
                   }}
@@ -304,6 +305,7 @@ export function TenantsPage() {
                   {copiedId === 'reset' ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
                   Copy
                 </Button>
+              </div>
               </div>
             )}
           </div>
