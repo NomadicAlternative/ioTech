@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Building2, Copy, Check } from 'lucide-react'
+import { Plus, Building2, Copy, Check, KeyRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,6 +9,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import { useAdminStore } from './adminStore'
+import { resetPassword } from './adminApi'
 
 export function TenantsPage() {
   const { t } = useTranslation()
@@ -23,6 +24,9 @@ export function TenantsPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [created, setCreated] = useState<{ email: string; password: string } | null>(null)
   const [credentialOpen, setCredentialOpen] = useState(false)
+  const [resetTarget, setResetTarget] = useState<Tenant | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [resetting, setResetting] = useState(false)
 
   useEffect(() => { fetchTenants() }, [])
 
@@ -109,6 +113,15 @@ export function TenantsPage() {
                 <Button variant="ghost" size="icon" onClick={() => copyToClipboard(tenant.id, tenant.id)}>
                   {copiedId === tenant.id ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs gap-1 text-muted-foreground hover:text-amber-600"
+                  onClick={() => { setResetTarget(tenant); setNewPassword('') }}
+                >
+                  <KeyRound className="w-3.5 h-3.5" />
+                  Reset PW
+                </Button>
               </div>
             </div>
           ))}
@@ -194,6 +207,74 @@ export function TenantsPage() {
               {t('common.done', 'Done')}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset password dialog */}
+      <Dialog open={!!resetTarget} onOpenChange={(o) => { if (!o) setResetTarget(null) }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('admin.resetPassword', 'Reset Installer Password')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              {t('admin.resetPasswordDesc', 'Set a new password for')}{' '}
+              <strong>{resetTarget?.name}</strong>
+            </p>
+            <div className="space-y-1">
+              <Label>{t('admin.newPassword', 'New Password')}</Label>
+              <Input
+                type="text"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Min 6 characters"
+                autoFocus
+              />
+            </div>
+            {created && (
+              <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 rounded-lg p-3 text-center">
+                <p className="text-xs text-green-800 dark:text-green-200 mb-2">
+                  {t('admin.newCredentials', 'New credentials — share with installer:')}
+                </p>
+                <p className="text-sm font-mono font-semibold">{created.email} / {created.password}</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-1 gap-1"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`Email: ${created.email}\nPassword: ${created.password}`)
+                    setCopiedId('reset')
+                    setTimeout(() => setCopiedId(null), 2000)
+                  }}
+                >
+                  {copiedId === 'reset' ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  Copy
+                </Button>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setResetTarget(null); setCreated(null) }}>
+              {t('common.cancel', 'Cancel')}
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!newPassword || newPassword.length < 6 || !resetTarget) return
+                setResetting(true)
+                try {
+                  const creds = await resetPassword(resetTarget.id, newPassword)
+                  setCreated(creds)
+                } catch {
+                  // handled by store
+                } finally {
+                  setResetting(false)
+                }
+              }}
+              disabled={resetting || !newPassword || newPassword.length < 6}
+            >
+              {resetting ? t('common.saving', 'Saving...') : t('admin.resetButton', 'Reset Password')}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

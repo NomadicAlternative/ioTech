@@ -65,4 +65,27 @@ async function createTenant({ name, email, password }) {
   };
 }
 
-module.exports = { listTenants, createTenant };
+async function resetPassword(tenantId, newPassword) {
+  if (!newPassword || newPassword.length < 6) {
+    throw new ConflictError('Password must be at least 6 characters');
+  }
+
+  const tenant = await db('tenants').where({ id: tenantId }).first();
+  if (!tenant) {
+    throw new ConflictError('Tenant not found');
+  }
+
+  const user = await db('users').where({ tenant_id: tenantId, role: 'admin' }).first();
+  if (!user) {
+    throw new ConflictError('No admin user found for this tenant');
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await db('users').where({ id: user.id }).update({ password_hash: passwordHash, updated_at: new Date() });
+
+  logger.info(`[admin.service] Reset password for tenant "${tenant.name}" user ${user.email}`);
+
+  return { email: user.email, password: newPassword };
+}
+
+module.exports = { listTenants, createTenant, resetPassword };
