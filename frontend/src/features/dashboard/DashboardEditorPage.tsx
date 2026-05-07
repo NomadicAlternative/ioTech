@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Plus, Share2, Save, Loader2 } from 'lucide-react'
+import { ArrowLeft, Plus, Share2, Save, Loader2, X } from 'lucide-react'
 import { Responsive as ResponsiveGridLayout } from 'react-grid-layout'
 import type { Layout } from 'react-grid-layout'
 import { v4 as uuidv4 } from 'uuid'
@@ -52,6 +52,7 @@ export function DashboardEditorPage() {
   const [sharedClientIds, setSharedClientIds] = useState<string[]>([])
   const [sharingLoading, setSharingLoading] = useState(false)
   const [currentBreakpoint, setCurrentBreakpoint] = useState<string>('lg')
+  const [paletteOpen, setPaletteOpen] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -184,8 +185,8 @@ export function DashboardEditorPage() {
 
   return (
     <div className="flex -m-6 h-[calc(100vh-3.5rem)] gap-0 overflow-hidden">
-      {/* ─── Widget Palette Sidebar ──────────────────────────────────────── */}
-      <aside className="w-56 flex-shrink-0 border-r bg-background overflow-y-auto p-3 space-y-2">
+      {/* ─── Widget Palette Sidebar (desktop only) ──────────────────────── */}
+      <aside className="hidden lg:flex lg:w-56 lg:flex-shrink-0 flex-col border-r bg-background overflow-y-auto p-3 space-y-2">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1 mb-3">
           {t('dashboard.editor.widgetsPalette')}
         </p>
@@ -271,6 +272,36 @@ export function DashboardEditorPage() {
 
       {/* ─── Widget Config Panel ─────────────────────────────────────────── */}
       <WidgetConfigPanel />
+
+      {/* ─── Mobile: floating add-widget button ──────────────────────────── */}
+      <button
+        onClick={() => setPaletteOpen(true)}
+        className="lg:hidden fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white"
+        style={{ background: 'var(--brand-imperial, #01295F)' }}
+      >
+        <Plus className="w-6 h-6" />
+      </button>
+
+      {/* ─── Mobile: widget palette bottom sheet ──────────────────────────── */}
+      <Dialog open={paletteOpen} onOpenChange={setPaletteOpen}>
+        <DialogContent className="sm:max-w-md max-h-[70vh] overflow-y-auto fixed bottom-0 left-0 right-0 top-auto rounded-t-2xl rounded-b-none translate-y-0 data-[state=closed]:translate-y-full transition-transform duration-300">
+          <DialogHeader className="flex flex-row items-center justify-between">
+            <DialogTitle>{t('dashboard.editor.widgetsPalette')}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2 py-2">
+            {WIDGET_TYPES.map((def) => (
+              <button
+                key={def.type}
+                className="flex items-center gap-2 px-3 py-3 rounded-lg border hover:bg-accent text-sm transition-colors text-left"
+                onClick={() => { handleAddWidget(def.type); setPaletteOpen(false) }}
+              >
+                <Plus className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                <span>{def.label}</span>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ─── Share Dialog ─────────────────────────────────────────────────── */}
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>
