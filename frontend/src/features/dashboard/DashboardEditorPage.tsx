@@ -321,8 +321,7 @@ export function DashboardEditorPage() {
               rowHeight={editMode === 'mobile' ? 55 : 80}
               margin={[8, 8]}
               width={canvasWidth || 1200}
-              compactType={null}
-              preventCollision={true}
+              compactType="vertical"
               isDraggable={editMode === 'desktop'}
               isResizable={editMode === 'desktop'}
               onBreakpointChange={(bp) => setCurrentBreakpoint(bp)}
