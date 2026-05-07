@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const authModel = require('./auth.model');
+const db = require('../../shared/db/knex');
 const { validateEmail, validatePassword } = require('../../shared/validators');
 const {
   ValidationError,
@@ -69,6 +70,77 @@ async function register(data) {
   logger.info(`[auth.service] New user registered: ${email} (tenant=${tenantId})`);
 
   return { user: { id: user.id, email: user.email, role: user.role, tenantId: user.tenant_id } };
+}
+
+/**
+ * Register a new installer (self-registration).
+ * Creates a tenant + user in a single transaction, then logs in immediately.
+ *
+ * @param {{ name: string, email: string, password: string, contact_email?: string, metadata?: object }} data
+ * @returns {Promise<{ accessToken: string, refreshToken: string, user: object }>}
+ */
+async function installerRegister(data) {
+  const { name, email, password, contact_email, metadata } = data;
+
+  if (!validateEmail(email)) throw new ValidationError('Invalid email address');
+  if (!validatePassword(password)) throw new ValidationError('Password must be at least 8 characters');
+
+  // Check for duplicate email globally (email is unique in tenants and users)
+  const existingUser = await authModel.findUserByEmailOnly(email);
+  if (existingUser) throw new ConflictError('Email already registered');
+
+  const tenantId = uuidv4();
+  const userId = uuidv4();
+  const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
+  // Run tenant + user creation in a single transaction
+  await db.transaction(async (trx) => {
+    await trx('tenants').insert({
+      id: tenantId,
+      name,
+      email,
+      contact_email: contact_email || null,
+      metadata: metadata ? JSON.stringify(metadata) : '{}',
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+
+    await trx('users').insert({
+      id: userId,
+      tenant_id: tenantId,
+      email,
+      password_hash: passwordHash,
+      role: 'admin',
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+  });
+
+  logger.info(`[auth.service] Installer registered: ${email} (tenant=${tenantId})`);
+
+  // Generate tokens immediately so the installer is logged in after registration
+  const accessToken = signAccessToken({
+    userId,
+    tenantId,
+    email,
+    role: 'admin',
+  });
+
+  const rawRefreshToken = signRefreshToken({ userId });
+  const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRES_MS);
+
+  await authModel.createRefreshToken({
+    id: uuidv4(),
+    userId,
+    token: rawRefreshToken,
+    expiresAt,
+  });
+
+  return {
+    accessToken,
+    refreshToken: rawRefreshToken,
+    user: { id: userId, email, role: 'admin', tenantId },
+  };
 }
 
 /**
@@ -168,4 +240,79 @@ async function logout(token) {
   logger.info('[auth.service] Refresh token revoked');
 }
 
-module.exports = { register, login, refreshToken, logout };
+/**
+ * Register a new installer (creates tenant + admin user in one transaction).
+ * Returns JWT tokens so the installer is logged in immediately after registration.
+ *
+ * @param {{ name: string, email: string, password: string, contact_email?: string, metadata?: object }} data
+ * @returns {Promise<{ accessToken: string, refreshToken: string, user: object, tenant: object }>}
+ */
+async function installerRegister(data) {
+  const { name, email, password, contact_email: contactEmail, metadata } = data;
+
+  if (!validateEmail(email)) throw new ValidationError('Invalid email address');
+  if (!validatePassword(password)) throw new ValidationError('Password must be at least 8 characters');
+
+  // Check for duplicate email across all users (email must be globally unique)
+  const existingUser = await authModel.findUserByEmailOnly(email);
+  if (existingUser) throw new ConflictError('Email already registered');
+
+  // Check for duplicate tenant email
+  const existingTenant = await db('tenants').where({ email }).first();
+  if (existingTenant) throw new ConflictError('A tenant with this email already exists');
+
+  const tenantId = uuidv4();
+  const userId = uuidv4();
+  const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
+  // Use a raw transaction (not withTenant) since the tenant doesn't exist yet
+  // — RLS policies will apply after the tenant is created
+  await db.transaction(async (trx) => {
+    // 1. Create tenant
+    await trx('tenants').insert({
+      id: tenantId,
+      name,
+      email,
+      contact_email: contactEmail || null,
+      metadata: JSON.stringify(metadata || {}),
+    });
+
+    // 2. Create user (admin role for the installer)
+    await trx('users').insert({
+      id: userId,
+      tenant_id: tenantId,
+      email,
+      password_hash: passwordHash,
+      role: 'admin',
+    });
+  });
+
+  // Generate tokens
+  const accessToken = signAccessToken({
+    userId,
+    tenantId,
+    email,
+    role: 'admin',
+  });
+
+  const rawRefreshToken = signRefreshToken({ userId });
+  const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRES_MS);
+
+  await authModel.createRefreshToken({
+    id: uuidv4(),
+    userId,
+    token: rawRefreshToken,
+    expiresAt,
+  });
+
+  logger.info(`[auth.service] New installer registered: ${email} (tenant=${tenantId})`);
+
+  return {
+    accessToken,
+    refreshToken: rawRefreshToken,
+    user: { id: userId, email, role: 'admin', tenantId },
+    tenant: { id: tenantId, name, email },
+  };
+}
+
+module.exports = { register, login, refreshToken, logout, installerRegister };
