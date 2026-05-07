@@ -377,4 +377,54 @@ router.get('/:id/provisioning-credentials', async (req, res, next) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/devices/{id}/regenerate-claim-token:
+ *   post:
+ *     summary: Regenerate the claim token for a device
+ *     tags:
+ *       - Devices
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *         description: Device ID
+ *     responses:
+ *       200:
+ *         description: Claim token regenerated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id: { type: string, format: uuid }
+ *                     claim_token: { type: string }
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Device not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/:id/regenerate-claim-token', validate(schemas.regenerateClaimToken), async (req, res, next) => {
+  try {
+    const device = await devicesService.regenerateClaimToken(req.tenantId, req.params.id);
+    res.json({ data: { id: device.id, claim_token: device.claim_token } });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

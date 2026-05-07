@@ -29,4 +29,6 @@ const command = Joi.object({
   state: Joi.string().valid('on', 'off').required(),
 });
 
-module.exports = { create, update, authenticate, claim, command };
+const regenerateClaimToken = Joi.object({});
+
+module.exports = { create, update, authenticate, claim, command, regenerateClaimToken };
