@@ -13,6 +13,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle,
+} from '@/components/ui/sheet'
 import { useDashboardStore } from './dashboardStore'
 import { useAuthStore } from '@/features/auth/authStore'
 import { WidgetRenderer } from '@/features/widgets/WidgetRenderer'
@@ -283,25 +286,31 @@ export function DashboardEditorPage() {
       </button>
 
       {/* ─── Mobile: widget palette bottom sheet ──────────────────────────── */}
-      <Dialog open={paletteOpen} onOpenChange={setPaletteOpen}>
-        <DialogContent className="sm:max-w-md max-h-[70vh] overflow-y-auto fixed bottom-0 left-0 right-0 top-auto rounded-t-2xl rounded-b-none translate-y-0 data-[state=closed]:translate-y-full transition-transform duration-300">
-          <DialogHeader className="flex flex-row items-center justify-between">
-            <DialogTitle>{t('dashboard.editor.widgetsPalette')}</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-2 py-2">
+      <Sheet open={paletteOpen} onOpenChange={setPaletteOpen}>
+        <SheetContent
+          side="bottom"
+          className="rounded-t-2xl px-4 pb-8 pt-4 max-h-[55vh] overflow-y-auto border-0"
+          style={{
+            background: 'linear-gradient(180deg, #001a3d 0%, #01295F 100%)',
+          }}
+        >
+          <SheetHeader>
+            <SheetTitle className="text-white/90 text-base">{t('dashboard.editor.widgetsPalette')}</SheetTitle>
+          </SheetHeader>
+          <div className="grid grid-cols-3 gap-2 mt-3">
             {WIDGET_TYPES.map((def) => (
               <button
                 key={def.type}
-                className="flex items-center gap-2 px-3 py-3 rounded-lg border hover:bg-accent text-sm transition-colors text-left"
                 onClick={() => { handleAddWidget(def.type); setPaletteOpen(false) }}
+                className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-white/15 bg-white/8 hover:bg-white/15 text-white/80 hover:text-white transition-all text-center"
               >
-                <Plus className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-                <span>{def.label}</span>
+                <Plus className="h-4 w-4 text-amber-400" />
+                <span className="text-[11px] font-medium leading-tight">{def.label}</span>
               </button>
             ))}
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* ─── Share Dialog ─────────────────────────────────────────────────── */}
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>
