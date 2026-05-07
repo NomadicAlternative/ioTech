@@ -14,6 +14,7 @@ import {
   Bot,
   Download,
   Cable,
+  Building2,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -31,6 +32,7 @@ export function AppShell() {
   const { t } = useTranslation()
   const logout = useAuthStore((s) => s.logout)
   const user   = useAuthStore((s) => s.user)
+  const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin)
   const currentLang = i18n.language?.startsWith('es') ? 'es' : 'en'
 
   return (
@@ -66,6 +68,28 @@ export function AppShell() {
               )}
             </NavLink>
           ))}
+
+          {/* Super-admin only: Tenant management */}
+          {isSuperAdmin && (
+            <NavLink
+              to="/app/tenants"
+              className={({ isActive }) =>
+                [
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+                  isActive
+                    ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
+                    : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                ].join(' ')
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <Building2 className={`w-4 h-4 shrink-0 ${isActive ? 'opacity-100' : 'opacity-60'}`} />
+                  {t('nav.tenants', 'Tenants')}
+                </>
+              )}
+            </NavLink>
+          )}
         </nav>
 
         {/* Footer */}

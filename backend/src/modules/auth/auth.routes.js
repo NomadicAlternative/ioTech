@@ -3,6 +3,8 @@
 const { Router } = require('express');
 const authService = require('./auth.service');
 const validate = require('../../shared/middleware/validate');
+const authGuard = require('../../shared/middleware/authGuard');
+const superAdmin = require('../../shared/middleware/superAdmin');
 const schemas = require('./auth.schemas');
 
 const router = Router();
@@ -152,7 +154,7 @@ router.post('/register', validate(schemas.register), async (req, res, next) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/installer-register', validate(schemas.installerRegister), async (req, res, next) => {
+router.post('/installer-register', authGuard, superAdmin, validate(schemas.installerRegister), async (req, res, next) => {
   try {
     const result = await authService.installerRegister(req.body);
     res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, REFRESH_COOKIE_OPTIONS);
