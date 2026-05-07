@@ -156,7 +156,7 @@ router.post('/installer-register', validate(schemas.installerRegister), async (r
   try {
     const result = await authService.installerRegister(req.body);
     res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, REFRESH_COOKIE_OPTIONS);
-    res.status(201).json({ accessToken: result.accessToken, user: result.user });
+    res.status(201).json({ accessToken: result.accessToken, user: result.user, tenant: result.tenant });
   } catch (err) {
     next(err);
   }
@@ -312,87 +312,6 @@ router.post('/logout', async (req, res, next) => {
     }
     res.clearCookie(REFRESH_COOKIE_NAME, { path: '/' });
     res.status(204).send();
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
- * @openapi
- * /api/auth/installer-register:
- *   post:
- *     summary: Self-register as a new installer (creates tenant + admin user)
- *     tags:
- *       - Auth
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *             properties:
- *               name:
- *                 type: string
- *                 maxLength: 255
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
- *                 minLength: 8
- *               contact_email:
- *                 type: string
- *                 format: email
- *               metadata:
- *                 type: object
- *     responses:
- *       201:
- *         description: Installer registered and logged in
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 accessToken: { type: string }
- *                 user:
- *                   type: object
- *                   properties:
- *                     id: { type: string, format: uuid }
- *                     email: { type: string }
- *                     role: { type: string }
- *                     tenantId: { type: string, format: uuid }
- *                 tenant:
- *                   type: object
- *                   properties:
- *                     id: { type: string, format: uuid }
- *                     name: { type: string }
- *                     email: { type: string }
- *       400:
- *         description: Validation error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ValidationError'
- *       409:
- *         description: Email already registered
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.post('/installer-register', validate(schemas.installerRegister), async (req, res, next) => {
-  try {
-    const result = await authService.installerRegister(req.body);
-    res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, REFRESH_COOKIE_OPTIONS);
-    res.status(201).json({
-      accessToken: result.accessToken,
-      user: result.user,
-      tenant: result.tenant,
-    });
   } catch (err) {
     next(err);
   }
