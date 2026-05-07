@@ -95,28 +95,20 @@ ioTech/
 ### Phases 1–4c (COMPLETE) — ver historia completa en dashboard-phase-6-archive.md
 
 ### Phase 5 — Dashboard Web (COMPLETE — PR merged)
-- 9 MVP widgets: Gauge, Number Display, Line Chart, Status Indicator, Toggle Switch, Button, Stat Card, Progress Bar, Map
-- Grid drag/resize con react-grid-layout
-- Config panel: device selector → datastream selector → type-specific settings
-- Auto-save con debounce 1500ms
-- Sharing dashboard con clientes
-- Socket.io → telemetryStore → widgets reactivos
+- 9 MVP widgets + grid drag/resize + auto-save + sharing + WebSocket reactivo
 
-### Phase 5 — Runtime fixes (branch: feat/dashboard-editor — PR #27 abierto)
-Fixes aplicados en esta sesión:
+### Phase 6 — Automation & Rules (COMPLETE — PRs #30, #31, #32 merged)
+- Rules engine con threshold/status triggers, relay/command actions, cooldown
+- Frontend CRUD: RulesPage, RuleForm con campos condicionales
 
-- **Grid layout**: `WidthProvider` → `ResizeObserver` con `useLayoutEffect` + `width` explícito pasado al `ResponsiveGridLayout`. Aplica en editor y view.
-- **Editor fullscreen**: `-m-6` en root div del editor para escapar `p-6` del AppShell + `overflow-hidden`
-- **Auto-save**: sanitizar `y: Infinity → 0` antes de enviar al backend — Joi rechaza non-integer en `y: integer().min(0)`
-- **ToggleSwitchWidget**: reemplazado `optimistic` (se reseteaba a null) por `localState` persistente + `pending` para bloquear doble-click. Telemetría toma prioridad si llega.
-- **Duplicate widget**: botón en WidgetConfigPanel — busca `maxRelay` en todo el layout y hace `maxRelay + 1`. Evita duplicados sin importar desde qué widget se duplica.
-- **Invalid Date**: guard `updatedAt ? ... : '—'` en DashboardListPage
-
-### Branch: feat/relay-control (PR #25 — PENDIENTE DE MERGE)
-- Relés 1-7 funcionando físicamente
-- Firmware: keepalive 60s, heartbeat 30s, disable_clean_session
-- Backend heartbeat timeout: 90s (era 60s)
-- Contrato MQTT: `{ type:"relay", relay:number, state:"on"|"off" }`
+### Phase 7 — Installer Flow (COMPLETE — branch: feat/installer-backend)
+- **PR #1**: POST /api/auth/installer-register, claim_token auto-gen, regenerate
+- **PR #2**: Firmware frontend CRUD (features/firmware/)
+- **PR #3**: Web Serial Provisioning UI (features/provisioning/ProvisioningPage, status filter)
+- **PR #4**: Charging rules: charging_start/stop, low_power_mode, battery_low trigger
+- **Flash Wizard**: POST /api/devices/:id/flash (SSE), FlashDeviceWizard, script flash-device.sh
+- **Bugs**: JSON.stringify datastreams, findById, logoSrc, SSE parsing — todos fixeados
+- **Manual**: docs/INSTALLER_ONBOARDING.md
 
 ## Key Runtime Config
 
@@ -125,8 +117,9 @@ Fixes aplicados en esta sesión:
 - **DB**: postgresql://diegogarcia@localhost:5432/iotech_dev
 - **Backend**: `cd backend && node src/index.js` (port 3000)
 - **Frontend**: port 5173
-- **Miniterm**: `python3 -m serial.tools.miniterm --dtr 0 --rts 0 /dev/cu.usbserial-10 115200`
-- **Flash port**: /dev/cu.usbserial-10
+- **Miniterm**: `python3 -m serial.tools.miniterm --dtr 0 --rts 0 /dev/cu.usbserial-110 115200`
+- **Flash port**: /dev/cu.usbserial-110 (auto-detectado)
+- **Flash script**: `./scripts/flash-device.sh <DEVICE_ID>`
 - **GPIO map**: relay1→23, relay2→22, relay3→21, relay4→19, relay5→18, relay6→5, relay7→17 (active LOW)
 - **Paleta**: `--brand-imperial:#01295F`, `--brand-cerulean:#437F97`, `--brand-olive:#849324`, `--brand-amber:#FFB30F`, `--brand-red:#FD151B`
 - **Cookie**: `refreshToken`, httpOnly, sameSite lax, maxAge 7d
@@ -135,9 +128,10 @@ Fixes aplicados en esta sesión:
 
 ## Next Steps
 
-1. **Mobile (punto 4)** — responsive view mode en celular, ajustar grid
-2. **Merge PR #25** — feat/relay-control (firmware + heartbeat)
-3. **Merge PR #27** — feat/dashboard-editor (todos los fixes de esta sesión)
+1. **Push feat/installer-backend y crear PRs** — 14 commits listos para review
+2. **OTA desde dashboard** — UI para triggerear OTA updates
+3. **Firmware file upload** — upload de binarios (hoy es URL externa)
+4. **Installer UI registration** — formulario de registro en el frontend
 
 ## API Overview
 
@@ -149,15 +143,19 @@ All errors return `{ error: { code, message, status, details? } }`.
 | POST | /api/auth/login | No | Login → sets refreshToken cookie |
 | POST | /api/auth/refresh | No | Refresh via cookie |
 | POST | /api/auth/logout | No | Logout + clear cookie |
-| GET | /api/devices | Yes | List devices |
+| POST | /api/auth/installer-register | No | Register installer (tenant + user) ← NUEVO |
+| GET | /api/devices | Yes | List devices (query: ?status=unclaimed) |
+| POST | /api/devices | Yes | Create device (auto-genera claim_token) |
 | POST | /api/devices/:id/command | Yes | Send relay command via MQTT |
+| POST | /api/devices/:id/regenerate-claim-token | Yes | Regenerate claim token ← NUEVO |
+| POST | /api/devices/:id/flash | Yes | Flash firmware via SSE ← NUEVO |
+| GET | /api/devices/:id/provisioning-credentials | Yes | Get credentials for serial provisioning |
 | GET | /api/device-templates/:id | Yes | Get template + datastreams |
+| GET | /api/firmware | Yes | List firmware versions |
+| POST | /api/firmware | Yes | Create firmware version |
 | GET | /api/dashboards | Yes | List dashboards |
 | POST | /api/dashboards | Yes | Create dashboard |
-| GET | /api/dashboards/:id | Yes | Get dashboard + layout |
 | PUT | /api/dashboards/:id/layout | Yes | Save layout JSON |
-| POST | /api/dashboards/:id/share | Yes | Share with client |
-| DELETE | /api/dashboards/:id/share/:clientId | Yes | Revoke share |
 
 ## Rules
 
@@ -168,3 +166,5 @@ All errors return `{ error: { code, message, status, details? } }`.
 - Multi-tenant via RLS — always use `withTenant()`
 - Conventional commits only
 - Save session summary to engram AND .agent/context.md at end of every session
+- No flashear firmware sin ESP32 conectado
+- Puerto serial se auto-detecta (ls /dev/cu.usbserial-*)
