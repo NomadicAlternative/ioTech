@@ -25,7 +25,8 @@
     "clients": "Clients",
     "settings": "Settings",
     "logout": "Logout",
-    "language": "Language"
+    "language": "Language",
+    "provision": "Provision"
   },
   "auth": {
     "subtitle": "Sign in to your account",
@@ -275,5 +276,14 @@
       "phonePlaceholder": "+1 555 123-4567",
       "addressPlaceholder": "123 Main St, City"
     }
+  },
+  "provisioning": {
+    "title": "Provision Devices",
+    "subtitle": "Connect unclaimed devices via USB Serial",
+    "noDevices": "No unclaimed devices",
+    "noDevicesDesc": "Create a device first to get a claim token, then connect it via USB to provision it.",
+    "provisionButton": "Provision via USB",
+    "browserUnsupported": "Browser not supported",
+    "browserUnsupportedDesc": "Web Serial API is only available in Chrome and Edge. Please use one of these browsers to provision devices via USB."
   }
 }

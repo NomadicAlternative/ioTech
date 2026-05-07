@@ -63,7 +63,20 @@ router.use(authGuard, tenantResolver);
  */
 router.get('/', paginate(), async (req, res, next) => {
   try {
-    const { data, total } = await devicesService.list(req.tenantId, req.pagination);
+    const status = req.query.status || null;
+    const { data, total } = await devicesService.list(req.tenantId, {
+      status,
+      pagination: req.pagination,
+    });
+    const { page, limit } = req.pagination;
+    res.json({
+      data,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
     const { page, limit } = req.pagination;
     res.json({
       data,

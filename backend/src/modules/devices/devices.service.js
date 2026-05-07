@@ -26,6 +26,7 @@ function camelizeDevice(row) {
     clientId: row.client_id,
     status: row.status,
     claimToken: row.claim_token,
+    hardwareId: row.hardware_id,
     isOnline: row.is_online,
     lastSeen: row.last_seen,
     metadata: row.metadata,
@@ -35,15 +36,20 @@ function camelizeDevice(row) {
 }
 
 /**
- * List all devices for a tenant, with pagination.
+ * List all devices for a tenant, with optional status filter and pagination.
  * @param {string} tenantId
- * @param {{ page: number, limit: number, sortBy: string|null, sortDir: string }} [pagination]
+ * @param {object} [options]
+ * @param {string|null} [options.status] — filter by status (unclaimed, claimed, active)
+ * @param {object} [options.pagination]
  * @returns {Promise<{ data: object[], total: number }>}
  */
-async function list(tenantId, pagination = {}) {
+async function list(tenantId, options = {}) {
+  const { status, pagination = {} } = options;
+  const filter = status ? { status } : undefined;
+
   const [data, total] = await Promise.all([
-    devicesModel.findAll(tenantId, pagination),
-    devicesModel.count(tenantId),
+    devicesModel.findAll(tenantId, pagination, filter),
+    devicesModel.count(tenantId, filter),
   ]);
   return { data: data.map(camelizeDevice), total };
 }

@@ -25,7 +25,8 @@
     "clients": "Clientes",
     "settings": "Configuración",
     "logout": "Cerrar sesión",
-    "language": "Idioma"
+    "language": "Idioma",
+    "provision": "Provisionar"
   },
   "auth": {
     "subtitle": "Ingresá a tu cuenta",
