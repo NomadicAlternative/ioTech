@@ -34,6 +34,12 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen">
+      <style>{`
+        @keyframes flowPulse {
+          0%, 100% { left: 0%; opacity: 0.3; }
+          50% { left: calc(100% - 8px); opacity: 1; }
+        }
+      `}</style>
 
       {/* ── Left panel ── */}
       <div
@@ -157,9 +163,17 @@ export function LoginPage() {
                   <span className="text-[10px] font-semibold text-white/60 uppercase tracking-wider">{label}</span>
                 </div>
                 {i < 3 && (
-                  <div className="flex items-center">
-                    <div className="w-8 h-0.5 rounded-full opacity-40" style={{ background: color }} />
-                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+                  <div className="flex items-center relative" style={{ width: '40px' }}>
+                    <div className="w-full h-0.5 rounded-full opacity-30" style={{ background: color }} />
+                    <div
+                      className="absolute w-2 h-2 rounded-full"
+                      style={{
+                        background: color,
+                        boxShadow: `0 0 8px ${color}, 0 0 16px ${color}`,
+                        animation: `flowPulse 2s ease-in-out ${i * 0.5}s infinite`,
+                        left: '0%',
+                      }}
+                    />
                   </div>
                 )}
               </div>
