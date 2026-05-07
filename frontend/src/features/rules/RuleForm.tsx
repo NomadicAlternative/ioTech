@@ -30,8 +30,8 @@ export interface RuleFormProps {
   rule?: Rule | null
 }
 
-type TriggerType = 'threshold' | 'status'
-type ActionType = 'relay' | 'command'
+type TriggerType = 'threshold' | 'status' | 'battery_low'
+type ActionType = 'relay' | 'command' | 'charging_start' | 'charging_stop' | 'low_power_mode'
 type Operator = 'gt' | 'gte' | 'lt' | 'lte' | 'eq' | 'neq'
 
 interface FormData {
@@ -45,15 +45,19 @@ interface FormData {
   triggerOperator: Operator | ''
   triggerValue: string
   triggerStatus: string
+  batteryField: string
+  batteryThreshold: string
   actionType: ActionType | ''
   actionDeviceId: string
   actionRelay: string
   actionState: boolean
+  actionPowerDuration: string
 }
 
 interface FormErrors {
   name?: string
   relay?: string
+  actionDeviceId?: string
 }
 
 const OPERATORS: { value: Operator; label: string }[] = [
@@ -76,10 +80,13 @@ const initialState: FormData = {
   triggerOperator: '',
   triggerValue: '',
   triggerStatus: 'offline',
+  batteryField: 'battery_level',
+  batteryThreshold: '20',
   actionType: '',
   actionDeviceId: '',
   actionRelay: '1',
   actionState: true,
+  actionPowerDuration: '60',
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
@@ -119,10 +126,13 @@ export function RuleForm({ open, onClose, rule }: RuleFormProps) {
         triggerOperator: String(triggerConfig.operator ?? '') as Operator | '',
         triggerValue: String(triggerConfig.value ?? ''),
         triggerStatus: String(triggerConfig.status ?? 'offline'),
+        batteryField: String(triggerConfig.field ?? 'battery_level'),
+        batteryThreshold: String(triggerConfig.threshold ?? '20'),
         actionType: rule.actionType,
         actionDeviceId: String(actionConfig.deviceId ?? ''),
         actionRelay: String(actionConfig.relay ?? '1'),
         actionState: actionConfig.state === true,
+        actionPowerDuration: String(actionConfig.durationMinutes ?? '60'),
       })
     } else {
       setForm(initialState)
@@ -152,6 +162,12 @@ export function RuleForm({ open, onClose, rule }: RuleFormProps) {
     const relayNum = parseInt(form.actionRelay, 10)
     if (form.actionType === 'relay' && (isNaN(relayNum) || relayNum < 1 || relayNum > 8)) {
       newErrors.relay = t('rules.form.errors.relayRange', 'Relay must be between 1 and 8')
+    }
+    if (
+      ['charging_start', 'charging_stop', 'low_power_mode'].includes(form.actionType) &&
+      !form.actionDeviceId
+    ) {
+      newErrors.actionDeviceId = t('rules.form.errors.deviceRequired', 'Device is required for this action')
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -203,6 +219,13 @@ export function RuleForm({ open, onClose, rule }: RuleFormProps) {
         status: form.triggerStatus,
       }
     }
+    if (form.triggerType === 'battery_low') {
+      return {
+        deviceId: form.triggerDeviceId || undefined,
+        field: form.batteryField || 'battery_level',
+        threshold: parseFloat(form.batteryThreshold),
+      }
+    }
     return {}
   }
 
@@ -212,6 +235,17 @@ export function RuleForm({ open, onClose, rule }: RuleFormProps) {
         deviceId: form.actionDeviceId || undefined,
         relay: parseInt(form.actionRelay, 10),
         state: form.actionState,
+      }
+    }
+    if (['charging_start', 'charging_stop'].includes(form.actionType)) {
+      return {
+        deviceId: form.actionDeviceId,
+      }
+    }
+    if (form.actionType === 'low_power_mode') {
+      return {
+        deviceId: form.actionDeviceId,
+        durationMinutes: parseInt(form.actionPowerDuration, 10) || undefined,
       }
     }
     return {}
@@ -297,6 +331,7 @@ export function RuleForm({ open, onClose, rule }: RuleFormProps) {
                 <SelectContent>
                   <SelectItem value="threshold">{t('rules.form.threshold', 'Threshold')}</SelectItem>
                   <SelectItem value="status">{t('rules.form.status', 'Status')}</SelectItem>
+                  <SelectItem value="battery_low">{t('rules.form.batteryLow', 'Battery Low')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -396,6 +431,48 @@ export function RuleForm({ open, onClose, rule }: RuleFormProps) {
                 </div>
               </>
             )}
+
+            {form.triggerType === 'battery_low' && (
+              <>
+                <div className="space-y-1">
+                  <Label>{t('rules.form.triggerDevice', 'Trigger Device')}</Label>
+                  <Select
+                    value={form.triggerDeviceId}
+                    onValueChange={(v: string) => updateField('triggerDeviceId', v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('rules.form.selectDevice', 'Select device')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {devices.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.name || d.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('rules.form.batteryField', 'Battery Field')}</Label>
+                  <Input
+                    value={form.batteryField}
+                    onChange={(e) => updateField('batteryField', e.target.value)}
+                    placeholder="battery_level"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('rules.form.batteryThreshold', 'Threshold (%)')}</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={form.batteryThreshold}
+                    onChange={(e) => updateField('batteryThreshold', e.target.value)}
+                    placeholder="20"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           {/* ── Action section ──────────────────────────────────────────────── */}
@@ -413,6 +490,9 @@ export function RuleForm({ open, onClose, rule }: RuleFormProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="relay">{t('rules.form.relay', 'Relay')}</SelectItem>
+                  <SelectItem value="charging_start">{t('rules.form.chargingStart', 'Start Charging')}</SelectItem>
+                  <SelectItem value="charging_stop">{t('rules.form.chargingStop', 'Stop Charging')}</SelectItem>
+                  <SelectItem value="low_power_mode">{t('rules.form.lowPower', 'Low Power Mode')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -461,6 +541,46 @@ export function RuleForm({ open, onClose, rule }: RuleFormProps) {
                   />
                 </div>
               </>
+            )}
+
+            {['charging_start', 'charging_stop', 'low_power_mode'].includes(form.actionType) && (
+              <>
+                <div className="space-y-1">
+                  <Label>{t('rules.form.actionDevice', 'Target Device')}</Label>
+                  <Select
+                    value={form.actionDeviceId}
+                    onValueChange={(v: string) => updateField('actionDeviceId', v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('rules.form.selectDevice', 'Select device')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {devices.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.name || d.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.actionDeviceId && (
+                    <p className="text-destructive text-xs mt-1">{errors.actionDeviceId}</p>
+                  )}
+                </div>
+              </>
+            )}
+
+            {form.actionType === 'low_power_mode' && (
+              <div className="space-y-1">
+                <Label>{t('rules.form.durationMinutes', 'Duration (minutes)')}</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={1440}
+                  value={form.actionPowerDuration}
+                  onChange={(e) => updateField('actionPowerDuration', e.target.value)}
+                  placeholder="60"
+                />
+              </div>
             )}
           </div>
         </div>

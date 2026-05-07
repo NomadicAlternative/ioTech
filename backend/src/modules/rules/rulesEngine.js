@@ -226,7 +226,74 @@ async function executeAction(rule, tenantId) {
     };
   }
 
+  if (action_type === 'charging_start') {
+    return {
+      type: 'charging',
+      action: 'start',
+      deviceId: action_config.deviceId,
+    };
+  }
+
+  if (action_type === 'charging_stop') {
+    return {
+      type: 'charging',
+      action: 'stop',
+      deviceId: action_config.deviceId,
+    };
+  }
+
+  if (action_type === 'low_power_mode') {
+    return {
+      type: 'power_mode',
+      action: 'low_power',
+      deviceId: action_config.deviceId,
+      durationMinutes: action_config.durationMinutes,
+    };
+  }
+
   throw new Error(`Unknown action type: ${action_type}`);
+}
+
+// ─── evaluateBatteryLowRules() ───────────────────────────────────────────────
+
+/**
+ * Evaluate battery_low trigger rules against incoming telemetry data.
+ *
+ * Fires when the battery level goes BELOW the configured threshold.
+ *
+ * @param {string} tenantId
+ * @param {string} deviceId
+ * @param {object} telemetryData
+ * @param {object[]} rules
+ * @returns {object[]}
+ */
+function evaluateBatteryLowRules(tenantId, deviceId, telemetryData, rules) {
+  const matches = [];
+
+  for (const rule of rules) {
+    if (rule.trigger_type !== 'battery_low') continue;
+    if (!rule.enabled) continue;
+
+    const { field = 'battery_level', threshold } = rule.trigger_config;
+
+    if (!(field in telemetryData)) continue;
+
+    const batteryValue = telemetryData[field];
+    if (typeof batteryValue !== 'number') continue;
+
+    if (batteryValue >= threshold) continue;
+
+    if (!checkCooldown(rule.id, rule.last_fired_at, rule.cooldown_ms)) continue;
+
+    markFired(rule.id);
+    matches.push({
+      rule,
+      matchedValue: batteryValue,
+      matchedField: field,
+    });
+  }
+
+  return matches;
 }
 
 module.exports = {
@@ -236,5 +303,6 @@ module.exports = {
   resetCooldownCache,
   evaluateThresholdRules,
   evaluateStatusRules,
+  evaluateBatteryLowRules,
   executeAction,
 };
