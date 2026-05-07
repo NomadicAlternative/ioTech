@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Building2, Copy, Check, KeyRound } from 'lucide-react'
+import { Plus, Building2, Copy, Check, KeyRound, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,6 +27,8 @@ export function TenantsPage() {
   const [resetTarget, setResetTarget] = useState<Tenant | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [resetting, setResetting] = useState(false)
+  const [showPw, setShowPw] = useState(false)
+  const [showResetPw, setShowResetPw] = useState(false)
 
   useEffect(() => { fetchTenants() }, [])
 
@@ -156,7 +158,24 @@ export function TenantsPage() {
             </div>
             <div className="space-y-1">
               <Label>{t('admin.password', 'Password')}</Label>
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min 6 characters" />
+              <div className="relative">
+                <Input
+                  type={showPw ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Min 6 characters"
+                  className="pr-10"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                  onClick={() => setShowPw(!showPw)}
+                  type="button"
+                >
+                  {showPw ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </Button>
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -223,13 +242,25 @@ export function TenantsPage() {
             </p>
             <div className="space-y-1">
               <Label>{t('admin.newPassword', 'New Password')}</Label>
-              <Input
-                type="text"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Min 6 characters"
-                autoFocus
-              />
+              <div className="relative">
+                <Input
+                  type={showResetPw ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Min 6 characters"
+                  autoFocus
+                  className="pr-10"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                  onClick={() => setShowResetPw(!showResetPw)}
+                  type="button"
+                >
+                  {showResetPw ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </Button>
+              </div>
             </div>
             {created && (
               <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 rounded-lg p-3 text-center">
