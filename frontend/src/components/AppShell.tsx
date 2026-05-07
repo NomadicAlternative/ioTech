@@ -12,13 +12,16 @@ import {
   Globe,
   ShieldCheck,
   Bot,
+  Download,
 } from 'lucide-react'
+import logoSrc from '@/assets/logo.svg'
 
 const NAV_ITEMS = [
   { to: '/app/dashboards', icon: LayoutDashboard, labelKey: 'nav.dashboards' },
   { to: '/app/devices',    icon: Cpu,             labelKey: 'nav.devices' },
   { to: '/app/rules',      icon: Bot,             labelKey: 'nav.rules' },
   { to: '/app/templates',  icon: FileCode2,        labelKey: 'nav.templates' },
+  { to: '/app/firmware',   icon: Download,         labelKey: 'nav.firmware' },
   { to: '/app/clients',    icon: Users,            labelKey: 'nav.clients' },
   { to: '/app/settings',   icon: Settings,         labelKey: 'nav.settings' },
 ]
@@ -36,15 +39,7 @@ export function AppShell() {
 
         {/* Brand */}
         <div className="px-6 py-5 border-b border-sidebar-border">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                 style={{ background: 'var(--brand-amber)' }}>
-              <Cpu className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-lg font-bold tracking-tight text-sidebar-foreground">
-              IoTech
-            </span>
-          </div>
+          <img src={logoSrc} alt="IoTech" className="h-10 w-auto object-contain" />
         </div>
 
         {/* Nav */}
