@@ -121,7 +121,7 @@ export function DeviceDetailPage() {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">{device.name}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">{device.name}</h1>
           <Badge
             className="border-0 gap-1.5 font-semibold"
             style={device.isOnline

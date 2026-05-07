@@ -88,7 +88,7 @@ export function RulesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t('rules.list.title', 'Automation Rules')}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">{t('rules.list.title', 'Automation Rules')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {t('rules.list.subtitle', 'Define rules that trigger actions based on device data')}
           </p>
@@ -107,7 +107,7 @@ export function RulesPage() {
       )}
 
       {/* Table */}
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr>

@@ -59,7 +59,7 @@ export function ProvisioningPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-xl sm:text-2xl font-bold">
             {t('provisioning.title', 'Provision Devices')}
           </h1>
           <p className="text-muted-foreground mt-1">

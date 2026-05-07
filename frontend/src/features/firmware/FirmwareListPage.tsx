@@ -49,7 +49,7 @@ export function FirmwareListPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t('firmware.list.title', 'Firmware Versions')}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">{t('firmware.list.title', 'Firmware Versions')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {t('firmware.list.subtitle', 'Manage firmware versions for device provisioning')}
           </p>
@@ -66,7 +66,7 @@ export function FirmwareListPage() {
         </div>
       )}
 
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr>

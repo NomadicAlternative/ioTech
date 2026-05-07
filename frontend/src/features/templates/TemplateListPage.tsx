@@ -101,7 +101,7 @@ export function TemplateListPage() {
             <FileCode2 className="w-5 h-5" style={{ color: 'var(--brand-imperial)' }} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">{t('templates.list.title')}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold">{t('templates.list.title')}</h1>
             <p className="text-muted-foreground text-sm mt-0.5">
               {t('templates.list.subtitle')}
             </p>

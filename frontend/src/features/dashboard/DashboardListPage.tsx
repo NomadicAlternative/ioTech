@@ -67,7 +67,7 @@ export function DashboardListPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t('dashboard.list.title')}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">{t('dashboard.list.title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {t('dashboard.list.subtitle')}
           </p>
