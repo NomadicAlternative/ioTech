@@ -202,13 +202,112 @@ describe('devicesService.create()', () => {
 // ─── list() ───────────────────────────────────────────────────────────────────
 
 describe('devicesService.list()', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('delegates to devicesModel.findAll with the tenantId', async () => {
     devicesModel.findAll.mockResolvedValue([makeDevice()]);
 
     const result = await devicesService.list(TENANT_ID);
 
-    expect(devicesModel.findAll).toHaveBeenCalledWith(TENANT_ID);
+    expect(devicesModel.findAll).toHaveBeenCalledWith(TENANT_ID, {});
     expect(result).toHaveLength(1);
+  });
+
+  it('passes status filter to devicesModel.findAll', async () => {
+    devicesModel.findAll.mockResolvedValue([]);
+
+    await devicesService.list(TENANT_ID, { status: 'unclaimed' });
+
+    expect(devicesModel.findAll).toHaveBeenCalledWith(TENANT_ID, { status: 'unclaimed' });
+  });
+
+  it('camelizes device fields in the response', async () => {
+    const rawDevice = {
+      id: 'uuid-1',
+      tenant_id: TENANT_ID,
+      name: 'Sensor',
+      status: 'active',
+      device_token: 'tok-xyz',
+      claim_token: null,
+      hardware_id: null,
+      created_at: new Date('2024-01-01'),
+      updated_at: new Date('2024-01-02'),
+      last_seen: null,
+      metadata: {},
+      template_id: null,
+      client_id: null,
+    };
+    devicesModel.findAll.mockResolvedValue([rawDevice]);
+
+    const result = await devicesService.list(TENANT_ID);
+
+    expect(result[0]).toEqual({
+      id: 'uuid-1',
+      tenantId: TENANT_ID,
+      name: 'Sensor',
+      status: 'active',
+      createdAt: rawDevice.created_at,
+      updatedAt: rawDevice.updated_at,
+      lastSeen: null,
+      metadata: {},
+      templateId: null,
+      clientId: null,
+      claimToken: null,
+      hardwareId: null,
+    });
+    // device_token must NOT leak into API response
+    expect(result[0].deviceToken).toBeUndefined();
+    expect(result[0].device_token).toBeUndefined();
+  });
+
+  it('exposes claimToken and hardwareId for unclaimed devices', async () => {
+    const rawDevice = {
+      id: 'uuid-2',
+      tenant_id: TENANT_ID,
+      name: 'Unclaimed Sensor',
+      status: 'unclaimed',
+      device_token: 'tok-abc',
+      claim_token: 'claim-xyz-123',
+      hardware_id: 'ESP32-S3-1234',
+      created_at: new Date(),
+      updated_at: new Date(),
+      last_seen: null,
+      metadata: {},
+      template_id: null,
+      client_id: null,
+    };
+    devicesModel.findAll.mockResolvedValue([rawDevice]);
+
+    const result = await devicesService.list(TENANT_ID);
+
+    expect(result[0].claimToken).toBe('claim-xyz-123');
+    expect(result[0].hardwareId).toBe('ESP32-S3-1234');
+  });
+
+  it('does NOT expose claimToken/hardwareId for non-unclaimed devices', async () => {
+    const rawDevice = {
+      id: 'uuid-3',
+      tenant_id: TENANT_ID,
+      name: 'Active Sensor',
+      status: 'active',
+      device_token: 'tok-def',
+      claim_token: 'claim-hidden',
+      hardware_id: 'ESP32-5678',
+      created_at: new Date(),
+      updated_at: new Date(),
+      last_seen: null,
+      metadata: {},
+      template_id: null,
+      client_id: null,
+    };
+    devicesModel.findAll.mockResolvedValue([rawDevice]);
+
+    const result = await devicesService.list(TENANT_ID);
+
+    expect(result[0].claimToken).toBeNull();
+    expect(result[0].hardwareId).toBeNull();
   });
 });
 
@@ -228,5 +327,89 @@ describe('devicesService.getById()', () => {
     devicesModel.findById.mockResolvedValue(null);
 
     await expect(devicesService.getById(TENANT_ID, DEVICE_ID)).rejects.toThrow(NotFoundError);
+  });
+
+  it('camelizes the returned device', async () => {
+    const rawDevice = {
+      id: DEVICE_ID,
+      tenant_id: TENANT_ID,
+      name: 'Test Sensor',
+      status: 'active',
+      device_token: 'tok-xyz',
+      claim_token: null,
+      hardware_id: null,
+      created_at: new Date(),
+      updated_at: new Date(),
+      last_seen: null,
+      metadata: {},
+      template_id: null,
+      client_id: null,
+    };
+    devicesModel.findById.mockResolvedValue(rawDevice);
+
+    const result = await devicesService.getById(TENANT_ID, DEVICE_ID);
+
+    expect(result.tenantId).toBe(TENANT_ID);
+    expect(result.device_token).toBeUndefined();
+  });
+});
+
+// ─── getProvisioningCredentials() ─────────────────────────────────────────────
+
+describe('devicesService.getProvisioningCredentials()', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns claimToken and hardwareId for an unclaimed device', async () => {
+    devicesModel.findById.mockResolvedValue({
+      id: 'dev-1',
+      tenant_id: TENANT_ID,
+      name: 'Unclaimed',
+      status: 'unclaimed',
+      claim_token: 'claim-tok-123',
+      hardware_id: 'ESP32-TEST-001',
+    });
+
+    const result = await devicesService.getProvisioningCredentials(TENANT_ID, 'dev-1');
+
+    expect(result).toEqual({
+      claimToken: 'claim-tok-123',
+      hardwareId: 'ESP32-TEST-001',
+    });
+  });
+
+  it('throws NotFoundError when device does not exist', async () => {
+    devicesModel.findById.mockResolvedValue(null);
+
+    await expect(
+      devicesService.getProvisioningCredentials(TENANT_ID, 'non-existent')
+    ).rejects.toThrow(NotFoundError);
+  });
+
+  it('throws ValidationError when device status is not unclaimed', async () => {
+    devicesModel.findById.mockResolvedValue({
+      id: 'dev-2',
+      tenant_id: TENANT_ID,
+      status: 'active',
+      claim_token: 'tok-abc',
+    });
+
+    await expect(
+      devicesService.getProvisioningCredentials(TENANT_ID, 'dev-2')
+    ).rejects.toThrow(ValidationError);
+  });
+
+  it('throws ValidationError when device has no claim_token', async () => {
+    devicesModel.findById.mockResolvedValue({
+      id: 'dev-3',
+      tenant_id: TENANT_ID,
+      status: 'unclaimed',
+      claim_token: null,
+    });
+
+    await expect(
+      devicesService.getProvisioningCredentials(TENANT_ID, 'dev-3')
+    ).rejects.toThrow(ValidationError);
   });
 });

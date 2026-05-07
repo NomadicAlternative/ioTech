@@ -13,10 +13,16 @@ router.use(authGuard, tenantResolver);
 /**
  * GET /api/devices
  * List all devices for the authenticated tenant.
+ * Query params:
+ *   status  - optional: filter by device status (e.g. 'unclaimed', 'active')
  */
 router.get('/', async (req, res, next) => {
   try {
-    const devices = await devicesService.list(req.tenantId);
+    const filters = {};
+    if (req.query.status) {
+      filters.status = req.query.status;
+    }
+    const devices = await devicesService.list(req.tenantId, filters);
     res.json({ data: devices });
   } catch (err) {
     next(err);
@@ -85,6 +91,23 @@ router.post('/:id/authenticate', async (req, res, next) => {
   try {
     const result = await devicesService.authenticate(req.params.id, req.body.device_token);
     res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/devices/:id/provisioning-credentials
+ * Get provisioning credentials (claim_token + hardware_id) for an unclaimed device.
+ * Used by the Web Serial provisioning flow on the frontend.
+ */
+router.get('/:id/provisioning-credentials', async (req, res, next) => {
+  try {
+    const credentials = await devicesService.getProvisioningCredentials(
+      req.tenantId,
+      req.params.id,
+    );
+    res.json({ data: credentials });
   } catch (err) {
     next(err);
   }

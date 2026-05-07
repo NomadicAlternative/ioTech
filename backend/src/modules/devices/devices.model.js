@@ -9,18 +9,23 @@ const { withTenant } = require('../../shared/db/tenant-knex');
  */
 
 /**
- * Retrieve all devices for a tenant.
+ * Retrieve all devices for a tenant, optionally filtered by status.
  * Uses withTenant() so PostgreSQL RLS policy (tenant_id = app.tenant_id) is enforced
  * as a second layer of defence alongside the explicit where({ tenant_id }).
  * @param {string} tenantId
+ * @param {{ status?: string }} [filters={}]
  * @returns {Promise<object[]>}
  */
-async function findAll(tenantId) {
-  return withTenant(tenantId, (trx) =>
-    trx('devices')
-      .where({ tenant_id: tenantId })
-      .orderBy('created_at', 'desc')
-  );
+async function findAll(tenantId, filters = {}) {
+  return withTenant(tenantId, (trx) => {
+    let query = trx('devices').where({ tenant_id: tenantId });
+
+    if (filters.status) {
+      query = query.andWhere({ status: filters.status });
+    }
+
+    return query.orderBy('created_at', 'desc');
+  });
 }
 
 /**

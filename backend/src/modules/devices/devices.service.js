@@ -12,12 +12,46 @@ const logger = require('../../shared/logger');
  */
 
 /**
- * List all devices for a tenant.
+ * List all devices for a tenant, optionally filtered by status.
  * @param {string} tenantId
+ * @param {{ status?: string }} [filters={}]
  * @returns {Promise<object[]>}
  */
-async function list(tenantId) {
-  return devicesModel.findAll(tenantId);
+async function list(tenantId, filters = {}) {
+  const devices = await devicesModel.findAll(tenantId, filters);
+  return devices.map(camelizeDevice);
+}
+
+/**
+ * Convert a raw DB device row to camelCase API response.
+ * Only exposes claimToken and hardwareId for unclaimed devices.
+ * @param {object} device
+ * @returns {object}
+ */
+function camelizeDevice(device) {
+  const result = {
+    id: device.id,
+    tenantId: device.tenant_id,
+    templateId: device.template_id,
+    clientId: device.client_id,
+    name: device.name,
+    status: device.status,
+    lastSeen: device.last_seen,
+    metadata: device.metadata,
+    createdAt: device.created_at,
+    updatedAt: device.updated_at,
+  };
+
+  // Only expose claim token + hardware ID for unclaimed devices (provisioning)
+  if (device.status === 'unclaimed') {
+    result.claimToken = device.claim_token;
+    result.hardwareId = device.hardware_id;
+  } else {
+    result.claimToken = null;
+    result.hardwareId = null;
+  }
+
+  return result;
 }
 
 /**
@@ -29,7 +63,7 @@ async function list(tenantId) {
 async function getById(tenantId, id) {
   const device = await devicesModel.findById(tenantId, id);
   if (!device) throw new NotFoundError(`Device not found: ${id}`);
-  return device;
+  return camelizeDevice(device);
 }
 
 /**
@@ -111,4 +145,28 @@ async function authenticate(deviceId, deviceToken) {
   return { ok: true, device: found };
 }
 
-module.exports = { list, getById, create, update, remove, authenticate };
+/**
+ * Get provisioning credentials for an unclaimed device.
+ * Returns the claim_token and hardware_id so the installer can
+ * send them to the device over Web Serial.
+ * @param {string} tenantId
+ * @param {string} deviceId
+ * @returns {Promise<{ claimToken: string, hardwareId: string|null }>}
+ */
+async function getProvisioningCredentials(tenantId, deviceId) {
+  const device = await devicesModel.findById(tenantId, deviceId);
+  if (!device) throw new NotFoundError(`Device not found: ${deviceId}`);
+  if (device.status !== 'unclaimed') {
+    throw new ValidationError('Device is not in unclaimed status — provisioning credentials are not available');
+  }
+  if (!device.claim_token) {
+    throw new ValidationError('Device has no claim token — cannot generate provisioning credentials');
+  }
+
+  return {
+    claimToken: device.claim_token,
+    hardwareId: device.hardware_id || null,
+  };
+}
+
+module.exports = { list, getById, create, update, remove, authenticate, getProvisioningCredentials };
