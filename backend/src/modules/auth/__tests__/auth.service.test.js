@@ -171,9 +171,13 @@ describe('authService.login()', () => {
     expect(authModel.createRefreshToken).not.toHaveBeenCalled();
   });
 
-  it('throws ValidationError when tenantId is missing', async () => {
+  it('throws UnauthorizedError when tenantId is missing and email is not found', async () => {
+    // When tenantId is undefined, login resolves tenant from email alone.
+    // If the email isn't found, it throws UnauthorizedError.
+    authModel.findUserByEmailOnly.mockResolvedValue(null);
+
     await expect(authService.login(undefined, EMAIL, PASSWORD)).rejects.toThrow(
-      ValidationError
+      UnauthorizedError
     );
   });
 });
