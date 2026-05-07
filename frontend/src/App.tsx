@@ -11,6 +11,7 @@ import { ClientListPage } from '@/features/clients/ClientListPage'
 import { RulesPage } from '@/features/rules/RulesPage'
 import { FirmwareListPage } from '@/features/firmware/FirmwareListPage'
 import { ProvisioningPage } from '@/features/provisioning/ProvisioningPage'
+import { TenantsPage } from '@/features/admin/TenantsPage'
 import { SocketProvider } from '@/providers/SocketProvider'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
@@ -56,6 +57,7 @@ export default function App() {
           <Route path="rules" element={<RulesPage />} />
           <Route path="firmware" element={<FirmwareListPage />} />
           <Route path="provision" element={<ErrorBoundary><ProvisioningPage /></ErrorBoundary>} />
+          <Route path="tenants" element={<ErrorBoundary><TenantsPage /></ErrorBoundary>} />
           <Route path="settings" element={<PlaceholderPage name="Settings" />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />

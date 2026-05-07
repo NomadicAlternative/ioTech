@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Plus, Share2, Save, Loader2 } from 'lucide-react'
+import { ArrowLeft, Plus, Share2, Save, Loader2, Gauge, Hash, TrendingUp, Circle, ToggleLeft, MousePointerClick, BarChart2, AlignLeft, MapPin } from 'lucide-react'
 import { Responsive as ResponsiveGridLayout } from 'react-grid-layout'
 import type { Layout } from 'react-grid-layout'
 import { v4 as uuidv4 } from 'uuid'
@@ -13,6 +13,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle,
+} from '@/components/ui/sheet'
 import { useDashboardStore } from './dashboardStore'
 import { useAuthStore } from '@/features/auth/authStore'
 import { WidgetRenderer } from '@/features/widgets/WidgetRenderer'
@@ -22,6 +25,18 @@ import { fetchClients, shareDashboard, revokeDashboardShare, fetchDashboardShare
 import type { WidgetLayoutEntry } from '@/features/widgets/types'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
+
+const WIDGET_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  gauge: Gauge,
+  number_display: Hash,
+  line_chart: TrendingUp,
+  status_indicator: Circle,
+  toggle_switch: ToggleLeft,
+  button: MousePointerClick,
+  stat_card: BarChart2,
+  progress_bar: AlignLeft,
+  map: MapPin,
+}
 
 export function DashboardEditorPage() {
   const { t } = useTranslation()
@@ -52,6 +67,7 @@ export function DashboardEditorPage() {
   const [sharedClientIds, setSharedClientIds] = useState<string[]>([])
   const [sharingLoading, setSharingLoading] = useState(false)
   const [currentBreakpoint, setCurrentBreakpoint] = useState<string>('lg')
+  const [paletteOpen, setPaletteOpen] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -184,8 +200,8 @@ export function DashboardEditorPage() {
 
   return (
     <div className="flex -m-6 h-[calc(100vh-3.5rem)] gap-0 overflow-hidden">
-      {/* ─── Widget Palette Sidebar ──────────────────────────────────────── */}
-      <aside className="w-56 flex-shrink-0 border-r bg-background overflow-y-auto p-3 space-y-2">
+      {/* ─── Widget Palette Sidebar (desktop only) ──────────────────────── */}
+      <aside className="hidden lg:flex lg:w-56 lg:flex-shrink-0 flex-col border-r bg-background overflow-y-auto p-3 space-y-2">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1 mb-3">
           {t('dashboard.editor.widgetsPalette')}
         </p>
@@ -271,6 +287,56 @@ export function DashboardEditorPage() {
 
       {/* ─── Widget Config Panel ─────────────────────────────────────────── */}
       <WidgetConfigPanel />
+
+      {/* ─── Mobile: floating add-widget button ──────────────────────────── */}
+      <button
+        onClick={() => setPaletteOpen(true)}
+        className="lg:hidden fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white"
+        style={{ background: 'var(--brand-imperial, #01295F)' }}
+      >
+        <Plus className="w-6 h-6" />
+      </button>
+
+      {/* ─── Mobile: widget palette bottom sheet ──────────────────────────── */}
+      <Sheet open={paletteOpen} onOpenChange={setPaletteOpen}>
+        <SheetContent
+          side="bottom"
+          className="rounded-t-2xl px-4 pb-8 pt-3 max-h-[58vh] overflow-y-auto border-0"
+          style={{
+            background: 'linear-gradient(180deg, #001a3d 0%, #01295F 100%)',
+          }}
+        >
+          {/* Drag handle */}
+          <div className="flex justify-center -mt-1 mb-3">
+            <div className="w-10 h-1 rounded-full bg-white/20" />
+          </div>
+
+          <SheetHeader className="mb-1">
+            <SheetTitle className="text-white/90 text-base font-semibold text-center">
+              {t('dashboard.editor.widgetsPalette')}
+            </SheetTitle>
+          </SheetHeader>
+
+          <div className="flex flex-wrap gap-2 mt-2">
+            {WIDGET_TYPES.map((def) => {
+              const Icon = WIDGET_ICONS[def.type]
+              return (
+                <button
+                  key={def.type}
+                  onClick={() => { handleAddWidget(def.type); setPaletteOpen(false) }}
+                  className="flex flex-col items-center gap-2 p-3.5 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/12 active:scale-95 transition-all text-center"
+                  style={{ width: 'calc(33.333% - 0.55rem)', minWidth: '90px' }}
+                >
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/10">
+                    {Icon && <Icon className="w-5 h-5 text-amber-400" />}
+                  </div>
+                  <span className="text-[11px] font-medium text-white/80 leading-tight">{def.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* ─── Share Dialog ─────────────────────────────────────────────────── */}
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>

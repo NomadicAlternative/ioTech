@@ -20,6 +20,7 @@ interface AuthState {
   user: AuthUser | null
   accessToken: string | null
   isAuthenticated: boolean
+  isSuperAdmin: boolean
 }
 
 interface AuthActions {
@@ -67,6 +68,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   user: null,
   accessToken: null,
   isAuthenticated: false,
+  isSuperAdmin: false,
 
   login: async (email: string, password: string) => {
     const res = await api.post<{ accessToken: string }>('/api/auth/login', {
@@ -75,7 +77,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
     })
     const { accessToken } = res.data
     const user = decodeJwtPayload(accessToken)
-    set({ accessToken, user, isAuthenticated: true })
+    const isSuperAdmin = ['admin@iotech.dev', 'diego@instalador.com'].includes(user.email)
+    set({ accessToken, user, isAuthenticated: true, isSuperAdmin })
   },
 
   logout: async () => {
@@ -92,7 +95,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
     const res = await api.post<{ accessToken: string }>('/api/auth/refresh')
     const { accessToken } = res.data
     const user = decodeJwtPayload(accessToken)
-    set({ accessToken, user, isAuthenticated: true })
+    const isSuperAdmin = ['admin@iotech.dev', 'diego@instalador.com'].includes(user.email)
+    set({ accessToken, user, isAuthenticated: true, isSuperAdmin })
   },
 
   setUser: (user: AuthUser) => set({ user }),
