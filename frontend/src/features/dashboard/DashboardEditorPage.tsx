@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Plus, Share2, Save, Loader2, Gauge, Hash, TrendingUp, Circle, ToggleLeft, MousePointerClick, BarChart2, AlignLeft, MapPin } from 'lucide-react'
+import { ArrowLeft, Plus, Share2, Save, Loader2, Gauge, Hash, TrendingUp, Circle, ToggleLeft, MousePointerClick, BarChart2, AlignLeft, MapPin, Smartphone, Monitor } from 'lucide-react'
 import { Responsive as ResponsiveGridLayout } from 'react-grid-layout'
 import type { Layout } from 'react-grid-layout'
 import { v4 as uuidv4 } from 'uuid'
@@ -68,6 +68,8 @@ export function DashboardEditorPage() {
   const [sharingLoading, setSharingLoading] = useState(false)
   const [currentBreakpoint, setCurrentBreakpoint] = useState<string>('lg')
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [editMode, setEditMode] = useState<'desktop' | 'mobile'>('desktop')
+  const [mobileLayout, setMobileLayout] = useState<WidgetLayoutEntry[]>([])
 
   useEffect(() => {
     if (!id) return
@@ -107,17 +109,39 @@ export function DashboardEditorPage() {
     return () => ro.disconnect()
   }, [])
 
+  // Sync mobile layout from main layout on first load
+  useEffect(() => {
+    if (layout.length > 0 && mobileLayout.length === 0) {
+      let y = 0
+      const compact = layout.map((e) => ({
+        ...e,
+        x: 0,
+        y,
+        w: 1,
+        h: Math.max(2, Math.ceil(e.h * 0.7)),
+      }))
+      compact.forEach((e) => { y += e.h })
+      setMobileLayout(compact)
+    }
+  }, [layout])
+
   const handleLayoutChange = useCallback(
     (newGridLayout: Layout) => {
+      const existingLayout = editMode === 'mobile' ? mobileLayout : layout
       const updated: WidgetLayoutEntry[] = newGridLayout.map((gl) => {
-        const existing = layout.find((e) => e.i === gl.i)
+        const existing = existingLayout.find((e) => e.i === gl.i)
         return existing
           ? { ...existing, x: gl.x, y: gl.y, w: gl.w, h: gl.h }
           : existing!
       }).filter(Boolean)
-      setLayout(updated)
+
+      if (editMode === 'mobile') {
+        setMobileLayout(updated)
+      } else {
+        setLayout(updated)
+      }
     },
-    [layout, setLayout]
+    [layout, mobileLayout, editMode, setLayout]
   )
 
   const handleAddWidget = (widgetType: string) => {
@@ -127,7 +151,7 @@ export function DashboardEditorPage() {
     const newEntry: WidgetLayoutEntry = {
       i: uuidv4(),
       x: 0,
-      y: Infinity, // adds to bottom
+      y: Infinity,
       w: def.defaultSize.w,
       h: def.defaultSize.h,
       widgetType: def.type,
@@ -138,7 +162,12 @@ export function DashboardEditorPage() {
         settings: { ...def.defaultConfig },
       },
     }
-    setLayout([...layout, newEntry])
+
+    if (editMode === 'mobile') {
+      setMobileLayout([...mobileLayout, { ...newEntry, w: 1, h: 2 }])
+    } else {
+      setLayout([...layout, newEntry])
+    }
   }
 
   const handleToggleShare = async (clientId: string) => {
@@ -155,6 +184,7 @@ export function DashboardEditorPage() {
     } catch {/* ignore */}
   }
 
+  // Desktop layout
   const gridLayout: Layout = layout.map((e) => ({
     i: e.i,
     x: e.x,
@@ -165,13 +195,16 @@ export function DashboardEditorPage() {
     minH: 2,
   }))
 
-  // Mobile layout: stack vertically in single column
-  let mobileY = 0
-  const xsLayout: Layout = layout.map((e) => {
-    const item = { i: e.i, x: 0, y: mobileY, w: 1, h: e.h, minW: 1, minH: 2 }
-    mobileY += e.h
-    return item
-  })
+  // Mobile layout (1-col stacked)
+  const xsLayout: Layout = mobileLayout.map((e) => ({
+    i: e.i,
+    x: e.x,
+    y: e.y,
+    w: 1,
+    h: e.h,
+    minW: 1,
+    minH: 2,
+  }))
 
   // SC-DASH-005: Redirect clients away from the edit route → view mode.
   // Guard is placed here (after all hooks) to comply with Rules of Hooks.
@@ -246,8 +279,18 @@ export function DashboardEditorPage() {
             {saveError && (
               <Badge variant="destructive" className="text-xs">{t('dashboard.editor.errorSaving')}</Badge>
             )}
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => setShareOpen(true)}>
+            <Button variant="outline" size="sm" className="gap-2 hidden sm:flex" onClick={() => setShareOpen(true)}>
               <Share2 className="h-4 w-4" /> {t('dashboard.editor.shareButton')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs"
+              onClick={() => setEditMode(editMode === 'desktop' ? 'mobile' : 'desktop')}
+              title={editMode === 'desktop' ? 'Edit mobile layout' : 'Edit desktop layout'}
+            >
+              {editMode === 'desktop' ? <Smartphone className="h-3.5 w-3.5" /> : <Monitor className="h-3.5 w-3.5" />}
+              <span className="hidden sm:inline">{editMode === 'desktop' ? 'Mobile' : 'Desktop'}</span>
             </Button>
             <Button size="sm" onClick={() => navigate(`/app/dashboards/${id}`)}>
               {t('dashboard.editor.done')}
@@ -256,28 +299,36 @@ export function DashboardEditorPage() {
         </div>
 
         {/* Grid canvas */}
-        <div ref={canvasRef} className="flex-1 overflow-auto p-4 bg-muted/30">
-          {layout.length === 0 ? (
+        <div ref={canvasRef} className="flex-1 overflow-auto p-2 sm:p-4 bg-muted/30">
+          {editMode === 'mobile' && (
+            <div className="flex items-center justify-center mb-2">
+              <Badge variant="secondary" className="gap-1.5 text-[10px] px-2 py-0.5">
+                <Smartphone className="h-3 w-3" />
+                Mobile Preview — {mobileLayout.length} widgets
+              </Badge>
+            </div>
+          )}
+          {(editMode === 'desktop' ? layout : mobileLayout).length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-2 text-center">
-              <p className="text-muted-foreground">{t('dashboard.editor.emptyCanvas')}</p>
+              <p className="text-muted-foreground text-sm">{t('dashboard.editor.emptyCanvas')}</p>
             </div>
           ) : (
             <ResponsiveGridLayout
               className="layout"
               layouts={{ lg: gridLayout, md: gridLayout, sm: gridLayout, xs: xsLayout }}
-          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }}
-          cols={{ lg: 12, md: 10, sm: 6, xs: 1 }}
-              rowHeight={80}
-              margin={[12, 12]}
+              breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }}
+              cols={{ lg: 12, md: 10, sm: 6, xs: 1 }}
+              rowHeight={editMode === 'mobile' ? 55 : 80}
+              margin={[8, 8]}
               width={canvasWidth || 1200}
-              isDraggable={currentBreakpoint !== 'xs'}
-              isResizable={currentBreakpoint !== 'xs'}
+              isDraggable={editMode === 'desktop'}
+              isResizable={editMode === 'desktop'}
               onBreakpointChange={(bp) => setCurrentBreakpoint(bp)}
               onLayoutChange={(newLayout) => handleLayoutChange(newLayout)}
             >
-              {layout.map((entry) => (
+              {(editMode === 'desktop' ? layout : mobileLayout).map((entry) => (
                 <div key={entry.i}>
-                  <WidgetRenderer entry={entry} isEditing />
+                  <WidgetRenderer entry={entry} isEditing={editMode === 'desktop'} />
                 </div>
               ))}
             </ResponsiveGridLayout>
