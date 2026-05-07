@@ -39,7 +39,7 @@ export function LoginPage() {
       <div
         className="hidden lg:flex lg:w-[58%] flex-col justify-between p-14 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #01295F 0%, #01295F 50%, #0a3d6b 75%, #0f4f82 100%)',
+            background: 'linear-gradient(135deg, #001a3d 0%, #001f47 50%, #062850 75%, #0a2f5c 100%)',
         }}
       >
         {/* Grid pattern — más visible */}
@@ -180,7 +180,7 @@ export function LoginPage() {
         <div
           className="lg:hidden absolute inset-0"
           style={{
-            background: 'linear-gradient(135deg, #01295F 0%, #01295F 50%, #0a3d6b 75%, #0f4f82 100%)',
+          background: 'linear-gradient(135deg, #001a3d 0%, #001f47 50%, #062850 75%, #0a2f5c 100%)',
           }}
         />
         <div
