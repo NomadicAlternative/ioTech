@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/features/auth/authStore'
@@ -15,6 +16,8 @@ import {
   Download,
   Cable,
   Building2,
+  Menu,
+  X,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -34,67 +37,94 @@ export function AppShell() {
   const user   = useAuthStore((s) => s.user)
   const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin)
   const currentLang = i18n.language?.startsWith('es') ? 'es' : 'en'
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  function closeSidebar() { setSidebarOpen(false) }
+
+  const NavItems = () => (
+    <>
+      {NAV_ITEMS.map(({ to, icon: Icon, labelKey }) => (
+        <NavLink
+          key={to}
+          to={to}
+          onClick={closeSidebar}
+          className={({ isActive }) =>
+            [
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+              isActive
+                ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
+                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+            ].join(' ')
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'opacity-100' : 'opacity-60'}`} />
+              {t(labelKey)}
+            </>
+          )}
+        </NavLink>
+      ))}
+
+      {isSuperAdmin && (
+        <NavLink
+          to="/app/tenants"
+          onClick={closeSidebar}
+          className={({ isActive }) =>
+            [
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+              isActive
+                ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
+                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+            ].join(' ')
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <Building2 className={`w-4 h-4 shrink-0 ${isActive ? 'opacity-100' : 'opacity-60'}`} />
+              {t('nav.tenants', 'Tenants')}
+            </>
+          )}
+        </NavLink>
+      )}
+    </>
+  )
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* ── Sidebar ── */}
-      <aside className="w-64 flex flex-col shrink-0 bg-sidebar border-r border-sidebar-border">
+      {/* ── Mobile overlay ── */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={closeSidebar}
+        />
+      )}
 
+      {/* ── Sidebar ── */}
+      <aside
+        className={[
+          'fixed lg:static inset-y-0 left-0 z-50 w-64 flex flex-col shrink-0 bg-sidebar border-r border-sidebar-border transition-transform duration-300',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+        ].join(' ')}
+      >
         {/* Brand */}
-        <div className="px-6 py-5 border-b border-sidebar-border">
+        <div className="px-6 py-5 border-b border-sidebar-border flex items-center justify-between">
           <span className="text-2xl font-bold tracking-tight" style={{ color: 'var(--brand-imperial, #01295F)' }}>ioTech</span>
+          <button
+            onClick={closeSidebar}
+            className="lg:hidden p-1 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/70"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Nav */}
         <nav className="flex flex-col gap-0.5 p-3 flex-1 overflow-y-auto">
-          {NAV_ITEMS.map(({ to, icon: Icon, labelKey }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                [
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
-                  isActive
-                    ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
-                    : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                ].join(' ')
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'opacity-100' : 'opacity-60'}`} />
-                  {t(labelKey)}
-                </>
-              )}
-            </NavLink>
-          ))}
-
-          {/* Super-admin only: Tenant management */}
-          {isSuperAdmin && (
-            <NavLink
-              to="/app/tenants"
-              className={({ isActive }) =>
-                [
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
-                  isActive
-                    ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
-                    : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                ].join(' ')
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Building2 className={`w-4 h-4 shrink-0 ${isActive ? 'opacity-100' : 'opacity-60'}`} />
-                  {t('nav.tenants', 'Tenants')}
-                </>
-              )}
-            </NavLink>
-          )}
+          <NavItems />
         </nav>
 
         {/* Footer */}
         <div className="p-3 border-t border-sidebar-border space-y-1">
-          {/* Language switcher */}
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg">
             <Globe className="w-4 h-4 text-sidebar-foreground/50 shrink-0" />
             <span className="text-xs text-sidebar-foreground/50 flex-1">{t('nav.language')}</span>
@@ -124,7 +154,6 @@ export function AppShell() {
             </div>
           </div>
 
-          {/* User + logout */}
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition-colors group">
             <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white"
                  style={{ background: 'var(--brand-cerulean)' }}>
@@ -146,10 +175,14 @@ export function AppShell() {
 
       {/* ── Main ── */}
       <div className="flex flex-col flex-1 overflow-hidden">
-
-        {/* Top bar */}
-        <header className="h-14 border-b bg-card flex items-center justify-between px-6 shrink-0">
-          <div />
+        <header className="h-14 border-b bg-card flex items-center justify-between px-4 lg:px-6 shrink-0">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="lg:hidden p-2 -ml-2 rounded-md hover:bg-muted text-muted-foreground"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <div className="hidden lg:block" />
           {user?.role && (
             <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full"
                  style={{ background: 'color-mix(in oklch, var(--brand-imperial) 12%, transparent)', color: 'var(--brand-imperial)' }}>
@@ -159,8 +192,7 @@ export function AppShell() {
           )}
         </header>
 
-        {/* Content */}
-        <main className="flex-1 overflow-auto p-6 bg-background">
+        <main className="flex-1 overflow-auto p-4 lg:p-6 bg-background">
           <Outlet />
         </main>
       </div>
