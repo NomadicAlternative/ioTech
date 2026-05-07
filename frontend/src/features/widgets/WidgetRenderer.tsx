@@ -25,13 +25,13 @@ export function WidgetRenderer({ entry, isEditing }: WidgetRendererProps) {
 
   return (
     <Card className="h-full w-full flex flex-col overflow-hidden">
-      <CardHeader className="py-2 px-3 flex-row items-center justify-between space-y-0 flex-shrink-0">
-        <CardTitle className="text-sm font-medium truncate">{entry.config.name || def?.label || entry.widgetType}</CardTitle>
+      <CardHeader className="py-1.5 px-2 flex-row items-center justify-between space-y-0 flex-shrink-0 min-h-0">
+        <CardTitle className="text-[11px] sm:text-sm font-medium truncate leading-tight">{entry.config.name || def?.label || entry.widgetType}</CardTitle>
         {isEditing && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 flex-shrink-0"
+            className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0"
             onClick={(e) => {
               e.stopPropagation()
               openConfig(entry.i)
@@ -41,7 +41,7 @@ export function WidgetRenderer({ entry, isEditing }: WidgetRendererProps) {
           </Button>
         )}
       </CardHeader>
-      <CardContent className="flex-1 p-2 overflow-hidden">
+      <CardContent className="flex-1 p-1.5 overflow-hidden [&_svg]:max-w-full [&_canvas]:max-w-full">
         {def ? (
           <def.component
             widgetId={entry.i}
@@ -49,8 +49,8 @@ export function WidgetRenderer({ entry, isEditing }: WidgetRendererProps) {
             isEditing={isEditing}
           />
         ) : (
-          <div className="flex items-center justify-center h-full text-sm text-destructive">
-            Unknown widget type: <code className="ml-1 font-mono">{entry.widgetType}</code>
+          <div className="flex items-center justify-center h-full text-[10px] sm:text-sm text-destructive">
+            Unknown widget type: <code className="ml-1 font-mono text-[10px]">{entry.widgetType}</code>
           </div>
         )}
       </CardContent>

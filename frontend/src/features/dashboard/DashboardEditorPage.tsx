@@ -191,8 +191,8 @@ export function DashboardEditorPage() {
     y: e.y,
     w: e.w,
     h: e.h,
-    minW: 2,
-    minH: 2,
+    minW: 1,
+    minH: 1,
   }))
 
   // Mobile layout (1-col stacked)
@@ -203,7 +203,7 @@ export function DashboardEditorPage() {
     w: 1,
     h: e.h,
     minW: 1,
-    minH: 2,
+    minH: 1,
   }))
 
   // SC-DASH-005: Redirect clients away from the edit route → view mode.
