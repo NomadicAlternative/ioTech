@@ -5,7 +5,7 @@ import { useAuthStore } from './authStore'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Cpu, AlertCircle, Wifi, Activity, Shield, ArrowRight } from 'lucide-react'
+import { Cpu, AlertCircle, Activity, Shield, ArrowRight, Radio, LayoutDashboard, Gauge } from 'lucide-react'
 
 export function LoginPage() {
   const { t } = useTranslation()
@@ -109,57 +109,86 @@ export function LoginPage() {
           <span className="text-white text-xl font-bold tracking-tight">IoTech</span>
         </div>
 
-        {/* Center content */}
-        <div className="relative z-10 space-y-10">
-          <div className="space-y-5">
+        {/* Center content — dynamic flow */}
+        <div className="relative z-10 space-y-8">
+          <div className="space-y-4">
             <div
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border"
               style={{ borderColor: 'rgba(255,179,15,0.4)', color: 'var(--brand-amber)', background: 'rgba(255,179,15,0.1)' }}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-              Platform v2.0 — Now live
+              Installer Platform — v2.0
             </div>
-            <h1 className="text-5xl font-extrabold text-white leading-[1.1] tracking-tight">
-              Smart control<br />
-              for{' '}
+            <h1 className="text-4xl font-extrabold text-white leading-[1.15] tracking-tight">
+              Deploy, monitor<br />
+              and{' '}
               <span
                 className="relative inline-block"
                 style={{ color: 'var(--brand-amber)' }}
               >
-                connected
-                <svg className="absolute -bottom-1 left-0 w-full" height="4" viewBox="0 0 200 4">
-                  <path d="M0 2 Q100 0 200 2" stroke="#FFB30F" strokeWidth="2" fill="none" opacity="0.6" />
+                automate
+                <svg className="absolute -bottom-1 left-0 w-full" height="4" viewBox="0 0 140 4">
+                  <path d="M0 2 Q70 0 140 2" stroke="#FFB30F" strokeWidth="2" fill="none" opacity="0.6" />
                 </svg>
               </span>
-              <br />devices
+              <br />your IoT devices
             </h1>
-            <p className="text-white/55 text-base max-w-xs leading-relaxed">
-              Monitor, manage and automate your IoT infrastructure from a single platform.
+            <p className="text-white/50 text-sm max-w-xs leading-relaxed">
+              From ESP32 to dashboard — one platform for the entire device lifecycle.
             </p>
           </div>
 
-          {/* Feature pills */}
-          <div className="flex flex-col gap-2.5">
+          {/* ── Flow diagram ── */}
+          <div className="flex items-center gap-2 py-2">
             {[
-              { icon: Wifi,     label: 'Real-time device monitoring' },
-              { icon: Activity, label: 'Live relay & sensor control' },
-              { icon: Shield,   label: 'Role-based access control' },
+              { icon: Cpu,      label: 'Device',   color: 'var(--brand-amber)' },
+              { icon: Radio,    label: 'MQTT',     color: 'var(--brand-cerulean)' },
+              { icon: Activity, label: 'Telemetry', color: '#849324' },
+              { icon: LayoutDashboard, label: 'Dashboard', color: 'var(--brand-amber)' },
+            ].map(({ icon: Icon, label, color }, i) => (
+              <div key={label} className="flex items-center gap-2">
+                <div className="flex flex-col items-center gap-1.5">
+                  <div
+                    className="w-14 h-14 rounded-xl flex items-center justify-center transition-transform hover:scale-110 duration-300"
+                    style={{ background: `${color}20`, border: `1px solid ${color}40` }}
+                  >
+                    <Icon className="w-5 h-5" style={{ color }} />
+                  </div>
+                  <span className="text-[10px] font-semibold text-white/60 uppercase tracking-wider">{label}</span>
+                </div>
+                {i < 3 && (
+                  <div className="flex items-center">
+                    <div className="w-8 h-0.5 rounded-full opacity-40" style={{ background: color }} />
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Feature pills */}
+          <div className="flex flex-col gap-2">
+            {[
+              { icon: Cpu,    label: 'One-click firmware flash & provisioning' },
+              { icon: Radio,  label: 'Real-time MQTT telemetry & commands' },
+              { icon: Gauge,  label: 'Custom dashboards with drag & drop widgets' },
+              { icon: Shield, label: 'Multi-tenant — one account, many clients' },
             ].map(({ icon: Icon, label }) => (
               <div
                 key={label}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-colors hover:bg-white/10"
                 style={{
                   borderColor: 'rgba(255,255,255,0.08)',
-                  background: 'rgba(255,255,255,0.05)',
+                  background: 'rgba(255,255,255,0.04)',
                 }}
               >
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(255,179,15,0.15)' }}
+                  style={{ background: 'rgba(255,179,15,0.12)' }}
                 >
                   <Icon className="w-4 h-4" style={{ color: 'var(--brand-amber)' }} />
                 </div>
-                <span className="text-white/75 text-sm font-medium">{label}</span>
+                <span className="text-white/70 text-sm">{label}</span>
               </div>
             ))}
           </div>
