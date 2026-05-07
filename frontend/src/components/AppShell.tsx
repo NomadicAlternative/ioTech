@@ -15,7 +15,6 @@ import {
   Download,
   Cable,
 } from 'lucide-react'
-import logoSrc from '@/assets/logo.svg'
 
 const NAV_ITEMS = [
   { to: '/app/dashboards', icon: LayoutDashboard, labelKey: 'nav.dashboards' },
@@ -41,7 +40,7 @@ export function AppShell() {
 
         {/* Brand */}
         <div className="px-6 py-5 border-b border-sidebar-border">
-          <img src={logoSrc} alt="IoTech" className="h-10 w-auto object-contain" />
+          <span className="text-2xl font-bold tracking-tight" style={{ color: 'var(--brand-imperial, #01295F)' }}>ioTech</span>
         </div>
 
         {/* Nav */}

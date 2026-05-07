@@ -53,50 +53,6 @@ async function count(tenantId, filter = {}) {
 }
 
 /**
- * Retrieve all devices for a tenant, with optional pagination and filters.
- * @param {string} tenantId
- * @param {{ page?: number, limit?: number, sortBy?: string|null, sortDir?: string }} [pagination]
- * @param {{ status?: string }} [filter]
- * @returns {Promise<object[]>}
- */
-async function findAll(tenantId, pagination = {}, filter = {}) {
-  const { page = 1, limit = 20, sortBy = null, sortDir = 'asc' } = pagination;
-  const offset = (page - 1) * limit;
-  const orderCol = sortBy || 'created_at';
-  const orderDir = sortBy ? sortDir : 'desc';
-
-  return withTenant(tenantId, (trx) => {
-    let query = trx('devices')
-      .where({ tenant_id: tenantId });
-
-    if (filter.status) {
-      query = query.where({ status: filter.status });
-    }
-
-    return query.orderBy(orderCol, orderDir).limit(limit).offset(offset);
-  });
-}
-
-/**
- * Count all devices for a tenant, with optional filters.
- * @param {string} tenantId
- * @param {{ status?: string }} [filter]
- * @returns {Promise<number>}
- */
-async function count(tenantId, filter = {}) {
-  const rows = await withTenant(tenantId, (trx) => {
-    let query = trx('devices').where({ tenant_id: tenantId });
-
-    if (filter.status) {
-      query = query.where({ status: filter.status });
-    }
-
-    return query.count('id');
-  });
-  return parseInt(rows[0].count, 10);
-}
-
-/**
  * Find a device by its device_token (for MQTT / device auth).
  * Not tenant-scoped — device identifies itself before tenant is known.
  * @param {string} deviceToken
@@ -148,6 +104,18 @@ async function remove(id) {
  */
 async function findByClaimToken(claimToken) {
   return db('devices').where({ claim_token: claimToken }).first();
+}
+
+/**
+ * Find a single device by ID, scoped to a tenant.
+ * @param {string} tenantId
+ * @param {string} id
+ * @returns {Promise<object|undefined>}
+ */
+async function findById(tenantId, id) {
+  return withTenant(tenantId, (trx) =>
+    trx('devices').where({ tenant_id: tenantId, id }).first()
+  );
 }
 
 module.exports = { findAll, findById, findByToken, findByClaimToken, insert, update, remove, count };
