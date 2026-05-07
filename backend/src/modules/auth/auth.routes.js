@@ -86,6 +86,84 @@ router.post('/register', validate(schemas.register), async (req, res, next) => {
 
 /**
  * @openapi
+ * /api/auth/installer-register:
+ *   post:
+ *     summary: Self-register as a new installer (creates tenant + user + logs in)
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 minLength: 1
+ *                 maxLength: 255
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *               contact_email:
+ *                 type: string
+ *                 format: email
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       201:
+ *         description: Installer registered and logged in
+ *         headers:
+ *           Set-Cookie:
+ *             schema:
+ *               type: string
+ *               description: httpOnly refreshToken cookie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id: { type: string, format: uuid }
+ *                     email: { type: string }
+ *                     role: { type: string }
+ *                     tenantId: { type: string, format: uuid }
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ *       409:
+ *         description: Email already registered
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/installer-register', validate(schemas.installerRegister), async (req, res, next) => {
+  try {
+    const result = await authService.installerRegister(req.body);
+    res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, REFRESH_COOKIE_OPTIONS);
+    res.status(201).json({ accessToken: result.accessToken, user: result.user, tenant: result.tenant });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @openapi
  * /api/auth/login:
  *   post:
  *     summary: Login and obtain JWT tokens

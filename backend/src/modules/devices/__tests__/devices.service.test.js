@@ -198,6 +198,27 @@ describe('devicesService.create()', () => {
       status: 'unclaimed',
     });
   });
+
+  it('auto-generates a claim_token (UUID v4 format) alongside device_token', async () => {
+    await devicesService.create(TENANT_ID, { name: 'Claimable Sensor' });
+
+    const insertedData = devicesModel.insert.mock.calls[0][0];
+
+    expect(insertedData.claim_token).toBeDefined();
+    expect(insertedData.claim_token).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
+    expect(insertedData.claim_token).not.toBe(insertedData.device_token);
+  });
+
+  it('generates unique claim_tokens across multiple creates', async () => {
+    await devicesService.create(TENANT_ID, { name: 'Sensor A' });
+    await devicesService.create(TENANT_ID, { name: 'Sensor B' });
+
+    const token1 = devicesModel.insert.mock.calls[0][0].claim_token;
+    const token2 = devicesModel.insert.mock.calls[1][0].claim_token;
+    expect(token1).not.toBe(token2);
+  });
 });
 
 // ─── list() ───────────────────────────────────────────────────────────────────

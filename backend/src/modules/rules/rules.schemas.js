@@ -4,8 +4,8 @@ const Joi = require('joi');
 
 // ─── Shared sub-schemas ───────────────────────────────────────────────────────
 
-const VALID_TRIGGER_TYPES = ['threshold', 'status'];
-const VALID_ACTION_TYPES = ['relay', 'command'];
+const VALID_TRIGGER_TYPES = ['threshold', 'status', 'battery_low'];
+const VALID_ACTION_TYPES = ['relay', 'command', 'charging_start', 'charging_stop', 'low_power_mode'];
 const VALID_OPERATORS = ['gt', 'gte', 'lt', 'lte', 'eq', 'neq'];
 
 // ─── Conditional config validators ────────────────────────────────────────────
@@ -46,6 +46,19 @@ function validateConditionalConfig(value, helpers) {
         return helpers.error('any.custom', { message: `triggerConfig: ${msg}` });
       }
     }
+
+    if (triggerType === 'battery_low') {
+      const { error } = Joi.object({
+        deviceId: Joi.string().uuid().optional(),
+        field: Joi.string().min(1).max(120).default('battery_level'),
+        threshold: Joi.number().min(0).max(100).required(),
+      }).validate(triggerConfig);
+
+      if (error) {
+        const msg = error.details.map((d) => d.message).join('; ');
+        return helpers.error('any.custom', { message: `triggerConfig: ${msg}` });
+      }
+    }
   }
 
   // ── actionConfig validation ───────────────────────────────────────────────
@@ -67,6 +80,29 @@ function validateConditionalConfig(value, helpers) {
       const { error } = Joi.object({
         action: Joi.string().min(1).max(120).required(),
         payload: Joi.object().optional(),
+      }).validate(actionConfig);
+
+      if (error) {
+        const msg = error.details.map((d) => d.message).join('; ');
+        return helpers.error('any.custom', { message: `actionConfig: ${msg}` });
+      }
+    }
+
+    if (['charging_start', 'charging_stop'].includes(actionType)) {
+      const { error } = Joi.object({
+        deviceId: Joi.string().uuid().required(),
+      }).validate(actionConfig);
+
+      if (error) {
+        const msg = error.details.map((d) => d.message).join('; ');
+        return helpers.error('any.custom', { message: `actionConfig: ${msg}` });
+      }
+    }
+
+    if (actionType === 'low_power_mode') {
+      const { error } = Joi.object({
+        deviceId: Joi.string().uuid().required(),
+        durationMinutes: Joi.number().integer().min(1).max(1440).optional(),
       }).validate(actionConfig);
 
       if (error) {

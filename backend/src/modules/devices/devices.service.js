@@ -25,6 +25,8 @@ function camelizeDevice(row) {
     templateId: row.template_id,
     clientId: row.client_id,
     status: row.status,
+    claimToken: row.claim_token,
+    hardwareId: row.hardware_id,
     isOnline: row.is_online,
     lastSeen: row.last_seen,
     metadata: row.metadata,
@@ -34,15 +36,20 @@ function camelizeDevice(row) {
 }
 
 /**
- * List all devices for a tenant, with pagination.
+ * List all devices for a tenant, with optional status filter and pagination.
  * @param {string} tenantId
- * @param {{ page: number, limit: number, sortBy: string|null, sortDir: string }} [pagination]
+ * @param {object} [options]
+ * @param {string|null} [options.status] — filter by status (unclaimed, claimed, active)
+ * @param {object} [options.pagination]
  * @returns {Promise<{ data: object[], total: number }>}
  */
-async function list(tenantId, pagination = {}) {
+async function list(tenantId, options = {}) {
+  const { status, pagination = {} } = options;
+  const filter = status ? { status } : undefined;
+
   const [data, total] = await Promise.all([
-    devicesModel.findAll(tenantId, pagination),
-    devicesModel.count(tenantId),
+    devicesModel.findAll(tenantId, pagination, filter),
+    devicesModel.count(tenantId, filter),
   ]);
   return { data: data.map(camelizeDevice), total };
 }
@@ -61,6 +68,7 @@ async function getById(tenantId, id) {
 
 /**
  * Create a new device.
+ * Auto-generates both device_token and claim_token.
  * @param {string} tenantId
  * @param {{ name: string, templateId?: string, clientId?: string, metadata?: object }} data
  * @returns {Promise<object>}
@@ -71,7 +79,8 @@ async function create(tenantId, data) {
     tenant_id: tenantId,
     template_id: data.templateId || null,
     client_id: data.clientId || null,
-    device_token: uuidv4(), // auto-generated secure token
+    device_token: uuidv4(), // auto-generated secure token for MQTT auth
+    claim_token: uuidv4(), // auto-generated claim token for claiming flow
     name: data.name,
     status: 'unclaimed',
     metadata: data.metadata || {},
@@ -81,6 +90,24 @@ async function create(tenantId, data) {
 
   logger.info(`[devices.service] Created device ${device.id} for tenant ${tenantId}`);
   return device;
+}
+
+/**
+ * Regenerate the claim_token for a device.
+ * Used when an installer needs to re-share a claim token.
+ * @param {string} tenantId
+ * @param {string} deviceId
+ * @returns {Promise<object>} Updated device record
+ */
+async function regenerateClaimToken(tenantId, deviceId) {
+  const device = await devicesModel.findById(tenantId, deviceId);
+  if (!device) throw new NotFoundError(`Device not found: ${deviceId}`);
+
+  const newClaimToken = uuidv4();
+  const updated = await devicesModel.update(deviceId, { claim_token: newClaimToken });
+
+  logger.info(`[devices.service] Regenerated claim_token for device ${deviceId} (tenant ${tenantId})`);
+  return updated;
 }
 
 /**
@@ -160,7 +187,7 @@ async function claimDevice(tenantId, claimToken) {
   return updated;
 }
 
-module.exports = { list, getById, create, update, remove, authenticate, claimDevice, sendCommand, getProvisioningCredentials };
+module.exports = { list, getById, create, update, remove, authenticate, claimDevice, sendCommand, getProvisioningCredentials, regenerateClaimToken };
 
 /**
  * Send a command to a device via MQTT.

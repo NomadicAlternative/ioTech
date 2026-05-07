@@ -12,6 +12,7 @@ import { useAuthStore } from '@/features/auth/authStore'
 import { fetchDeviceTemplate, sendDeviceCommand } from './api'
 import type { DeviceTemplate } from '@/features/widgets/types'
 import { ProvisioningModal } from './components/ProvisioningModal'
+import { FlashDeviceWizard } from './components/FlashDeviceWizard'
 
 const RELAY_COUNT = 7
 
@@ -27,6 +28,7 @@ export function DeviceDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [template, setTemplate] = useState<DeviceTemplate | null>(null)
   const [provisioningOpen, setProvisioningOpen] = useState(false)
+  const [flashOpen, setFlashOpen] = useState(false)
 
   // relay states: index 0 = relay 1, ..., index 6 = relay 7
   const [relayStates, setRelayStates] = useState<boolean[]>(Array(RELAY_COUNT).fill(false))
@@ -145,6 +147,10 @@ export function DeviceDetailPage() {
           <Button variant="outline" size="sm" onClick={() => setProvisioningOpen(true)}>
             <Usb className="h-4 w-4 mr-2" />
             Configurar dispositivo
+          </Button>
+          <Button variant="default" size="sm" onClick={() => setFlashOpen(true)}>
+            <Usb className="h-4 w-4 mr-2" />
+            Flash & Provision
           </Button>
         </div>
       </div>
@@ -292,6 +298,14 @@ export function DeviceDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Flash wizard */}
+      <FlashDeviceWizard
+        deviceId={device.id}
+        deviceName={device.name}
+        open={flashOpen}
+        onClose={() => setFlashOpen(false)}
+      />
 
       {/* Provisioning modal */}
       <ProvisioningModal

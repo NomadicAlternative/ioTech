@@ -7,9 +7,9 @@ export interface Rule {
   name: string
   description: string | null
   enabled: boolean
-  triggerType: 'threshold' | 'status'
+  triggerType: 'threshold' | 'status' | 'battery_low'
   triggerConfig: Record<string, unknown>
-  actionType: 'relay' | 'command'
+  actionType: 'relay' | 'command' | 'charging_start' | 'charging_stop' | 'low_power_mode'
   actionConfig: Record<string, unknown>
   cooldownMs: number
   lastFiredAt: string | null
@@ -21,9 +21,9 @@ export interface CreateRulePayload {
   name: string
   description?: string | null
   enabled?: boolean
-  triggerType: 'threshold' | 'status'
+  triggerType: 'threshold' | 'status' | 'battery_low'
   triggerConfig: Record<string, unknown>
-  actionType: 'relay' | 'command'
+  actionType: 'relay' | 'command' | 'charging_start' | 'charging_stop' | 'low_power_mode'
   actionConfig: Record<string, unknown>
   cooldownMs?: number
 }

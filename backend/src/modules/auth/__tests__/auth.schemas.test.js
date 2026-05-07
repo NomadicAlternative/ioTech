@@ -49,14 +49,18 @@ describe('auth.schemas', () => {
   });
 
   describe('refresh', () => {
-    it('accepts a valid refreshToken', () => {
-      const { error } = schemas.refresh.validate({ refreshToken: 'abc' });
+    it('accepts an empty body (token read from httpOnly cookie)', () => {
+      const { error } = schemas.refresh.validate({});
       expect(error).toBeUndefined();
     });
 
-    it('rejects missing refreshToken', () => {
-      const { error } = schemas.refresh.validate({});
-      expect(error).toBeDefined();
+    it('strips unknown fields', () => {
+      const { value, error } = schemas.refresh.validate(
+        { rogue: 'field' },
+        { stripUnknown: true }
+      );
+      expect(error).toBeUndefined();
+      expect(value.rogue).toBeUndefined();
     });
   });
 });

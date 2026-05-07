@@ -29,10 +29,11 @@ export type UpdateDevicePayload = Partial<CreateDevicePayload>
 export async function listDevices(
   page = 1,
   limit = 10,
-  search?: string
+  search?: string,
+  status?: string
 ): Promise<{ data: Device[]; meta: PaginationMeta }> {
   const res = await api.get<{ data: Device[]; meta: PaginationMeta }>('/api/devices', {
-    params: { page, limit, ...(search ? { search } : {}) },
+    params: { page, limit, ...(search ? { search } : {}), ...(status ? { status } : {}) },
   })
   return { ...res.data, data: res.data.data.map(withOnlineStatus) }
 }

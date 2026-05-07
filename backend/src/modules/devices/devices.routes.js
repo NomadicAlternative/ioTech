@@ -63,7 +63,11 @@ router.use(authGuard, tenantResolver);
  */
 router.get('/', paginate(), async (req, res, next) => {
   try {
-    const { data, total } = await devicesService.list(req.tenantId, req.pagination);
+    const status = req.query.status || null;
+    const { data, total } = await devicesService.list(req.tenantId, {
+      status,
+      pagination: req.pagination,
+    });
     const { page, limit } = req.pagination;
     res.json({
       data,
@@ -372,6 +376,135 @@ router.get('/:id/provisioning-credentials', async (req, res, next) => {
   try {
     const credentials = await devicesService.getProvisioningCredentials(req.tenantId, req.params.id);
     res.json({ data: credentials });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @openapi
+ * /api/devices/{id}/regenerate-claim-token:
+ *   post:
+ *     summary: Regenerate the claim token for a device
+ *     tags:
+ *       - Devices
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *         description: Device ID
+ *     responses:
+ *       200:
+ *         description: Claim token regenerated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id: { type: string, format: uuid }
+ *                     claim_token: { type: string }
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Device not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/:id/regenerate-claim-token', validate(schemas.regenerateClaimToken), async (req, res, next) => {
+  try {
+    const device = await devicesService.regenerateClaimToken(req.tenantId, req.params.id);
+    res.json({ data: { id: device.id, claim_token: device.claim_token } });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @openapi
+ * /api/devices/{id}/flash:
+ *   post:
+ *     summary: Flash firmware to device via PlatformIO — SSE stream
+ *     tags:
+ *       - Devices
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: SSE stream with flash progress
+ *         content:
+ *           text/event-stream:
+ *             schema: { type: string }
+ */
+router.post('/:id/flash', async (req, res, next) => {
+  try {
+    // Ensure device exists and belongs to tenant
+    const device = await devicesService.getById(req.tenantId, req.params.id);
+
+    // Set SSE headers
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
+
+    const sendEvent = (event, data) => {
+      res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+    };
+
+    const flashService = require('./devices.flash.service');
+
+    sendEvent('progress', { step: 'start', line: '🔍 Detecting ESP32...' });
+
+    const controller = flashService.flashFirmware({
+      onProgress: ({ step, line }) => {
+        sendEvent('progress', { step, line });
+      },
+      onDone: async ({ success, error }) => {
+        if (!success) {
+          sendEvent('error', { message: error });
+          res.end();
+          return;
+        }
+
+        // Fetch provisioning credentials
+        try {
+          const creds = await devicesService.getProvisioningCredentials(req.tenantId, device.id);
+          sendEvent('done', {
+            message: 'Flash complete! Device is ready for provisioning.',
+            credentials: creds,
+          });
+        } catch (credErr) {
+          sendEvent('done', {
+            message: 'Flash complete! But could not fetch credentials.',
+            error: credErr.message,
+          });
+        }
+        res.end();
+      },
+    });
+
+    // Handle client disconnect
+    req.on('close', () => {
+      controller.abort();
+    });
   } catch (err) {
     next(err);
   }

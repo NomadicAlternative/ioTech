@@ -9,6 +9,8 @@ import { DeviceDetailPage } from '@/features/devices/DeviceDetailPage'
 import { TemplateListPage } from '@/features/templates/TemplateListPage'
 import { ClientListPage } from '@/features/clients/ClientListPage'
 import { RulesPage } from '@/features/rules/RulesPage'
+import { FirmwareListPage } from '@/features/firmware/FirmwareListPage'
+import { ProvisioningPage } from '@/features/provisioning/ProvisioningPage'
 import { SocketProvider } from '@/providers/SocketProvider'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
@@ -52,6 +54,8 @@ export default function App() {
           <Route path="templates" element={<TemplateListPage />} />
           <Route path="clients" element={<ClientListPage />} />
           <Route path="rules" element={<RulesPage />} />
+          <Route path="firmware" element={<FirmwareListPage />} />
+          <Route path="provision" element={<ErrorBoundary><ProvisioningPage /></ErrorBoundary>} />
           <Route path="settings" element={<PlaceholderPage name="Settings" />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />

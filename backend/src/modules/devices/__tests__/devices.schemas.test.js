@@ -53,4 +53,20 @@ describe('devices.schemas', () => {
       expect(error).toBeUndefined();
     });
   });
+
+  describe('regenerateClaimToken', () => {
+    it('accepts an empty body (no fields needed)', () => {
+      const { error } = schemas.regenerateClaimToken.validate({});
+      expect(error).toBeUndefined();
+    });
+
+    it('strips unknown fields', () => {
+      const { value, error } = schemas.regenerateClaimToken.validate(
+        { rogue: 'field' },
+        { stripUnknown: true }
+      );
+      expect(error).toBeUndefined();
+      expect(value.rogue).toBeUndefined();
+    });
+  });
 });
