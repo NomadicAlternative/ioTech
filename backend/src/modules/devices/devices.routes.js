@@ -77,15 +77,6 @@ router.get('/', paginate(), async (req, res, next) => {
     next(err);
   }
 });
-    const { page, limit } = req.pagination;
-    res.json({
-      data,
-      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    });
-  } catch (err) {
-    next(err);
-  }
-});
 
 /**
  * @openapi

@@ -13,8 +13,9 @@ import {
   ShieldCheck,
   Bot,
   Download,
-  Usb,
+  Cable,
 } from 'lucide-react'
+import logoSrc from '@/assets/logo.svg'
 
 const NAV_ITEMS = [
   { to: '/app/dashboards', icon: LayoutDashboard, labelKey: 'nav.dashboards' },
@@ -22,7 +23,7 @@ const NAV_ITEMS = [
   { to: '/app/rules',      icon: Bot,             labelKey: 'nav.rules' },
   { to: '/app/templates',  icon: FileCode2,        labelKey: 'nav.templates' },
   { to: '/app/firmware',   icon: Download,         labelKey: 'nav.firmware' },
-  { to: '/app/provision',  icon: Usb,              labelKey: 'nav.provision' },
+  { to: '/app/provision',  icon: Cable,            labelKey: 'nav.provision' },
   { to: '/app/clients',    icon: Users,            labelKey: 'nav.clients' },
   { to: '/app/settings',   icon: Settings,         labelKey: 'nav.settings' },
 ]

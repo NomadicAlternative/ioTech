@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Usb, AlertTriangle, Cpu, RefreshCw } from 'lucide-react'
+import { Cable, AlertTriangle, Cpu, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
 import { listDevices } from '@/features/devices/api'
 import type { Device } from '@/features/widgets/types'
 import { ProvisioningModal } from '@/features/devices/components/ProvisioningModal'
@@ -97,11 +96,11 @@ export function ProvisioningPage() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
-              <Skeleton className="h-10 w-10 rounded-full" />
+            <div key={i} className="flex items-center gap-4 p-4 border rounded-lg animate-pulse">
+              <div className="h-10 w-10 rounded-full bg-muted" />
               <div className="space-y-2 flex-1">
-                <Skeleton className="h-4 w-48" />
-                <Skeleton className="h-3 w-32" />
+                <div className="h-4 w-48 rounded bg-muted" />
+                <div className="h-3 w-32 rounded bg-muted" />
               </div>
             </div>
           ))}
@@ -153,7 +152,7 @@ export function ProvisioningPage() {
                 onClick={() => handleProvision(device)}
                 disabled={!supported || device.status !== 'unclaimed'}
               >
-                <Usb className="w-4 h-4 mr-2" />
+                <Cable className="w-4 h-4 mr-2" />
                 {t('provisioning.provisionButton', 'Provision via USB')}
               </Button>
             </div>

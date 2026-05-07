@@ -55,7 +55,7 @@ export default function App() {
           <Route path="clients" element={<ClientListPage />} />
           <Route path="rules" element={<RulesPage />} />
           <Route path="firmware" element={<FirmwareListPage />} />
-          <Route path="provision" element={<ProvisioningPage />} />
+          <Route path="provision" element={<ErrorBoundary><ProvisioningPage /></ErrorBoundary>} />
           <Route path="settings" element={<PlaceholderPage name="Settings" />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
