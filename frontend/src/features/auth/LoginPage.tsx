@@ -34,12 +34,18 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen">
+      <style>{`
+        @keyframes flowPulse {
+          0%, 100% { left: 0%; opacity: 0.3; }
+          50% { left: calc(100% - 8px); opacity: 1; }
+        }
+      `}</style>
 
       {/* ── Left panel ── */}
       <div
         className="hidden lg:flex lg:w-[58%] flex-col justify-between p-14 relative overflow-hidden"
         style={{
-            background: 'linear-gradient(135deg, var(--navy) 0%, #0A2440 50%, #0E2F52 75%, #123A62 100%)',
+            background: 'linear-gradient(135deg, #001a3d 0%, #001f47 50%, #062850 75%, #0a2f5c 100%)',
         }}
       >
         {/* Grid pattern — más visible */}
@@ -56,7 +62,7 @@ export function LoginPage() {
 
         {/* Nodos del circuito — SVG decorativo */}
         <svg
-          className="absolute inset-0 w-full h-full opacity-20"
+          className="absolute inset-0 w-full h-full opacity-10"
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="xMidYMid slice"
         >
@@ -87,27 +93,22 @@ export function LoginPage() {
           <circle cx="20%" cy="80%" r="10" fill="none" stroke="#437F97" strokeWidth="1" opacity="0.5" />
         </svg>
 
-        {/* Glow top-right — más intenso */}
+        {/* Glow top-right */}
         <div
-          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-25 blur-[100px] pointer-events-none"
-          style={{ background: 'var(--blue)' }}
-        />
-        {/* Glow bottom-left — amber más presente */}
-        <div
-          className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full opacity-25 blur-[80px] pointer-events-none"
-          style={{ background: 'var(--accent)' }}
+          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-20 blur-[100px] pointer-events-none"
+          style={{ background: 'var(--brand-cerulean)' }}
         />
         {/* Glow bottom-left */}
         <div
           className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full opacity-15 blur-[80px] pointer-events-none"
-          style={{ background: 'var(--accent)' }}
+          style={{ background: 'var(--brand-amber)' }}
         />
 
         {/* Logo */}
         <div className="relative flex items-center gap-3 z-10">
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg"
-            style={{ background: 'var(--accent)' }}
+            style={{ background: 'var(--brand-amber)' }}
           >
             <Cpu className="w-5 h-5 text-white" />
           </div>
@@ -115,19 +116,22 @@ export function LoginPage() {
         </div>
 
         {/* Center content — dynamic flow */}
-        <div className="relative z-10 space-y-6">
-          <div className="space-y-3">
+        <div className="relative z-10 space-y-8">
+          <div className="space-y-4">
             <div
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border"
-              style={{ borderColor: 'rgba(255,179,15,0.4)', color: 'var(--accent)', background: 'rgba(255,179,15,0.1)' }}
+              style={{ borderColor: 'rgba(255,179,15,0.4)', color: 'var(--brand-amber)', background: 'rgba(255,179,15,0.1)' }}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
               Installer Platform — v2.0
             </div>
-            <h1 className="text-4xl font-bold text-white leading-[1.15] tracking-tight">
+            <h1 className="text-4xl font-extrabold text-white leading-[1.15] tracking-tight">
               Deploy, monitor<br />
               and{' '}
-              <span className="relative inline-block" style={{ color: 'var(--accent)' }}>
+              <span
+                className="relative inline-block"
+                style={{ color: 'var(--brand-amber)' }}
+              >
                 automate
                 <svg className="absolute -bottom-1 left-0 w-full" height="4" viewBox="0 0 140 4">
                   <path d="M0 2 Q70 0 140 2" stroke="#FFB30F" strokeWidth="2" fill="none" opacity="0.6" />
@@ -135,7 +139,7 @@ export function LoginPage() {
               </span>
               <br />your IoT devices
             </h1>
-            <p className="text-white/45 text-sm max-w-xs leading-relaxed">
+            <p className="text-white/50 text-sm max-w-xs leading-relaxed">
               From ESP32 to dashboard — one platform for the entire device lifecycle.
             </p>
           </div>
@@ -143,16 +147,16 @@ export function LoginPage() {
           {/* ── Flow diagram ── */}
           <div className="flex items-center gap-2 py-2">
             {[
-              { icon: Cpu,      label: 'Device',   color: 'var(--accent)' },
-              { icon: Radio,    label: 'MQTT',     color: 'var(--blue)' },
+              { icon: Cpu,      label: 'Device',   color: 'var(--brand-amber)' },
+              { icon: Radio,    label: 'MQTT',     color: 'var(--brand-cerulean)' },
               { icon: Activity, label: 'Telemetry', color: '#849324' },
-              { icon: LayoutDashboard, label: 'Dashboard', color: 'var(--accent)' },
+              { icon: LayoutDashboard, label: 'Dashboard', color: 'var(--brand-amber)' },
             ].map(({ icon: Icon, label, color }, i) => (
               <div key={label} className="flex items-center gap-2">
                 <div className="flex flex-col items-center gap-1.5">
                   <div
                     className="w-14 h-14 rounded-xl flex items-center justify-center transition-transform hover:scale-110 duration-300"
-                    style={{ background: color + '20', border: '1px solid ' + color + '40' }}
+                    style={{ background: `${color}20`, border: `1px solid ${color}40` }}
                   >
                     <Icon className="w-5 h-5" style={{ color }} />
                   </div>
@@ -165,8 +169,9 @@ export function LoginPage() {
                       className="absolute w-2 h-2 rounded-full"
                       style={{
                         background: color,
-                        boxShadow: '0 0 8px ' + color + ', 0 0 16px ' + color,
-                        animation: 'flowPulse 2s ease-in-out ' + (i * 0.5) + 's infinite',
+                        boxShadow: `0 0 8px ${color}, 0 0 16px ${color}`,
+                        animation: `flowPulse 2s ease-in-out ${i * 0.5}s infinite`,
+                        left: '0%',
                       }}
                     />
                   </div>
@@ -185,17 +190,17 @@ export function LoginPage() {
             ].map(({ icon: Icon, label }) => (
               <div
                 key={label}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-colors hover:bg-white/8"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-colors hover:bg-white/10"
                 style={{
-                  borderColor: 'rgba(255,179,15,0.15)',
-                  background: 'rgba(255,179,15,0.06)',
+                  borderColor: 'rgba(255,255,255,0.08)',
+                  background: 'rgba(255,255,255,0.04)',
                 }}
               >
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                   style={{ background: 'rgba(255,179,15,0.12)' }}
                 >
-                  <Icon className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                  <Icon className="w-4 h-4" style={{ color: 'var(--brand-amber)' }} />
                 </div>
                 <span className="text-white/70 text-sm">{label}</span>
               </div>
@@ -218,7 +223,7 @@ export function LoginPage() {
         <div
           className="lg:hidden absolute inset-0"
           style={{
-          background: 'linear-gradient(135deg, var(--navy) 0%, #0A2440 50%, #0E2F52 75%, #123A62 100%)',
+          background: 'linear-gradient(135deg, #001a3d 0%, #001f47 50%, #062850 75%, #0a2f5c 100%)',
           }}
         />
         <div
@@ -233,18 +238,18 @@ export function LoginPage() {
         />
         <div
           className="lg:hidden absolute top-0 right-0 w-72 h-72 rounded-full opacity-20 blur-[80px] pointer-events-none"
-          style={{ background: 'var(--blue)' }}
+          style={{ background: 'var(--brand-cerulean)' }}
         />
         <div
           className="lg:hidden absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-15 blur-[70px] pointer-events-none"
-          style={{ background: 'var(--accent)' }}
+          style={{ background: 'var(--brand-amber)' }}
         />
 
         {/* Mobile logo */}
         <div className="relative z-10 flex lg:hidden items-center gap-2.5 mb-8">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"
-            style={{ background: 'var(--accent)' }}
+            style={{ background: 'var(--brand-amber)' }}
           >
             <Cpu className="w-5 h-5 text-white" />
           </div>
@@ -265,7 +270,7 @@ export function LoginPage() {
 
           {/* Form card — glassmorphism en mobile, borde simple en desktop */}
           <div
-            className="rounded-2xl p-6 sm:p-8 space-y-5 lg:border lg:shadow-sm lg:bg-white"
+            className="rounded-2xl p-8 space-y-5 lg:border lg:shadow-sm lg:bg-white"
             style={{
               background: 'rgba(255,255,255,0.07)',
               backdropFilter: 'blur(16px)',
@@ -274,7 +279,7 @@ export function LoginPage() {
             }}
           >
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-[13px] font-medium lg:text-[var(--muted-foreground)] text-white/80">
+              <Label htmlFor="email" className="text-sm font-semibold lg:text-foreground text-white/90">
                 {t('auth.emailLabel')}
               </Label>
               <Input
@@ -285,12 +290,12 @@ export function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-[var(--border)] border-white/20 rounded-xl focus-visible:ring-[var(--blue)]"
+                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-border border-white/20 focus-visible:ring-[#437F97]"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-[13px] font-medium lg:text-[var(--muted-foreground)] text-white/80">
+              <Label htmlFor="password" className="text-sm font-semibold lg:text-foreground text-white/90">
                 {t('auth.passwordLabel')}
               </Label>
               <Input
@@ -301,7 +306,7 @@ export function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-[var(--border)] border-white/20 rounded-xl focus-visible:ring-[var(--blue)]"
+                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-border border-white/20 focus-visible:ring-[#437F97]"
               />
             </div>
 
