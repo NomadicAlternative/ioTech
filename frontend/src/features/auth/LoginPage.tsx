@@ -112,7 +112,7 @@ export function LoginPage() {
           >
             <Cpu className="w-5 h-5 text-white" />
           </div>
-          <span className="text-white text-xl font-bold tracking-tight">IoTech</span>
+          <span className="text-white text-xl font-bold tracking-tight">io<span style={{ color: 'var(--brand-amber)' }}>Tech</span></span>
         </div>
 
         {/* Center content — dynamic flow */}
@@ -160,7 +160,7 @@ export function LoginPage() {
                   >
                     <Icon className="w-5 h-5" style={{ color }} />
                   </div>
-                  <span className="text-[10px] font-semibold text-white/60 uppercase tracking-wider">{label}</span>
+                  <span className="text-[10px] font-semibold text-amber-300/80 uppercase tracking-wider">{label}</span>
                 </div>
                 {i < 3 && (
                   <div className="flex items-center relative" style={{ width: '40px' }}>
@@ -192,8 +192,8 @@ export function LoginPage() {
                 key={label}
                 className="flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-colors hover:bg-white/10"
                 style={{
-                  borderColor: 'rgba(255,255,255,0.08)',
-                  background: 'rgba(255,255,255,0.04)',
+                  borderColor: 'rgba(255,179,15,0.15)',
+                  background: 'rgba(255,179,15,0.05)',
                 }}
               >
                 <div
