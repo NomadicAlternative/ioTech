@@ -167,7 +167,6 @@ export function LoginPage() {
                         background: color,
                         boxShadow: '0 0 8px ' + color + ', 0 0 16px ' + color,
                         animation: 'flowPulse 2s ease-in-out ' + (i * 0.5) + 's infinite',
-                        left: '0%',
                       }}
                     />
                   </div>
