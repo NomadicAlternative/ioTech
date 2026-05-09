@@ -110,9 +110,9 @@ export function LoginPage() {
             className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30"
             style={{ background: 'var(--brand-amber)' }}
           >
-            <Cpu className="w-5 h-5 text-white" />
+            <Cpu className="w-5 h-5 text-amber-400" />
           </div>
-          <span className="text-white text-xl font-bold tracking-tight">io<span style={{ color: 'var(--brand-amber)' }}>Tech</span></span>
+          <span className="text-white text-xl font-bold tracking-tight">ioTech</span>
         </div>
 
         {/* Center content — dynamic flow */}
@@ -130,7 +130,7 @@ export function LoginPage() {
               and{' '}
               <span
                 className="relative inline-block"
-                style={{ color: 'var(--brand-amber)' }}
+                style={{ color: '#FCD34D' }}
               >
                 automate
                 <svg className="absolute -bottom-1 left-0 w-full" height="4" viewBox="0 0 140 4">
@@ -251,7 +251,7 @@ export function LoginPage() {
             className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30"
             style={{ background: 'var(--brand-amber)' }}
           >
-            <Cpu className="w-5 h-5 text-white" />
+            <Cpu className="w-5 h-5 text-amber-400" />
           </div>
           <span className="text-xl font-bold tracking-tight text-white">IoTech</span>
         </div>
