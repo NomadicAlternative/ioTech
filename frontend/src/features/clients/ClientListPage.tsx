@@ -183,7 +183,7 @@ export function ClientListPage() {
               clients.map((client) => (
                 <tr
                   key={client.id}
-                  className="border-t hover:bg-muted/30 cursor-pointer group transition-colors"
+                  className="border-t hover:bg-[var(--blue)]/3 cursor-pointer group transition-colors"
                   onClick={() => setEditClientId(client.id)}
                 >
                   <td className="px-5 py-4">

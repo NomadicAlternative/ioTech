@@ -109,24 +109,24 @@ export function RulesPage() {
       {/* Table */}
       <div className="border rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50">
+          <thead className="border-b border-[var(--border)]">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">
                 {t('rules.list.colName', 'Name')}
               </th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider hidden sm:table-cell">
                 {t('rules.list.colTrigger', 'Trigger')}
               </th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider hidden sm:table-cell">
                 {t('rules.list.colAction', 'Action')}
               </th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider hidden md:table-cell">
                 {t('rules.list.colEnabled', 'Enabled')}
               </th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider hidden lg:table-cell">
                 {t('rules.list.colCooldown', 'Cooldown')}
               </th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider hidden lg:table-cell">
                 {t('rules.list.colLastFired', 'Last Fired')}
               </th>
               <th className="px-4 py-3" />
@@ -179,7 +179,7 @@ export function RulesPage() {
             {/* Rule rows */}
             {!loading &&
               rules.map((rule) => (
-                <tr key={rule.id} className="border-t hover:bg-muted/30 transition-colors group">
+                <tr key={rule.id} className="border-t hover:bg-[var(--blue)]/3 transition-colors group">
                   <td className="px-4 py-3 font-medium">{rule.name}</td>
                   <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
                     <Badge variant="secondary">{triggerTypeLabel(rule.triggerType)}</Badge>
