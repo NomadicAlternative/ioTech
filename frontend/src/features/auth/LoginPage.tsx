@@ -130,7 +130,7 @@ export function LoginPage() {
               and{' '}
               <span
                 className="relative inline-block"
-                style={{ color: 'var(--brand-amber)', textShadow: '0 0 20px rgba(255,179,15,0.5)' }}
+                style={{ color: 'var(--brand-amber)' }}
               >
                 automate
                 <svg className="absolute -bottom-1 left-0 w-full" height="4" viewBox="0 0 140 4">

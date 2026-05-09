@@ -31,7 +31,7 @@
     /* Legacy brand tokens (kept for existing component references) */
     --brand-imperial: var(--navy);
     --brand-cerulean: var(--blue);
-    --brand-amber: var(--accent);
+    --brand-amber: #FFB30F;
     --brand-red: var(--danger-text);
 
     --background: #F7F9FC;
