@@ -34,12 +34,6 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen">
-      <style>{`
-        @keyframes flowPulse {
-          0%, 100% { left: 0%; opacity: 0.3; }
-          50% { left: calc(100% - 8px); opacity: 1; }
-        }
-      `}</style>
 
       {/* ── Left panel ── */}
       <div
