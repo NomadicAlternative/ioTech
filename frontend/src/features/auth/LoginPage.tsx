@@ -45,7 +45,7 @@ export function LoginPage() {
       <div
         className="hidden lg:flex lg:w-[58%] flex-col justify-between p-14 relative overflow-hidden"
         style={{
-            background: 'linear-gradient(135deg, #001a3d 0%, #001f47 50%, #062850 75%, #0a2f5c 100%)',
+            background: 'linear-gradient(135deg, #14213D 0%, #1A2F52 50%, #1F3A63 75%, #244878 100%)',
         }}
       >
         {/* Grid pattern — más visible */}
@@ -67,30 +67,30 @@ export function LoginPage() {
           preserveAspectRatio="xMidYMid slice"
         >
           {/* Líneas de circuito */}
-          <line x1="15%" y1="20%" x2="40%" y2="20%" stroke="#FFB30F" strokeWidth="1.5" />
-          <line x1="40%" y1="20%" x2="40%" y2="45%" stroke="#FFB30F" strokeWidth="1.5" />
-          <line x1="40%" y1="45%" x2="70%" y2="45%" stroke="#437F97" strokeWidth="1.5" />
-          <line x1="70%" y1="45%" x2="70%" y2="70%" stroke="#437F97" strokeWidth="1.5" />
-          <line x1="70%" y1="70%" x2="90%" y2="70%" stroke="#FFB30F" strokeWidth="1.5" />
-          <line x1="20%" y1="60%" x2="20%" y2="80%" stroke="#437F97" strokeWidth="1.5" />
-          <line x1="20%" y1="80%" x2="55%" y2="80%" stroke="#437F97" strokeWidth="1.5" />
-          <line x1="10%" y1="40%" x2="25%" y2="40%" stroke="#FFB30F" strokeWidth="1.5" />
+          <line x1="15%" y1="20%" x2="40%" y2="20%" stroke="#FCA311" strokeWidth="1.5" />
+          <line x1="40%" y1="20%" x2="40%" y2="45%" stroke="#FCA311" strokeWidth="1.5" />
+          <line x1="40%" y1="45%" x2="70%" y2="45%" stroke="#14213D" strokeWidth="1.5" />
+          <line x1="70%" y1="45%" x2="70%" y2="70%" stroke="#14213D" strokeWidth="1.5" />
+          <line x1="70%" y1="70%" x2="90%" y2="70%" stroke="#FCA311" strokeWidth="1.5" />
+          <line x1="20%" y1="60%" x2="20%" y2="80%" stroke="#14213D" strokeWidth="1.5" />
+          <line x1="20%" y1="80%" x2="55%" y2="80%" stroke="#14213D" strokeWidth="1.5" />
+          <line x1="10%" y1="40%" x2="25%" y2="40%" stroke="#FCA311" strokeWidth="1.5" />
           {/* Nodos */}
-          <circle cx="15%" cy="20%" r="4" fill="#FFB30F" />
-          <circle cx="40%" cy="20%" r="4" fill="#FFB30F" />
-          <circle cx="40%" cy="45%" r="4" fill="#437F97" />
-          <circle cx="70%" cy="45%" r="4" fill="#437F97" />
-          <circle cx="70%" cy="70%" r="4" fill="#FFB30F" />
-          <circle cx="90%" cy="70%" r="4" fill="#FFB30F" />
-          <circle cx="20%" cy="60%" r="4" fill="#437F97" />
-          <circle cx="20%" cy="80%" r="4" fill="#437F97" />
-          <circle cx="55%" cy="80%" r="4" fill="#437F97" />
-          <circle cx="10%" cy="40%" r="4" fill="#FFB30F" />
-          <circle cx="25%" cy="40%" r="4" fill="#FFB30F" />
+          <circle cx="15%" cy="20%" r="4" fill="#FCA311" />
+          <circle cx="40%" cy="20%" r="4" fill="#FCA311" />
+          <circle cx="40%" cy="45%" r="4" fill="#14213D" />
+          <circle cx="70%" cy="45%" r="4" fill="#14213D" />
+          <circle cx="70%" cy="70%" r="4" fill="#FCA311" />
+          <circle cx="90%" cy="70%" r="4" fill="#FCA311" />
+          <circle cx="20%" cy="60%" r="4" fill="#14213D" />
+          <circle cx="20%" cy="80%" r="4" fill="#14213D" />
+          <circle cx="55%" cy="80%" r="4" fill="#14213D" />
+          <circle cx="10%" cy="40%" r="4" fill="#FCA311" />
+          <circle cx="25%" cy="40%" r="4" fill="#FCA311" />
           {/* Nodos grandes vacíos */}
-          <circle cx="40%" cy="20%" r="10" fill="none" stroke="#FFB30F" strokeWidth="1" opacity="0.5" />
-          <circle cx="70%" cy="45%" r="10" fill="none" stroke="#437F97" strokeWidth="1" opacity="0.5" />
-          <circle cx="20%" cy="80%" r="10" fill="none" stroke="#437F97" strokeWidth="1" opacity="0.5" />
+          <circle cx="40%" cy="20%" r="10" fill="none" stroke="#FCA311" strokeWidth="1" opacity="0.5" />
+          <circle cx="70%" cy="45%" r="10" fill="none" stroke="#14213D" strokeWidth="1" opacity="0.5" />
+          <circle cx="20%" cy="80%" r="10" fill="none" stroke="#14213D" strokeWidth="1" opacity="0.5" />
         </svg>
 
         {/* Glow top-right */}
@@ -120,7 +120,7 @@ export function LoginPage() {
           <div className="space-y-4">
             <div
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border"
-              style={{ borderColor: 'rgba(255,179,15,0.4)', color: 'var(--brand-amber)', background: 'rgba(255,179,15,0.1)' }}
+              style={{ borderColor: 'rgba(252,163,17,0.4)', color: 'var(--brand-amber)', background: 'rgba(252,163,17,0.1)' }}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
               Installer Platform — v2.0
@@ -130,11 +130,11 @@ export function LoginPage() {
               and{' '}
               <span
                 className="relative inline-block"
-                style={{ color: '#FCD34D' }}
+                style={{ color: '#FCA311' }}
               >
                 automate
                 <svg className="absolute -bottom-1 left-0 w-full" height="4" viewBox="0 0 140 4">
-                  <path d="M0 2 Q70 0 140 2" stroke="#FFB30F" strokeWidth="2" fill="none" opacity="0.6" />
+                  <path d="M0 2 Q70 0 140 2" stroke="#FCA311" strokeWidth="2" fill="none" opacity="0.6" />
                 </svg>
               </span>
               <br />your IoT devices
@@ -192,13 +192,13 @@ export function LoginPage() {
                 key={label}
                 className="flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-colors hover:bg-white/10"
                 style={{
-                  borderColor: 'rgba(255,179,15,0.15)',
-                  background: 'rgba(255,179,15,0.05)',
+                  borderColor: 'rgba(252,163,17,0.15)',
+                  background: 'rgba(252,163,17,0.05)',
                 }}
               >
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(255,179,15,0.12)' }}
+                  style={{ background: 'rgba(252,163,17,0.12)' }}
                 >
                   <Icon className="w-4 h-4" style={{ color: 'var(--brand-amber)' }} />
                 </div>
@@ -290,7 +290,7 @@ export function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-border border-white/20 focus-visible:ring-[#437F97]"
+                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-border border-white/20 focus-visible:ring-[#14213D]"
               />
             </div>
 
@@ -306,7 +306,7 @@ export function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-border border-white/20 focus-visible:ring-[#437F97]"
+                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-border border-white/20 focus-visible:ring-[#14213D]"
               />
             </div>
 
