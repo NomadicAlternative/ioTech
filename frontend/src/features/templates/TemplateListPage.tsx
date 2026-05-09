@@ -94,7 +94,7 @@ export function TemplateListPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
         <div className="flex items-center gap-4">
           <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
                style={{ background: 'color-mix(in oklch, var(--brand-imperial) 10%, transparent)' }}>

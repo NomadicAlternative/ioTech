@@ -86,7 +86,7 @@ export function RulesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold">{t('rules.list.title', 'Automation Rules')}</h1>
           <p className="text-muted-foreground text-sm mt-1">

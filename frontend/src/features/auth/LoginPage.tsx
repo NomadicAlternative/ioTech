@@ -67,28 +67,28 @@ export function LoginPage() {
           preserveAspectRatio="xMidYMid slice"
         >
           {/* Líneas de circuito */}
-          <line x1="15%" y1="20%" x2="40%" y2="20%" stroke="#FFB703" strokeWidth="1.5" />
-          <line x1="40%" y1="20%" x2="40%" y2="45%" stroke="#FFB703" strokeWidth="1.5" />
+          <line x1="15%" y1="20%" x2="40%" y2="20%" stroke="#FFB30F" strokeWidth="1.5" />
+          <line x1="40%" y1="20%" x2="40%" y2="45%" stroke="#FFB30F" strokeWidth="1.5" />
           <line x1="40%" y1="45%" x2="70%" y2="45%" stroke="#437F97" strokeWidth="1.5" />
           <line x1="70%" y1="45%" x2="70%" y2="70%" stroke="#437F97" strokeWidth="1.5" />
-          <line x1="70%" y1="70%" x2="90%" y2="70%" stroke="#FFB703" strokeWidth="1.5" />
+          <line x1="70%" y1="70%" x2="90%" y2="70%" stroke="#FFB30F" strokeWidth="1.5" />
           <line x1="20%" y1="60%" x2="20%" y2="80%" stroke="#437F97" strokeWidth="1.5" />
           <line x1="20%" y1="80%" x2="55%" y2="80%" stroke="#437F97" strokeWidth="1.5" />
-          <line x1="10%" y1="40%" x2="25%" y2="40%" stroke="#FFB703" strokeWidth="1.5" />
+          <line x1="10%" y1="40%" x2="25%" y2="40%" stroke="#FFB30F" strokeWidth="1.5" />
           {/* Nodos */}
-          <circle cx="15%" cy="20%" r="4" fill="#FFB703" />
-          <circle cx="40%" cy="20%" r="4" fill="#FFB703" />
+          <circle cx="15%" cy="20%" r="4" fill="#FFB30F" />
+          <circle cx="40%" cy="20%" r="4" fill="#FFB30F" />
           <circle cx="40%" cy="45%" r="4" fill="#437F97" />
           <circle cx="70%" cy="45%" r="4" fill="#437F97" />
-          <circle cx="70%" cy="70%" r="4" fill="#FFB703" />
-          <circle cx="90%" cy="70%" r="4" fill="#FFB703" />
+          <circle cx="70%" cy="70%" r="4" fill="#FFB30F" />
+          <circle cx="90%" cy="70%" r="4" fill="#FFB30F" />
           <circle cx="20%" cy="60%" r="4" fill="#437F97" />
           <circle cx="20%" cy="80%" r="4" fill="#437F97" />
           <circle cx="55%" cy="80%" r="4" fill="#437F97" />
-          <circle cx="10%" cy="40%" r="4" fill="#FFB703" />
-          <circle cx="25%" cy="40%" r="4" fill="#FFB703" />
+          <circle cx="10%" cy="40%" r="4" fill="#FFB30F" />
+          <circle cx="25%" cy="40%" r="4" fill="#FFB30F" />
           {/* Nodos grandes vacíos */}
-          <circle cx="40%" cy="20%" r="10" fill="none" stroke="#FFB703" strokeWidth="1" opacity="0.5" />
+          <circle cx="40%" cy="20%" r="10" fill="none" stroke="#FFB30F" strokeWidth="1" opacity="0.5" />
           <circle cx="70%" cy="45%" r="10" fill="none" stroke="#437F97" strokeWidth="1" opacity="0.5" />
           <circle cx="20%" cy="80%" r="10" fill="none" stroke="#437F97" strokeWidth="1" opacity="0.5" />
         </svg>
@@ -131,7 +131,7 @@ export function LoginPage() {
               <span className="relative inline-block" style={{ color: 'var(--accent)' }}>
                 automate
                 <svg className="absolute -bottom-1 left-0 w-full" height="4" viewBox="0 0 140 4">
-                  <path d="M0 2 Q70 0 140 2" stroke="#FFB703" strokeWidth="2" fill="none" opacity="0.6" />
+                  <path d="M0 2 Q70 0 140 2" stroke="#FFB30F" strokeWidth="2" fill="none" opacity="0.6" />
                 </svg>
               </span>
               <br />your IoT devices

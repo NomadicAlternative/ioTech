@@ -59,7 +59,7 @@ export function AppShell() {
         >
           {({ isActive }) => (
             <>
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'opacity-100' : 'opacity-60'}`} />
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'opacity-100 text-amber-400' : 'opacity-50'}`} />
               {t(labelKey)}
             </>
           )}
