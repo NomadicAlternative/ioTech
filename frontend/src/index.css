@@ -22,6 +22,7 @@
     --black: #000000;
     --prussian-blue: #14213D;
     --orange: #FCA311;
+    --muted-blue: #919EBC;
     --alabaster-grey: #E5E5E5;
     --white: #FFFFFF;
 
@@ -50,9 +51,9 @@
     --primary: var(--prussian-blue);
     --primary-foreground: var(--white);
     --secondary: #EDEDED;
-    --secondary-foreground: var(--black);
+    --secondary-foreground: var(--muted-blue);
     --muted: #EDEDED;
-    --muted-foreground: #6B7280;
+    --muted-foreground: var(--muted-blue);
     --accent: var(--orange);
     --accent-foreground: var(--black);
     --destructive: var(--danger-text);

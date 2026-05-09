@@ -223,7 +223,7 @@ export function LoginPage() {
         <div
           className="lg:hidden absolute inset-0"
           style={{
-          background: 'linear-gradient(135deg, #001a3d 0%, #001f47 50%, #062850 75%, #0a2f5c 100%)',
+          background: 'linear-gradient(135deg, #14213D 0%, #1A2F52 50%, #1F3A63 75%, #244878 100%)',
           }}
         />
         <div
