@@ -62,7 +62,7 @@ export function LoginPage() {
 
         {/* Nodos del circuito — SVG decorativo */}
         <svg
-          className="absolute inset-0 w-full h-full opacity-10"
+          className="absolute inset-0 w-full h-full opacity-20"
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="xMidYMid slice"
         >
@@ -93,10 +93,15 @@ export function LoginPage() {
           <circle cx="20%" cy="80%" r="10" fill="none" stroke="#437F97" strokeWidth="1" opacity="0.5" />
         </svg>
 
-        {/* Glow top-right */}
+        {/* Glow top-right — más intenso */}
         <div
-          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-20 blur-[100px] pointer-events-none"
+          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-25 blur-[100px] pointer-events-none"
           style={{ background: 'var(--blue)' }}
+        />
+        {/* Glow bottom-left — amber más presente */}
+        <div
+          className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full opacity-25 blur-[80px] pointer-events-none"
+          style={{ background: 'var(--accent)' }}
         />
         {/* Glow bottom-left */}
         <div
@@ -187,10 +192,10 @@ export function LoginPage() {
             ].map(({ icon: Icon, label }) => (
               <div
                 key={label}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-colors hover:bg-white/10"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-colors hover:bg-white/8"
                 style={{
-                  borderColor: 'rgba(255,255,255,0.08)',
-                  background: 'rgba(255,255,255,0.04)',
+                  borderColor: 'rgba(255,179,15,0.15)',
+                  background: 'rgba(255,179,15,0.06)',
                 }}
               >
                 <div
