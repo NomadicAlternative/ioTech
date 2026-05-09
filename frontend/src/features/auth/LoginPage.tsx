@@ -45,7 +45,7 @@ export function LoginPage() {
       <div
         className="hidden lg:flex lg:w-[58%] flex-col justify-between p-14 relative overflow-hidden"
         style={{
-            background: 'linear-gradient(135deg, #001a3d 0%, #001f47 50%, #062850 75%, #0a2f5c 100%)',
+            background: 'linear-gradient(135deg, var(--navy) 0%, #0A2440 50%, #0E2F52 75%, #123A62 100%)',
         }}
       >
         {/* Grid pattern — más visible */}
@@ -223,7 +223,7 @@ export function LoginPage() {
         <div
           className="lg:hidden absolute inset-0"
           style={{
-          background: 'linear-gradient(135deg, #001a3d 0%, #001f47 50%, #062850 75%, #0a2f5c 100%)',
+          background: 'linear-gradient(135deg, var(--navy) 0%, #0A2440 50%, #0E2F52 75%, #123A62 100%)',
           }}
         />
         <div
@@ -270,7 +270,7 @@ export function LoginPage() {
 
           {/* Form card — glassmorphism en mobile, borde simple en desktop */}
           <div
-            className="rounded-2xl p-8 space-y-5 lg:border lg:shadow-sm lg:bg-white"
+            className="rounded-2xl p-6 sm:p-8 space-y-5 lg:border lg:shadow-sm lg:bg-white"
             style={{
               background: 'rgba(255,255,255,0.07)',
               backdropFilter: 'blur(16px)',
@@ -279,7 +279,7 @@ export function LoginPage() {
             }}
           >
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-semibold lg:text-foreground text-white/90">
+              <Label htmlFor="email" className="text-[13px] font-medium lg:text-[var(--muted-foreground)] text-white/80">
                 {t('auth.emailLabel')}
               </Label>
               <Input
@@ -290,12 +290,12 @@ export function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-border border-white/20 focus-visible:ring-[#437F97]"
+                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-[var(--border)] border-white/20 rounded-xl focus-visible:ring-[var(--blue)]"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm font-semibold lg:text-foreground text-white/90">
+              <Label htmlFor="password" className="text-[13px] font-medium lg:text-[var(--muted-foreground)] text-white/80">
                 {t('auth.passwordLabel')}
               </Label>
               <Input
@@ -306,7 +306,7 @@ export function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-border border-white/20 focus-visible:ring-[#437F97]"
+                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-[var(--border)] border-white/20 rounded-xl focus-visible:ring-[var(--blue)]"
               />
             </div>
 
