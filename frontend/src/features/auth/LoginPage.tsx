@@ -160,7 +160,7 @@ export function LoginPage() {
                 <div className="flex flex-col items-center gap-1.5">
                   <div
                     className="w-14 h-14 rounded-xl flex items-center justify-center transition-transform hover:scale-110 duration-300"
-                    style={{ background: `${color}20`, border: `1px solid ${color}40` }}
+                    style={{ background: color + '20', border: '1px solid ' + color + '40' }}
                   >
                     <Icon className="w-5 h-5" style={{ color }} />
                   </div>
@@ -173,8 +173,8 @@ export function LoginPage() {
                       className="absolute w-2 h-2 rounded-full"
                       style={{
                         background: color,
-                        boxShadow: `0 0 12px ${color}, 0 0 24px ${color}, 0 0 36px ${color}`,
-                        animation: `flowPulse 2s ease-in-out ${i * 0.5}s infinite`,
+                        boxShadow: '0 0 12px ' + color + ', 0 0 24px ' + color + ', 0 0 36px ' + color,
+                        animation: 'flowPulse 2s ease-in-out ' + (i * 0.5) + 's infinite',
                         left: '0%',
                       }}
                     />
