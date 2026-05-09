@@ -57,8 +57,8 @@
     --accent: var(--orange);
     --accent-foreground: var(--black);
     --destructive: var(--danger-text);
-    --border: #D1D5DB;
-    --input: #D1D5DB;
+    --border: #C8D0DD;
+    --input: #C8D0DD;
     --ring: var(--orange);
     --chart-1: var(--prussian-blue);
     --chart-2: var(--orange);
@@ -69,11 +69,11 @@
 
     /* Sidebar */
     --sidebar: var(--prussian-blue);
-    --sidebar-foreground: var(--alabaster-grey);
+    --sidebar-foreground: var(--muted-blue);
     --sidebar-primary: #1A2F52;
     --sidebar-primary-foreground: var(--white);
     --sidebar-accent: #1A2F52;
-    --sidebar-accent-foreground: var(--alabaster-grey);
+    --sidebar-accent-foreground: var(--white);
     --sidebar-border: #1A2F52;
     --sidebar-ring: var(--orange);
 }
