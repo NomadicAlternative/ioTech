@@ -87,14 +87,14 @@ export function LoginPage() {
           <circle cx="20%" cy="80%" r="10" fill="none" stroke="#437F97" strokeWidth="1" opacity="0.5" />
         </svg>
 
-        {/* Glow top-right */}
+        {/* Glow top-right — más intenso */}
         <div
-          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-20 blur-[100px] pointer-events-none"
+          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-25 blur-[100px] pointer-events-none"
           style={{ background: 'var(--blue)' }}
         />
-        {/* Glow bottom-left */}
+        {/* Glow bottom-left — amber más presente */}
         <div
-          className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full opacity-15 blur-[80px] pointer-events-none"
+          className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full opacity-25 blur-[80px] pointer-events-none"
           style={{ background: 'var(--accent)' }}
         />
         {/* Glow bottom-left */}
@@ -106,13 +106,11 @@ export function LoginPage() {
         {/* Logo */}
         <div className="relative flex items-center gap-3 z-10">
           <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30"
+            className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg"
             style={{ background: 'var(--accent)' }}
           >
             <Cpu className="w-5 h-5 text-white" />
           </div>
-          <span className="text-white text-xl font-bold tracking-tight">ioTech</span>
-        </div>
           <span className="text-white text-xl font-bold tracking-tight">IoTech</span>
         </div>
 
@@ -129,10 +127,10 @@ export function LoginPage() {
             <h1 className="text-4xl font-bold text-white leading-[1.15] tracking-tight">
               Deploy, monitor<br />
               and{' '}
-              <span className="relative inline-block" style={{ color: 'var(--accent)', textShadow: '0 0 20px rgba(255,179,15,0.5)' }}>
+              <span className="relative inline-block" style={{ color: 'var(--accent)' }}>
                 automate
-                <svg className="absolute -bottom-1 left-0 w-full" height="5" viewBox="0 0 140 5">
-                  <path d="M0 3 Q70 -2 140 3" stroke="#FFB30F" strokeWidth="2.5" fill="none" opacity="0.8" />
+                <svg className="absolute -bottom-1 left-0 w-full" height="4" viewBox="0 0 140 4">
+                  <path d="M0 2 Q70 0 140 2" stroke="#FFB30F" strokeWidth="2" fill="none" opacity="0.6" />
                 </svg>
               </span>
               <br />your IoT devices
@@ -167,7 +165,7 @@ export function LoginPage() {
                       className="absolute w-2 h-2 rounded-full"
                       style={{
                         background: color,
-                        boxShadow: '0 0 12px ' + color + ', 0 0 24px ' + color + ', 0 0 36px ' + color,
+                        boxShadow: '0 0 8px ' + color + ', 0 0 16px ' + color,
                         animation: 'flowPulse 2s ease-in-out ' + (i * 0.5) + 's infinite',
                         left: '0%',
                       }}
