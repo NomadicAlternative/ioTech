@@ -67,28 +67,28 @@ export function LoginPage() {
           preserveAspectRatio="xMidYMid slice"
         >
           {/* Líneas de circuito */}
-          <line x1="15%" y1="20%" x2="40%" y2="20%" stroke="#FFB30F" strokeWidth="1.5" />
-          <line x1="40%" y1="20%" x2="40%" y2="45%" stroke="#FFB30F" strokeWidth="1.5" />
+          <line x1="15%" y1="20%" x2="40%" y2="20%" stroke="#FFB703" strokeWidth="1.5" />
+          <line x1="40%" y1="20%" x2="40%" y2="45%" stroke="#FFB703" strokeWidth="1.5" />
           <line x1="40%" y1="45%" x2="70%" y2="45%" stroke="#437F97" strokeWidth="1.5" />
           <line x1="70%" y1="45%" x2="70%" y2="70%" stroke="#437F97" strokeWidth="1.5" />
-          <line x1="70%" y1="70%" x2="90%" y2="70%" stroke="#FFB30F" strokeWidth="1.5" />
+          <line x1="70%" y1="70%" x2="90%" y2="70%" stroke="#FFB703" strokeWidth="1.5" />
           <line x1="20%" y1="60%" x2="20%" y2="80%" stroke="#437F97" strokeWidth="1.5" />
           <line x1="20%" y1="80%" x2="55%" y2="80%" stroke="#437F97" strokeWidth="1.5" />
-          <line x1="10%" y1="40%" x2="25%" y2="40%" stroke="#FFB30F" strokeWidth="1.5" />
+          <line x1="10%" y1="40%" x2="25%" y2="40%" stroke="#FFB703" strokeWidth="1.5" />
           {/* Nodos */}
-          <circle cx="15%" cy="20%" r="4" fill="#FFB30F" />
-          <circle cx="40%" cy="20%" r="4" fill="#FFB30F" />
+          <circle cx="15%" cy="20%" r="4" fill="#FFB703" />
+          <circle cx="40%" cy="20%" r="4" fill="#FFB703" />
           <circle cx="40%" cy="45%" r="4" fill="#437F97" />
           <circle cx="70%" cy="45%" r="4" fill="#437F97" />
-          <circle cx="70%" cy="70%" r="4" fill="#FFB30F" />
-          <circle cx="90%" cy="70%" r="4" fill="#FFB30F" />
+          <circle cx="70%" cy="70%" r="4" fill="#FFB703" />
+          <circle cx="90%" cy="70%" r="4" fill="#FFB703" />
           <circle cx="20%" cy="60%" r="4" fill="#437F97" />
           <circle cx="20%" cy="80%" r="4" fill="#437F97" />
           <circle cx="55%" cy="80%" r="4" fill="#437F97" />
-          <circle cx="10%" cy="40%" r="4" fill="#FFB30F" />
-          <circle cx="25%" cy="40%" r="4" fill="#FFB30F" />
+          <circle cx="10%" cy="40%" r="4" fill="#FFB703" />
+          <circle cx="25%" cy="40%" r="4" fill="#FFB703" />
           {/* Nodos grandes vacíos */}
-          <circle cx="40%" cy="20%" r="10" fill="none" stroke="#FFB30F" strokeWidth="1" opacity="0.5" />
+          <circle cx="40%" cy="20%" r="10" fill="none" stroke="#FFB703" strokeWidth="1" opacity="0.5" />
           <circle cx="70%" cy="45%" r="10" fill="none" stroke="#437F97" strokeWidth="1" opacity="0.5" />
           <circle cx="20%" cy="80%" r="10" fill="none" stroke="#437F97" strokeWidth="1" opacity="0.5" />
         </svg>
@@ -96,19 +96,19 @@ export function LoginPage() {
         {/* Glow top-right */}
         <div
           className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-20 blur-[100px] pointer-events-none"
-          style={{ background: 'var(--brand-cerulean)' }}
+          style={{ background: 'var(--blue)' }}
         />
         {/* Glow bottom-left */}
         <div
           className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full opacity-15 blur-[80px] pointer-events-none"
-          style={{ background: 'var(--brand-amber)' }}
+          style={{ background: 'var(--accent)' }}
         />
 
         {/* Logo */}
         <div className="relative flex items-center gap-3 z-10">
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg"
-            style={{ background: 'var(--brand-amber)' }}
+            style={{ background: 'var(--accent)' }}
           >
             <Cpu className="w-5 h-5 text-white" />
           </div>
@@ -116,30 +116,27 @@ export function LoginPage() {
         </div>
 
         {/* Center content — dynamic flow */}
-        <div className="relative z-10 space-y-8">
-          <div className="space-y-4">
+        <div className="relative z-10 space-y-6">
+          <div className="space-y-3">
             <div
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border"
-              style={{ borderColor: 'rgba(255,179,15,0.4)', color: 'var(--brand-amber)', background: 'rgba(255,179,15,0.1)' }}
+              style={{ borderColor: 'rgba(255,179,15,0.4)', color: 'var(--accent)', background: 'rgba(255,179,15,0.1)' }}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
               Installer Platform — v2.0
             </div>
-            <h1 className="text-4xl font-extrabold text-white leading-[1.15] tracking-tight">
+            <h1 className="text-4xl font-bold text-white leading-[1.15] tracking-tight">
               Deploy, monitor<br />
               and{' '}
-              <span
-                className="relative inline-block"
-                style={{ color: 'var(--brand-amber)' }}
-              >
+              <span className="relative inline-block" style={{ color: 'var(--accent)' }}>
                 automate
                 <svg className="absolute -bottom-1 left-0 w-full" height="4" viewBox="0 0 140 4">
-                  <path d="M0 2 Q70 0 140 2" stroke="#FFB30F" strokeWidth="2" fill="none" opacity="0.6" />
+                  <path d="M0 2 Q70 0 140 2" stroke="#FFB703" strokeWidth="2" fill="none" opacity="0.6" />
                 </svg>
               </span>
               <br />your IoT devices
             </h1>
-            <p className="text-white/50 text-sm max-w-xs leading-relaxed">
+            <p className="text-white/45 text-sm max-w-xs leading-relaxed">
               From ESP32 to dashboard — one platform for the entire device lifecycle.
             </p>
           </div>
@@ -147,10 +144,10 @@ export function LoginPage() {
           {/* ── Flow diagram ── */}
           <div className="flex items-center gap-2 py-2">
             {[
-              { icon: Cpu,      label: 'Device',   color: 'var(--brand-amber)' },
-              { icon: Radio,    label: 'MQTT',     color: 'var(--brand-cerulean)' },
+              { icon: Cpu,      label: 'Device',   color: 'var(--accent)' },
+              { icon: Radio,    label: 'MQTT',     color: 'var(--blue)' },
               { icon: Activity, label: 'Telemetry', color: '#849324' },
-              { icon: LayoutDashboard, label: 'Dashboard', color: 'var(--brand-amber)' },
+              { icon: LayoutDashboard, label: 'Dashboard', color: 'var(--accent)' },
             ].map(({ icon: Icon, label, color }, i) => (
               <div key={label} className="flex items-center gap-2">
                 <div className="flex flex-col items-center gap-1.5">
@@ -200,7 +197,7 @@ export function LoginPage() {
                   className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                   style={{ background: 'rgba(255,179,15,0.12)' }}
                 >
-                  <Icon className="w-4 h-4" style={{ color: 'var(--brand-amber)' }} />
+                  <Icon className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                 </div>
                 <span className="text-white/70 text-sm">{label}</span>
               </div>
@@ -238,18 +235,18 @@ export function LoginPage() {
         />
         <div
           className="lg:hidden absolute top-0 right-0 w-72 h-72 rounded-full opacity-20 blur-[80px] pointer-events-none"
-          style={{ background: 'var(--brand-cerulean)' }}
+          style={{ background: 'var(--blue)' }}
         />
         <div
           className="lg:hidden absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-15 blur-[70px] pointer-events-none"
-          style={{ background: 'var(--brand-amber)' }}
+          style={{ background: 'var(--accent)' }}
         />
 
         {/* Mobile logo */}
         <div className="relative z-10 flex lg:hidden items-center gap-2.5 mb-8">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"
-            style={{ background: 'var(--brand-amber)' }}
+            style={{ background: 'var(--accent)' }}
           >
             <Cpu className="w-5 h-5 text-white" />
           </div>
