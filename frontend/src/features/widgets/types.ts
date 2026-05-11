@@ -82,6 +82,7 @@ export interface Device {
   status: string
   isOnline: boolean
   lastSeen: string | null
+  firmwareVersion: string | null
   metadata: Record<string, unknown> | null
   createdAt: string
   updatedAt: string
