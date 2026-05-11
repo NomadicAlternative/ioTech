@@ -21,6 +21,7 @@ const { otaRouter } = require('./modules/firmware/firmware.routes');
 const dashboardsRoutes = require('./modules/dashboards/dashboards.routes');
 const rulesRoutes = require('./modules/rules/rules.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
+const aiRoutes = require('./modules/ai/ai.routes');
 const mqttAuthGuardRouter = require('./shared/middleware/mqttAuthGuard');
 
 /**
@@ -62,6 +63,7 @@ function createApp() {
   app.use('/api/dashboards', dashboardsRoutes);
   app.use('/api/rules', rulesRoutes);
   app.use('/api/admin', adminRoutes);
+  app.use('/api/ai', aiRoutes);
   app.use('/internal/mqtt', mqttAuthGuardRouter);
 
   // ── Swagger / OpenAPI docs (no auth required) ────────────────────────────
