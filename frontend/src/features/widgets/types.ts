@@ -121,5 +121,6 @@ export interface DeviceTemplate {
   id: string
   name: string
   description?: string
+  hardware_model?: string
   datastreams: Datastream[]
 }

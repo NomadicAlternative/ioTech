@@ -31,7 +31,7 @@ export function DeviceDetailPage() {
   const [otaOpen, setOtaOpen] = useState(false)
 
   // Derive hardware_model from the device template's name (stored as model identifier)
-  const hardwareModel = template?.name ?? null
+  const hardwareModel = template?.hardware_model ?? null
 
   // relay states: index 0 = relay 1, ..., index 6 = relay 7
   const [relayStates, setRelayStates] = useState<boolean[]>(Array(RELAY_COUNT).fill(false))
@@ -159,7 +159,7 @@ export function DeviceDetailPage() {
             <Usb className="h-4 w-4 mr-2" />
             Flash & Provision
           </Button>
-          {device.firmwareVersion && (
+          {hardwareModel && (
             <Button variant="outline" size="sm" onClick={() => setOtaOpen(true)}>
               <Upload className="h-4 w-4 mr-2" />
               {t('devices.ota.title')}
