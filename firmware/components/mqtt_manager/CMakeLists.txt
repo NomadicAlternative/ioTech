@@ -9,6 +9,7 @@ idf_component_register(
         freertos
         relay_controller
         json
+        ota_manager
     EMBED_TXTFILES
         ../../certs/isrg_root_x1.pem
 )
