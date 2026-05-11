@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Upload, File } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -12,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { useFirmwareStore } from './firmwareStore'
 import type { FirmwareVersion } from './types'
+import api from '@/lib/axios'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -51,6 +53,8 @@ export function FirmwareForm({ open, onClose, firmware }: FirmwareFormProps) {
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const isEdit = !!firmware
 
@@ -68,6 +72,7 @@ export function FirmwareForm({ open, onClose, firmware }: FirmwareFormProps) {
     }
     setErrors({})
     setSubmitError(null)
+    setFile(null)
   }, [firmware, open])
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -87,8 +92,8 @@ export function FirmwareForm({ open, onClose, firmware }: FirmwareFormProps) {
     if (!form.hardware_model.trim()) {
       newErrors.hardware_model = t('firmware.form.errors.hwModelRequired', 'Hardware model is required')
     }
-    if (!form.download_url.trim()) {
-      newErrors.download_url = t('firmware.form.errors.urlRequired', 'Download URL is required')
+    if (!file && !form.download_url.trim()) {
+      newErrors.download_url = t('firmware.form.errors.urlOrFile', 'Upload a file or provide a download URL')
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -101,17 +106,29 @@ export function FirmwareForm({ open, onClose, firmware }: FirmwareFormProps) {
     setSubmitError(null)
 
     try {
-      const payload = {
-        version: form.version.trim(),
-        hardware_model: form.hardware_model.trim(),
-        release_notes: form.release_notes.trim() || null,
-        download_url: form.download_url.trim(),
-      }
-
-      if (isEdit && firmware) {
-        await updateFirmware(firmware.id, payload)
+      if (file) {
+        // Multipart upload with file
+        const formData = new FormData()
+        formData.append('version', form.version.trim())
+        formData.append('hardware_model', form.hardware_model.trim())
+        if (form.release_notes.trim()) formData.append('release_notes', form.release_notes.trim())
+        formData.append('file', file)
+        await api.post('/api/firmware/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
       } else {
-        await createFirmware(payload)
+        const payload = {
+          version: form.version.trim(),
+          hardware_model: form.hardware_model.trim(),
+          release_notes: form.release_notes.trim() || null,
+          download_url: form.download_url.trim(),
+        }
+
+        if (isEdit && firmware) {
+          await updateFirmware(firmware.id, payload)
+        } else {
+          await createFirmware(payload)
+        }
       }
       onClose()
     } catch (err) {
@@ -169,18 +186,46 @@ export function FirmwareForm({ open, onClose, firmware }: FirmwareFormProps) {
             )}
           </div>
 
-          {/* ── Download URL ────────────────────────────────────────────────── */}
-          <div className="space-y-1">
-            <Label>{t('firmware.form.downloadUrl', 'Download URL')}</Label>
-            <Input
-              value={form.download_url}
-              onChange={(e) => updateField('download_url', e.target.value)}
-              placeholder="https://example.com/firmware.bin"
+          {/* ── File Upload ──────────────────────────────────────────────────── */}
+          <div className="space-y-2">
+            <Label>{t('firmware.form.fileUpload', 'Firmware binary (.bin)')}</Label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".bin"
+              className="hidden"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
-            {errors.download_url && (
-              <p className="text-destructive text-xs mt-1">{errors.download_url}</p>
+            {file ? (
+              <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)]/50 px-3 py-2">
+                <File className="h-4 w-4 text-[var(--muted-foreground)]" />
+                <span className="text-sm truncate flex-1">{file.name}</span>
+                <Button variant="ghost" size="icon-sm" onClick={() => { setFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}>
+                  ✕
+                </Button>
+              </div>
+            ) : (
+              <Button variant="outline" className="w-full" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="h-4 w-4 mr-2" />
+                {t('firmware.form.selectFile', 'Select .bin file')}
+              </Button>
             )}
           </div>
+
+          {/* ── Download URL (optional when file is uploaded) ──────────────────── */}
+          {!file && (
+            <div className="space-y-1">
+              <Label>{t('firmware.form.downloadUrl', 'Download URL')}</Label>
+              <Input
+                value={form.download_url}
+                onChange={(e) => updateField('download_url', e.target.value)}
+                placeholder="https://example.com/firmware.bin"
+              />
+              {errors.download_url && (
+                <p className="text-destructive text-xs mt-1">{errors.download_url}</p>
+              )}
+            </div>
+          )}
 
           {/* ── Release Notes ──────────────────────────────────────────────── */}
           <div className="space-y-1">
