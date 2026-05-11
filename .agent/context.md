@@ -135,9 +135,7 @@ ioTech/
 
 ## Next Steps
 
-1. **OTA follow-up: OTA button hidden when firmwareVersion is null** — verificar si el botón OTA se oculta correctamente cuando device.firmwareVersion es null (sugerencia del verify report)
-2. **OTA follow-up: hardwareModel from template** — verificar que hardwareModel se deriva del campo DB `hardware_model`, no de `template.name` (sugerencia del verify report)
-3. **Firmware file upload** — upload de binarios (hoy es URL externa)
+1. **Firmware file upload** — upload de binarios (hoy es URL externa)
 4. **Installer UI registration** — formulario de registro en el frontend
 
 ## API Overview
