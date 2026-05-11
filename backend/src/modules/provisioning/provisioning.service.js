@@ -4,8 +4,12 @@ const { v4: uuidv4 } = require('uuid');
 const devicesModel = require('../devices/devices.model');
 const logger = require('../../shared/logger');
 const { NotFoundError, ConflictError, UnprocessableEntityError } = require('../../shared/errors');
+const { getLocalIp } = require('../../shared/network');
 
-const MQTT_URL = process.env.MQTT_BROKER_URL || 'mqtt://localhost:1883';
+function getMqttUrl() {
+  const localIp = getLocalIp();
+  return `mqtt://${localIp}:1883`;
+}
 
 /**
  * Exchange a claim_token + hardware_id for a permanent device_token and MQTT config.
@@ -29,7 +33,7 @@ async function provision(claimToken, hardwareId) {
     logger.info(`[provisioning.service] Device ${device.id} re-provisioning (already active) — returning existing token`);
     return {
       device_token: device.device_token,
-      mqtt_url: MQTT_URL,
+      mqtt_url: getMqttUrl(),
       tenant_id: device.tenant_id,
       device_id: device.id,
     };

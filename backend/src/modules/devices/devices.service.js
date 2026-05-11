@@ -6,6 +6,7 @@ const db = require('../../shared/db/knex');
 const { NotFoundError, UnauthorizedError, ConflictError } = require('../../shared/errors');
 const logger = require('../../shared/logger');
 const { getClient: getMqttClient } = require('../../mqtt/mqttClient');
+const { getLocalIp } = require('../../shared/network');
 
 /**
  * Business logic for the devices module.
@@ -227,11 +228,15 @@ async function getProvisioningCredentials(tenantId, deviceId) {
   const device = await devicesModel.findById(tenantId, deviceId);
   if (!device) throw new NotFoundError(`Device not found: ${deviceId}`);
 
+  const localIp = getLocalIp();
+  const port = process.env.PORT || 3000;
+
   return {
     device_token: device.device_token,
+    claim_token: device.claim_token || undefined,
     tenant_id: device.tenant_id,
     device_id: device.id,
-    backend_url: process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`,
-    mqtt_url: process.env.MQTT_BROKER_URL || 'mqtt://localhost:1883',
+    backend_url: `http://${localIp}:${port}`,
+    mqtt_url: `mqtt://${localIp}:1883`,
   };
 }
