@@ -62,7 +62,9 @@
       "saved": "Guardado",
       "errorSaving": "Error al guardar",
       "shareButton": "Compartir",
-      "done": "Listo",
+    "done": "Listo",
+    "close": "Cerrar",
+    "sending": "Enviando…",
       "emptyCanvas": "Hacé clic en un widget de la paleta para agregarlo"
     },
     "share": {
@@ -174,6 +176,18 @@
       "doneDesc": "El dispositivo se reiniciará y conectará a la red en segundos.",
       "errorTitle": "Error al configurar",
       "manualTitle": "Credenciales para configuración manual"
+    },
+    "ota": {
+      "title": "Actualización de firmware",
+      "description": "Enviá una actualización de firmware over-the-air a este dispositivo.",
+      "noHardwareModel": "No hay modelo de hardware asignado a esta plantilla.",
+      "noVersions": "No hay versiones de firmware disponibles para este dispositivo.",
+      "selectVersion": "Seleccionar versión",
+      "selectPlaceholder": "Elegí una versión de firmware…",
+      "releaseNotes": "Notas de la versión",
+      "confirm": "Actualizar firmware",
+      "triggered": "OTA disparada. El dispositivo descargará y aplicará el nuevo firmware.",
+      "unknownError": "Ocurrió un error inesperado."
     }
   },
   "templates": {

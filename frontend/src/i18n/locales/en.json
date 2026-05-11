@@ -62,7 +62,9 @@
       "saved": "Saved",
       "errorSaving": "Error saving",
       "shareButton": "Share",
-      "done": "Done",
+    "done": "Done",
+    "close": "Close",
+    "sending": "Sending…",
       "emptyCanvas": "Click a widget from the palette to add it"
     },
     "share": {
@@ -174,6 +176,18 @@
       "doneDesc": "The device will restart and connect to the network in seconds.",
       "errorTitle": "Configuration error",
       "manualTitle": "Credentials for manual setup"
+    },
+    "ota": {
+      "title": "Firmware update",
+      "description": "Send an over-the-air firmware update to this device.",
+      "noHardwareModel": "No hardware model assigned to this device template.",
+      "noVersions": "No firmware versions available for this device.",
+      "selectVersion": "Select version",
+      "selectPlaceholder": "Choose a firmware version…",
+      "releaseNotes": "Release notes",
+      "confirm": "Update firmware",
+      "triggered": "OTA update triggered. The device will download and apply the new firmware.",
+      "unknownError": "An unexpected error occurred."
     }
   },
   "templates": {
