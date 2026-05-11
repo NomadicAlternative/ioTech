@@ -10,11 +10,11 @@ const buttonVariants = cva(
       variant: {
         default: "bg-[var(--blue)] text-white hover:bg-[var(--blue-hover)] shadow-sm",
         outline:
-          "border-[var(--border)] bg-white text-[var(--text)] hover:bg-[var(--muted)] hover:border-[var(--blue)]/20 aria-expanded:bg-muted",
+          "border-[var(--border)] bg-[var(--card)] text-black hover:bg-[var(--muted)] hover:border-[var(--blue)]/20 aria-expanded:bg-muted",
         secondary:
-          "bg-[var(--secondary)] text-[var(--text)] hover:bg-[var(--muted)] aria-expanded:bg-secondary",
+          "bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:bg-[var(--muted)] aria-expanded:bg-secondary",
         ghost:
-          "hover:bg-[var(--muted)] hover:text-[var(--text)] aria-expanded:bg-muted",
+          "hover:bg-[var(--muted)] hover:text-[var(--foreground)] aria-expanded:bg-muted",
         destructive:
           "bg-[var(--danger-bg)] text-[var(--danger-text)] hover:bg-red-100 focus-visible:border-red-300 focus-visible:ring-red-200",
         link: "text-[var(--blue)] underline-offset-4 hover:underline",
