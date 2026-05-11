@@ -199,9 +199,9 @@ export function DeviceListPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
         <div>
-          <h1 className="text-2xl font-bold">{t('devices.list.title')}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">{t('devices.list.title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {t('devices.list.subtitle')}
           </p>
@@ -231,16 +231,16 @@ export function DeviceListPage() {
       </div>
 
       {/* Table */}
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50">
+          <thead className="border-b border-[var(--border)]">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('devices.list.colName')}</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('devices.list.colStatus')}</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">{t('devices.list.colName')}</th>
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">{t('devices.list.colStatus')}</th>
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider hidden md:table-cell">
                 {t('devices.list.colTemplate')}
               </th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider hidden lg:table-cell">
                 {t('devices.list.colLastSeen')}
               </th>
               <th className="px-4 py-3" />
@@ -286,7 +286,7 @@ export function DeviceListPage() {
               devices.map((device) => (
                 <tr
                   key={device.id}
-                  className="border-t hover:bg-muted/30 cursor-pointer group transition-colors"
+                  className="border-t border-[var(--border)] hover:bg-[var(--blue)]/3 cursor-pointer group transition-colors"
                   onClick={() => navigate(`/app/devices/${device.id}`)}
                 >
                   <td className="px-4 py-3 font-medium">{device.name}</td>

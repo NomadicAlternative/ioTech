@@ -47,9 +47,9 @@ export function FirmwareListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
         <div>
-          <h1 className="text-2xl font-bold">{t('firmware.list.title', 'Firmware Versions')}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">{t('firmware.list.title', 'Firmware Versions')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {t('firmware.list.subtitle', 'Manage firmware versions for device provisioning')}
           </p>
@@ -66,20 +66,20 @@ export function FirmwareListPage() {
         </div>
       )}
 
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50">
+          <thead className="border-b border-[var(--border)]">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">
                 {t('firmware.list.colVersion', 'Version')}
               </th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider hidden sm:table-cell">
                 {t('firmware.list.colHardwareModel', 'Hardware Model')}
               </th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider hidden md:table-cell">
                 {t('firmware.list.colReleaseNotes', 'Release Notes')}
               </th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider hidden lg:table-cell">
                 {t('firmware.list.colCreated', 'Created')}
               </th>
               <th className="px-4 py-3" />
@@ -115,7 +115,7 @@ export function FirmwareListPage() {
 
             {!loading &&
               firmwareList.map((fw) => (
-                <tr key={fw.id} className="border-t hover:bg-muted/30 transition-colors group">
+                <tr key={fw.id} className="border-t hover:bg-[var(--blue)]/3 transition-colors group">
                   <td className="px-4 py-3 font-medium">
                     <span className="flex items-center gap-1.5">
                       {fw.version}

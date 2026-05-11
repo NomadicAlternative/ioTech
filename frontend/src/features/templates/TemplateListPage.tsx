@@ -94,14 +94,14 @@ export function TemplateListPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
         <div className="flex items-center gap-4">
           <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
                style={{ background: 'color-mix(in oklch, var(--brand-imperial) 10%, transparent)' }}>
             <FileCode2 className="w-5 h-5" style={{ color: 'var(--brand-imperial)' }} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">{t('templates.list.title')}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold">{t('templates.list.title')}</h1>
             <p className="text-muted-foreground text-sm mt-0.5">
               {t('templates.list.subtitle')}
             </p>
@@ -184,7 +184,7 @@ export function TemplateListPage() {
               templates.map((template) => (
                 <tr
                   key={template.id}
-                  className="border-t hover:bg-muted/30 cursor-pointer group transition-colors"
+                  className="border-t hover:bg-[var(--blue)]/3 cursor-pointer group transition-colors"
                   onClick={() => setEditTemplateId(template.id)}
                 >
                   <td className="px-5 py-4">

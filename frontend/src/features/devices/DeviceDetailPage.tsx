@@ -119,9 +119,9 @@ export function DeviceDetailPage() {
         </Button>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">{device.name}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">{device.name}</h1>
           <Badge
             className="border-0 gap-1.5 font-semibold"
             style={device.isOnline
@@ -190,7 +190,7 @@ export function DeviceDetailPage() {
       {/* Relay control */}
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
             <CardTitle className="text-base">Relay Control</CardTitle>
             {!device.isOnline && (
               <span className="text-xs font-medium px-2 py-0.5 rounded-full"
@@ -218,7 +218,7 @@ export function DeviceDetailPage() {
                     !device.isOnline ? 'opacity-50' : '',
                   ].join(' ')}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
                     <span className={`text-xs font-semibold uppercase tracking-wide ${isOn ? 'text-green-700' : 'text-muted-foreground'}`}>
                       Relay {i + 1}
                     </span>
@@ -233,7 +233,7 @@ export function DeviceDetailPage() {
                       style={isOn ? { boxShadow: '0 0 7px 3px rgba(34,197,94,0.65)' } : {}}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
                     <span className={`text-sm font-bold ${isOn ? 'text-green-700' : 'text-muted-foreground/60'}`}>
                       {isOn ? 'ON' : 'OFF'}
                     </span>

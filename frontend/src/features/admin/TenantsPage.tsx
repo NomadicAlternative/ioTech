@@ -60,10 +60,10 @@ export function TenantsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
         <div>
-          <h1 className="text-2xl font-bold">{t('admin.title', 'Tenants')}</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold">{t('admin.title', 'Tenants')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             {t('admin.subtitle', 'Manage installer accounts and their tenants')}
           </p>
         </div>
@@ -132,7 +132,7 @@ export function TenantsPage() {
             <div className="text-center py-12 border rounded-lg">
               <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium">{t('admin.noTenants', 'No tenants yet')}</h3>
-              <p className="text-muted-foreground mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {t('admin.noTenantsDesc', 'Create your first installer tenant to get started.')}
               </p>
             </div>
