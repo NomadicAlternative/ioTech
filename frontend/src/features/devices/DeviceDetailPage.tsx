@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Clock, Usb } from 'lucide-react'
+import { ArrowLeft, Clock, Upload, Usb } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,8 +11,8 @@ import { useDeviceStore } from './deviceStore'
 import { useAuthStore } from '@/features/auth/authStore'
 import { fetchDeviceTemplate, sendDeviceCommand } from './api'
 import type { DeviceTemplate } from '@/features/widgets/types'
-import { ProvisioningModal } from './components/ProvisioningModal'
 import { FlashDeviceWizard } from './components/FlashDeviceWizard'
+import { OtaUpdateDialog } from './components/OtaUpdateDialog'
 
 const RELAY_COUNT = 7
 
@@ -27,8 +27,11 @@ export function DeviceDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [template, setTemplate] = useState<DeviceTemplate | null>(null)
-  const [provisioningOpen, setProvisioningOpen] = useState(false)
   const [flashOpen, setFlashOpen] = useState(false)
+  const [otaOpen, setOtaOpen] = useState(false)
+
+  // Derive hardware_model from the device template's name (stored as model identifier)
+  const hardwareModel = template?.name ?? null
 
   // relay states: index 0 = relay 1, ..., index 6 = relay 7
   const [relayStates, setRelayStates] = useState<boolean[]>(Array(RELAY_COUNT).fill(false))
@@ -136,6 +139,14 @@ export function DeviceDetailPage() {
             />
             {device.isOnline ? t('devices.status.online') : t('devices.status.offline')}
           </Badge>
+          {/* Firmware version badge */}
+          <Badge
+            variant="outline"
+            className="gap-1 font-mono text-xs"
+          >
+            <Upload className="h-3 w-3" />
+            {device.firmwareVersion ?? '\u2014'}
+          </Badge>
         </div>
         <div className="flex items-center gap-3">
           {device.lastSeen && (
@@ -144,14 +155,16 @@ export function DeviceDetailPage() {
               {t('devices.detail.lastSeen', { date: new Date(device.lastSeen).toLocaleString() })}
             </div>
           )}
-          <Button variant="outline" size="sm" onClick={() => setProvisioningOpen(true)}>
-            <Usb className="h-4 w-4 mr-2" />
-            Configurar dispositivo
-          </Button>
           <Button variant="default" size="sm" onClick={() => setFlashOpen(true)}>
             <Usb className="h-4 w-4 mr-2" />
             Flash & Provision
           </Button>
+          {device.firmwareVersion && (
+            <Button variant="outline" size="sm" onClick={() => setOtaOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              {t('devices.ota.title')}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -307,12 +320,12 @@ export function DeviceDetailPage() {
         onClose={() => setFlashOpen(false)}
       />
 
-      {/* Provisioning modal */}
-      <ProvisioningModal
+      {/* OTA update dialog */}
+      <OtaUpdateDialog
         deviceId={device.id}
-        deviceName={device.name}
-        open={provisioningOpen}
-        onClose={() => setProvisioningOpen(false)}
+        hardwareModel={hardwareModel}
+        open={otaOpen}
+        onClose={() => setOtaOpen(false)}
       />
     </div>
   )
