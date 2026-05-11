@@ -7,6 +7,15 @@ const templatesModel = require('../device-templates/device-templates.model');
 const { getClient: getMqttClient } = require('../../mqtt/mqttClient');
 const logger = require('../../shared/logger');
 const { NotFoundError, ConflictError } = require('../../shared/errors');
+const { getLocalIp } = require('../../shared/network');
+
+function resolveUrl(downloadUrl) {
+  if (!downloadUrl) return downloadUrl;
+  if (downloadUrl.startsWith('http://') || downloadUrl.startsWith('https://')) return downloadUrl;
+  const ip = getLocalIp();
+  const port = process.env.PORT || 3000;
+  return `http://${ip}:${port}${downloadUrl}`;
+}
 
 async function list(tenantId) {
   return firmwareModel.findAll(tenantId);
@@ -69,7 +78,7 @@ async function checkLatest(currentVersion, hardwareModel) {
     return { upToDate: true };
   }
 
-  return { version: latest.version, url: latest.download_url };
+  return { version: latest.version, url: resolveUrl(latest.download_url) };
 }
 
 /**
@@ -100,7 +109,7 @@ async function triggerOta(tenantId, deviceId, requestedVersion) {
   }
 
   const targetVersion = requestedVersion || latest.version;
-  const firmwareInfo = { version: targetVersion, url: latest.download_url };
+  const firmwareInfo = { version: targetVersion, url: resolveUrl(latest.download_url) };
 
   // 4. Publish MQTT
   const mqttClient = getMqttClient();

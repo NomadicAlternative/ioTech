@@ -1,6 +1,9 @@
 'use strict';
 
 const { Router } = require('express');
+const multer = require('multer');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 const firmwareService = require('./firmware.service');
 const authGuard = require('../../shared/middleware/authGuard');
 const tenantResolver = require('../../shared/middleware/tenantResolver');
@@ -8,6 +11,17 @@ const validate = require('../../shared/middleware/validate');
 const schemas = require('./firmware.schemas');
 
 const router = Router();
+
+// ── File upload setup ──────────────────────────────────────────────────────
+const UPLOADS_DIR = path.resolve(__dirname, '../../../uploads/firmware');
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname) || '.bin';
+    cb(null, `${uuidv4()}${ext}`);
+  },
+});
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB
 
 // ── Public routes (device-facing, no JWT) ────────────────────────────────
 
@@ -30,6 +44,28 @@ router.get('/check', validate(schemas.check, 'query'), async (req, res, next) =>
 // Everything below this line requires a valid JWT and tenant context
 
 router.use(authGuard, tenantResolver);
+
+/**
+ * POST /api/firmware/upload
+ * Upload a firmware binary file. Accepts multipart form: version, hardware_model,
+ * release_notes (optional), and file (binary). Generates download_url automatically.
+ */
+router.post('/upload', upload.single('file'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'No file uploaded', status: 400 } });
+    }
+    const { version, hardware_model, release_notes } = req.body;
+    if (!version || !hardware_model) {
+      return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'version and hardware_model are required', status: 400 } });
+    }
+    const download_url = `/firmware/files/${req.file.filename}`;
+    const fw = await firmwareService.create(req.tenantId, { version, hardware_model, release_notes, download_url });
+    res.status(201).json({ data: fw });
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.get('/', async (req, res, next) => {
   try {

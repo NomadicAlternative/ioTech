@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const swaggerJsdoc = require('swagger-jsdoc');
@@ -39,6 +40,9 @@ function createApp() {
   }));
   app.use(cookieParser());
   app.use(express.json());
+
+  // ── Static firmware files (public, for ESP32 OTA downloads) ──────────────
+  app.use('/firmware/files', express.static(path.join(__dirname, '..', 'uploads', 'firmware')));
 
   // ── Health endpoint ───────────────────────────────────────────────────────
   app.get('/health', (req, res) => {
