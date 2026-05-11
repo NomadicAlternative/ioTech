@@ -8,6 +8,7 @@
 #include "esp_tls.h"
 
 #include "mqtt_manager.h"
+#include "ota_manager.h"
 #include "nvs_storage.h"
 #include "sm_events.h"
 #include "relay_controller.h"
@@ -134,10 +135,31 @@ static void mqtt_event_handler(void *handler_args,
 
         if (strncmp(topic, ota_topic, strlen(ota_topic)) == 0) {
             ESP_LOGI(TAG, "OTA notify received: %s", data);
-            if (s_ota_cb) {
-                s_ota_cb(data);
+
+            cJSON *root = cJSON_Parse(data);
+            if (root) {
+                cJSON *j_version = cJSON_GetObjectItem(root, "version");
+                cJSON *j_url     = cJSON_GetObjectItem(root, "url");
+
+                if (cJSON_IsString(j_url)) {
+                    ESP_LOGI(TAG, "OTA URL: %s", j_url->valuestring);
+                    ota_manager_set_url(j_url->valuestring);
+
+                    if (cJSON_IsString(j_version)) {
+                        ESP_LOGI(TAG, "OTA version: %s", j_version->valuestring);
+                    }
+
+                    if (s_ota_cb) {
+                        s_ota_cb(j_url->valuestring);
+                    }
+                    sm_send_event(SM_EVT_OTA_NOTIFY);
+                } else {
+                    ESP_LOGW(TAG, "OTA notify payload missing 'url' — ignoring");
+                }
+                cJSON_Delete(root);
+            } else {
+                ESP_LOGW(TAG, "Failed to parse OTA notify JSON: %s", data);
             }
-            sm_send_event(SM_EVT_OTA_NOTIFY);
             break;
         }
 
