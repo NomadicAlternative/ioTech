@@ -253,6 +253,22 @@ describe('devicesService.getById()', () => {
 
     await expect(devicesService.getById(TENANT_ID, DEVICE_ID)).rejects.toThrow(NotFoundError);
   });
+
+  it('includes firmwareVersion in camelized output when firmware_version is present', async () => {
+    devicesModel.findById.mockResolvedValue(makeDevice({ firmware_version: '2.0.0' }));
+
+    const result = await devicesService.getById(TENANT_ID, DEVICE_ID);
+
+    expect(result.firmwareVersion).toBe('2.0.0');
+  });
+
+  it('includes firmwareVersion as null when firmware_version is null', async () => {
+    devicesModel.findById.mockResolvedValue(makeDevice({ firmware_version: null }));
+
+    const result = await devicesService.getById(TENANT_ID, DEVICE_ID);
+
+    expect(result.firmwareVersion).toBeNull();
+  });
 });
 
 // ─── getProvisioningCredentials() ────────────────────────────────────────────

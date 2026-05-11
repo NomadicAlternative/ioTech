@@ -25,6 +25,7 @@ function camelizeDevice(row) {
     templateId: row.template_id,
     clientId: row.client_id,
     status: row.status,
+    firmwareVersion: row.firmware_version ?? null,
     claimToken: row.claim_token,
     hardwareId: row.hardware_id,
     isOnline: row.is_online,
