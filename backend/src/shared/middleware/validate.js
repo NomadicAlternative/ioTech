@@ -24,8 +24,14 @@ function validate(schema, target = 'body') {
       return next(new ValidationError('Validation failed', details));
     }
 
-    // Replace req[target] with the Joi-sanitized (stripped) value
-    req[target] = value;
+    // Replace req[target] with the Joi-sanitized (stripped) value.
+    // For 'query', Express 5 makes req.query a read-only getter, so we
+    // attach the sanitized values to req.sanitizedQuery instead.
+    if (target === 'query') {
+      req.sanitizedQuery = value;
+    } else {
+      req[target] = value;
+    }
     return next();
   };
 }

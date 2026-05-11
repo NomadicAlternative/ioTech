@@ -9,6 +9,26 @@ const schemas = require('./firmware.schemas');
 
 const router = Router();
 
+// ── Public routes (device-facing, no JWT) ────────────────────────────────
+
+/**
+ * GET /api/firmware/check
+ * Device-facing endpoint — checks if a newer firmware version exists.
+ * No auth required because ESP32 devices cannot hold JWTs.
+ */
+router.get('/check', validate(schemas.check, 'query'), async (req, res, next) => {
+  try {
+    const params = req.sanitizedQuery || req.query;
+    const result = await firmwareService.checkLatest(params.current, params.hardware_model);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── Authenticated routes (dashboard-facing) ─────────────────────────────────
+// Everything below this line requires a valid JWT and tenant context
+
 router.use(authGuard, tenantResolver);
 
 router.get('/', async (req, res, next) => {
@@ -56,4 +76,20 @@ router.delete('/:id', async (req, res, next) => {
   }
 });
 
+// Also export a sub-router for the OTA endpoint so app.js can mount it at
+// /api/devices/:id/ota while the rest of firmware routes stay at /api/firmware.
+// This keeps OTA logic in the firmware module (per design decision).
+const otaRouter = Router();
+otaRouter.use(authGuard, tenantResolver);
+otaRouter.post('/:id/ota', validate(schemas.triggerOta), async (req, res, next) => {
+  try {
+    const body = req.body || {};
+    const result = await firmwareService.triggerOta(req.tenantId, req.params.id, body.version);
+    res.status(202).json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
+module.exports.otaRouter = otaRouter;
