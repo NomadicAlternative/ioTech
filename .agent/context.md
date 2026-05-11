@@ -126,10 +126,17 @@ ioTech/
 - **Socket event**: `telemetry:new` (socketServer.js line 73)
 - **Relay state**: string `"on"|"off"` — NO boolean
 
+### Firmware OTA (ARCHIVED — 3 stacked PRs, `docs/sdd/archive/2026-05-11-firmware-ota/`)
+- **PR 1** (merged, commits on main): Phases 1-4, 8, 9 — DB migration, backend check/trigger/heartbeat endpoints, integration tests
+- **PR 2** (merged, commits on main): Phases 5-6 — Device firmware type, firmwareApi, OtaUpdateDialog, version badge + button
+- **PR 3** (merged, commits on main): Phase 7 — Parse OTA notify JSON in mqtt_manager.c, extract version+url, call ota_manager_set_url() before triggering SM_EVT_OTA_NOTIFY
+- **Verify**: 112 tests passing (84 backend, 28 frontend), 37/37 spec scenarios compliant
+- **Archived**: `2026-05-11` → `docs/sdd/archive/2026-05-11-firmware-ota/`
+
 ## Next Steps
 
-1. **Push feat/installer-backend y crear PRs** — 14 commits listos para review
-2. **OTA desde dashboard** — UI para triggerear OTA updates
+1. **OTA follow-up: OTA button hidden when firmwareVersion is null** — verificar si el botón OTA se oculta correctamente cuando device.firmwareVersion es null (sugerencia del verify report)
+2. **OTA follow-up: hardwareModel from template** — verificar que hardwareModel se deriva del campo DB `hardware_model`, no de `template.name` (sugerencia del verify report)
 3. **Firmware file upload** — upload de binarios (hoy es URL externa)
 4. **Installer UI registration** — formulario de registro en el frontend
 
@@ -152,7 +159,9 @@ All errors return `{ error: { code, message, status, details? } }`.
 | GET | /api/devices/:id/provisioning-credentials | Yes | Get credentials for serial provisioning |
 | GET | /api/device-templates/:id | Yes | Get template + datastreams |
 | GET | /api/firmware | Yes | List firmware versions |
+| GET | /api/firmware/check | No | Check latest firmware by hardware_model ← NUEVO (OTA) |
 | POST | /api/firmware | Yes | Create firmware version |
+| POST | /api/devices/:id/ota | Yes | Trigger OTA firmware update ← NUEVO (OTA) |
 | GET | /api/dashboards | Yes | List dashboards |
 | POST | /api/dashboards | Yes | Create dashboard |
 | PUT | /api/dashboards/:id/layout | Yes | Save layout JSON |
