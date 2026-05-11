@@ -50,4 +50,15 @@ async function remove(id) {
   return db('firmware_versions').where({ id }).delete();
 }
 
-module.exports = { findAll, findById, findByVersionAndModel, insert, update, remove };
+/**
+ * Find the latest firmware version for a given hardware model.
+ * Returns the full row or undefined if none exist.
+ */
+async function findLatestByHardwareModel(hardwareModel) {
+  return db('firmware_versions')
+    .where({ hardware_model: hardwareModel })
+    .orderBy('version', 'desc')
+    .first();
+}
+
+module.exports = { findAll, findById, findByVersionAndModel, findLatestByHardwareModel, insert, update, remove };

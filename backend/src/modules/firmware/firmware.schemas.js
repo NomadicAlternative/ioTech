@@ -16,4 +16,13 @@ const update = Joi.object({
   download_url: Joi.string().uri(),
 });
 
-module.exports = { create, update };
+const check = Joi.object({
+  current: Joi.string().max(20).optional(),
+  hardware_model: Joi.string().max(100).required(),
+});
+
+const triggerOta = Joi.object({
+  version: Joi.string().max(20).optional(),
+});
+
+module.exports = { create, update, check, triggerOta };

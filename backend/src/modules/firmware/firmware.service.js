@@ -2,6 +2,9 @@
 
 const { v4: uuidv4 } = require('uuid');
 const firmwareModel = require('./firmware.model');
+const devicesModel = require('../devices/devices.model');
+const templatesModel = require('../device-templates/device-templates.model');
+const { getClient: getMqttClient } = require('../../mqtt/mqttClient');
 const logger = require('../../shared/logger');
 const { NotFoundError, ConflictError } = require('../../shared/errors');
 
@@ -47,4 +50,72 @@ async function remove(tenantId, id) {
   logger.info(`[firmware.service] Deleted firmware ${id}`);
 }
 
-module.exports = { list, getById, create, update, remove };
+/**
+ * Check if a newer firmware version is available for a hardware model.
+ * Device-facing endpoint — no tenant scoping needed.
+ *
+ * @param {string} currentVersion  — the device's current firmware version (optional)
+ * @param {string} hardwareModel   — the device's hardware model (required)
+ * @returns {Promise<{ version: string, url: string }|{ upToDate: true }>}
+ */
+async function checkLatest(currentVersion, hardwareModel) {
+  if (!hardwareModel) {
+    throw new NotFoundError('hardware_model is required');
+  }
+
+  const latest = await firmwareModel.findLatestByHardwareModel(hardwareModel);
+
+  if (!latest || latest.version === currentVersion) {
+    return { upToDate: true };
+  }
+
+  return { version: latest.version, url: latest.download_url };
+}
+
+/**
+ * Trigger an OTA update for a device.
+ * Resolves the device → template → hardware_model → latest firmware,
+ * publishes MQTT, and updates the device record.
+ *
+ * @param {string} tenantId
+ * @param {string} deviceId
+ * @param {string} [requestedVersion]  — optional specific version to install
+ * @returns {Promise<{ ok: true, firmware: { version: string, url: string } }>}
+ */
+async function triggerOta(tenantId, deviceId, requestedVersion) {
+  // 1. Resolve device
+  const device = await devicesModel.findById(tenantId, deviceId);
+  if (!device) throw new NotFoundError(`Device not found: ${deviceId}`);
+
+  // 2. Resolve template → hardware_model
+  const template = await templatesModel.findById(tenantId, device.template_id);
+  if (!template || !template.hardware_model) {
+    throw new NotFoundError('template_missing_hardware_model');
+  }
+
+  // 3. Resolve latest firmware
+  const latest = await firmwareModel.findLatestByHardwareModel(template.hardware_model);
+  if (!latest) {
+    throw new NotFoundError(`No firmware found for hardware_model: ${template.hardware_model}`);
+  }
+
+  const targetVersion = requestedVersion || latest.version;
+  const firmwareInfo = { version: targetVersion, url: latest.download_url };
+
+  // 4. Publish MQTT
+  const mqttClient = getMqttClient();
+  if (!mqttClient) {
+    throw new NotFoundError('mqtt_unavailable');
+  }
+
+  const topic = `org/${tenantId}/device/${deviceId}/ota/notify`;
+  mqttClient.publish(topic, JSON.stringify(firmwareInfo), { qos: 1 });
+  logger.info(`[firmware.service] Published OTA notify to ${topic}: ${JSON.stringify(firmwareInfo)}`);
+
+  // 5. Update device firmware_version
+  await devicesModel.update(deviceId, { firmware_version: targetVersion });
+
+  return { ok: true, firmware: firmwareInfo };
+}
+
+module.exports = { list, getById, create, update, remove, checkLatest, triggerOta };
