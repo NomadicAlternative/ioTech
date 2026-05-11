@@ -18,6 +18,7 @@ import {
   Building2,
   Menu,
   X,
+  Wand2,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { to: '/app/rules',      icon: Bot,             labelKey: 'nav.rules' },
   { to: '/app/templates',  icon: FileCode2,        labelKey: 'nav.templates' },
   { to: '/app/firmware',   icon: Download,         labelKey: 'nav.firmware' },
+  { to: '/app/ai',         icon: Wand2,            labelKey: 'nav.ai' },
   { to: '/app/provision',  icon: Cable,            labelKey: 'nav.provision' },
   { to: '/app/clients',    icon: Users,            labelKey: 'nav.clients' },
   { to: '/app/settings',   icon: Settings,         labelKey: 'nav.settings' },

@@ -26,7 +26,9 @@
     "settings": "Configuración",
     "logout": "Cerrar sesión",
     "language": "Idioma",
-    "provision": "Provisionar"
+    "firmware": "Firmware",
+    "provision": "Provisionar",
+    "ai": "Asistente IA"
   },
   "auth": {
     "subtitle": "Ingresá a tu cuenta",

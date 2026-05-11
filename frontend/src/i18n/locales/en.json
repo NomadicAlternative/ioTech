@@ -26,7 +26,8 @@
     "settings": "Settings",
     "logout": "Logout",
     "language": "Language",
-    "provision": "Provision"
+    "provision": "Provision",
+    "ai": "AI Assistant"
   },
   "auth": {
     "subtitle": "Sign in to your account",
