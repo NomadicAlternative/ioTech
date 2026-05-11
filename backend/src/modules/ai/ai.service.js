@@ -1,7 +1,11 @@
 'use strict';
 
 const { getLocalIp } = require('../../shared/network');
+const { v4: uuidv4 } = require('uuid');
 const logger = require('../../shared/logger');
+const templatesService = require('../device-templates/device-templates.service');
+const devicesService = require('../devices/devices.service');
+const rulesService = require('../rules/rules.service');
 
 /**
  * System prompt that teaches the LLM everything about iotech's
@@ -207,4 +211,58 @@ async function configure(prompt) {
   return { ...ruleBasedConfig(prompt), _source: 'rule-based-fallback' };
 }
 
-module.exports = { configure };
+/**
+ * Apply the AI-generated configuration: create template, device, and rules.
+ */
+async function apply(tenantId, config) {
+  const { template, datastreams, pines, rules } = config;
+  const hardwareModel = template.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '');
+
+  // 1. Create device template
+  const createdTemplate = await templatesService.create(tenantId, {
+    name: template.name,
+    description: template.description,
+    datastreams: datastreams.map(ds => ({
+      key: ds.key,
+      name: ds.name,
+      type: ds.type,
+      unit: ds.unit || null,
+      direction: ds.direction,
+    })),
+    hardware_model: hardwareModel,
+  });
+
+  // 2. Create device
+  const createdDevice = await devicesService.create(tenantId, {
+    name: template.name,
+    template_id: createdTemplate.id,
+  });
+
+  // 3. Create rules
+  const createdRules = [];
+  for (const rule of (rules || [])) {
+    const r = await rulesService.create(tenantId, {
+      name: rule.name,
+      description: rule.description || '',
+      triggerType: 'threshold',
+      triggerConfig: rule.condition,
+      actionType: 'relay',
+      actionConfig: { actions: rule.actions },
+      cooldownMs: (rule.cooldown_seconds || 60) * 1000,
+      enabled: true,
+    });
+    createdRules.push(r);
+  }
+
+  logger.info(`[ai.service] Applied config: template=${createdTemplate.id} device=${createdDevice.id} rules=${createdRules.length}`);
+
+  return {
+    template: createdTemplate,
+    device: createdDevice,
+    rules: createdRules,
+    hardware_model: hardwareModel,
+    claim_token: createdDevice.claim_token,
+  };
+}
+
+module.exports = { configure, apply };

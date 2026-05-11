@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Wand2, Loader2, CheckCircle2, Copy, Cpu, Cable, AlertTriangle } from 'lucide-react'
+import { Wand2, Loader2, CheckCircle2, Copy, Cpu, Cable, AlertTriangle, Rocket } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -27,12 +27,17 @@ export function AIChat() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<AIConfig | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [applying, setApplying] = useState(false)
+  const [applied, setApplied] = useState(false)
+  const [appliedData, setAppliedData] = useState<{ deviceId?: string; claimToken?: string } | null>(null)
 
-  async function handleSubmit() {
+    async function handleSubmit() {
     if (!input.trim() || loading) return
     setLoading(true)
     setError(null)
     setResult(null)
+    setApplied(false)
+    setAppliedData(null)
     try {
       const res = await api.post('/api/ai/configure', { prompt: input.trim() })
       setResult(res.data.data)
@@ -41,6 +46,23 @@ export function AIChat() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleApply() {
+    if (!result || applying) return
+    setApplying(true)
+    setError(null)
+    try {
+      const res = await api.post('/api/ai/apply', { config: result })
+      const data = res.data.data
+      setApplied(true)
+      setAppliedData({ deviceId: data.device?.id, claimToken: data.claim_token })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al aplicar configuración')
+    } finally {
+      setApplying(false)
+    }
+  }
   }
 
   return (
@@ -171,6 +193,31 @@ export function AIChat() {
               </pre>
             </CardContent>
           </Card>
+
+          {/* Apply button */}
+          {!applied ? (
+            <Button className="w-full" onClick={handleApply} disabled={applying}>
+              {applying ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Rocket className="h-4 w-4 mr-2" />}
+              {applying ? 'Aplicando…' : 'Aplicar configuración'}
+            </Button>
+          ) : (
+            <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <span className="font-medium text-green-800">¡Configuración aplicada!</span>
+              </div>
+              <p className="text-sm text-green-700">Template, dispositivo y reglas creados.</p>
+              {appliedData?.deviceId && (
+                <p className="text-xs text-green-600">
+                  Ya podés flashear y provisionar el dispositivo.
+                  <Button variant="link" size="sm" className="h-auto p-0 ml-1 text-green-700 underline"
+                    onClick={() => window.open(`/app/devices/${appliedData.deviceId}`, '_blank')}>
+                    Ver dispositivo →
+                  </Button>
+                </p>
+              )}
+            </div>
+          )}
 
           {result._source && (
             <p className="text-xs text-muted-foreground text-right">

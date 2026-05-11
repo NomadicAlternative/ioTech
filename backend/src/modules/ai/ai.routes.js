@@ -32,4 +32,26 @@ router.post('/configure', async (req, res, next) => {
   }
 });
 
+/**
+ * POST /api/ai/apply
+ * Apply the AI-generated config: create template, device, and rules.
+ *
+ * Body: { config: { template, datastreams, pines, rules } }
+ * Returns: { template, device, rules, claim_token }
+ */
+router.post('/apply', async (req, res, next) => {
+  try {
+    const { config } = req.body;
+    if (!config || !config.template) {
+      return res.status(400).json({
+        error: { code: 'VALIDATION_ERROR', message: 'config with template is required', status: 400 },
+      });
+    }
+    const result = await aiService.apply(req.tenantId, config);
+    res.status(201).json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
