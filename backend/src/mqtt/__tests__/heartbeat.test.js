@@ -128,6 +128,38 @@ describe('handleHeartbeat()', () => {
     expect(devicesModel.update).toHaveBeenLastCalledWith(DEVICE_ID, { status: 'offline' });
     // But no crash — getSocketService returned null
   });
+
+  // ── Firmware version sync ─────────────────────────────────────────────────
+
+  it('updates firmware_version when payload contains firmwareVersion', async () => {
+    devicesModel.update.mockResolvedValue({ id: DEVICE_ID });
+
+    await handleHeartbeat(TENANT_ID, DEVICE_ID, { status: 'online', firmwareVersion: '2.0.0' });
+
+    expect(devicesModel.update).toHaveBeenCalledWith(
+      DEVICE_ID,
+      expect.objectContaining({ firmware_version: '2.0.0' })
+    );
+  });
+
+  it('does NOT update firmware_version when payload has no firmwareVersion', async () => {
+    devicesModel.update.mockResolvedValue({ id: DEVICE_ID });
+
+    await handleHeartbeat(TENANT_ID, DEVICE_ID, { status: 'online' });
+
+    // The update call should NOT include firmware_version
+    const updateCall = devicesModel.update.mock.calls[0][1];
+    expect(updateCall.firmware_version).toBeUndefined();
+  });
+
+  it('does NOT update firmware_version when firmwareVersion is empty string', async () => {
+    devicesModel.update.mockResolvedValue({ id: DEVICE_ID });
+
+    await handleHeartbeat(TENANT_ID, DEVICE_ID, { status: 'online', firmwareVersion: '' });
+
+    const updateCall = devicesModel.update.mock.calls[0][1];
+    expect(updateCall.firmware_version).toBeUndefined();
+  });
 });
 
 // ─── handleHeartbeat() — rules engine hook (Task 2.2) ────────────────────────

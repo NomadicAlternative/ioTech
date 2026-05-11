@@ -76,7 +76,14 @@ async function handleHeartbeat(tenantId, deviceId, payload) {
   }
 
   try {
-    await devicesModel.update(deviceId, { last_seen: new Date(), status: 'online' });
+    const updateFields = { last_seen: new Date(), status: 'online' };
+
+    // Extract firmware_version from JSON payload if present
+    if (payload && typeof payload === 'object' && payload.firmwareVersion) {
+      updateFields.firmware_version = payload.firmwareVersion;
+    }
+
+    await devicesModel.update(deviceId, updateFields);
     logger.info(`[heartbeat] device ${deviceId} online (tenant ${tenantId})`);
 
     const socketSvc = getSocketService();
