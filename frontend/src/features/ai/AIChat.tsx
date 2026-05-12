@@ -7,11 +7,8 @@ import api from '@/lib/axios'
 
 interface AIConfig {
   template: { name: string; description: string }
+  drivers: { model: string; gpio?: number; i2c_addr?: string; channels?: { num: number; gpio: number; name: string }[] }[]
   datastreams: { key: string; name: string; type: string; unit?: string; direction: string }[]
-  pines: {
-    sensores: { tipo: string; gpio: number; nombre: string }[]
-    relays: { numero: number; gpio: number; nombre: string }[]
-  }
   rules: {
     name: string
     description: string
@@ -114,36 +111,26 @@ export function AIChat() {
             </CardContent>
           </Card>
 
-          {/* Pines */}
+          {/* Drivers / Pines */}
           <Card>
             <CardContent className="pt-4 space-y-3">
               <h3 className="font-medium flex items-center gap-2">
                 <Cable className="h-4 w-4" />
-                Conexiones
+                Drivers activos ({result.drivers?.length || 0})
               </h3>
               <div className="grid grid-cols-2 gap-3">
-                {result.pines.sensores?.length > 0 && (
-                  <div className="space-y-2">
-                    <span className="text-xs font-medium text-muted-foreground uppercase">Sensores</span>
-                    {result.pines.sensores.map((s, i) => (
-                      <div key={i} className="rounded-lg border border-[var(--border)] bg-[var(--muted)]/30 px-3 py-2">
-                        <p className="text-sm font-medium">{s.tipo}</p>
-                        <p className="text-xs text-muted-foreground">GPIO{s.gpio} — {s.nombre}</p>
-                      </div>
+                {result.drivers?.map((driver, i) => (
+                  <div key={i} className="rounded-lg border border-[var(--border)] bg-[var(--muted)]/30 px-3 py-2">
+                    <p className="text-sm font-medium">{driver.model}</p>
+                    {driver.gpio != null && <p className="text-xs text-muted-foreground">GPIO {driver.gpio}</p>}
+                    {driver.i2c_addr && <p className="text-xs text-muted-foreground">I2C {driver.i2c_addr}</p>}
+                    {driver.channels?.map((ch, j) => (
+                      <p key={j} className="text-xs text-muted-foreground">
+                        {ch.name} — GPIO {ch.gpio}
+                      </p>
                     ))}
                   </div>
-                )}
-                {result.pines.relays?.length > 0 && (
-                  <div className="space-y-2">
-                    <span className="text-xs font-medium text-muted-foreground uppercase">Relays</span>
-                    {result.pines.relays.map((r, i) => (
-                      <div key={i} className="rounded-lg border border-[var(--border)] bg-[var(--muted)]/30 px-3 py-2">
-                        <p className="text-sm font-medium">Relay {r.numero}</p>
-                        <p className="text-xs text-muted-foreground">GPIO{r.gpio}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                ))}
               </div>
             </CardContent>
           </Card>

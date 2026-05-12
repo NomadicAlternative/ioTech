@@ -15,47 +15,63 @@ const SYSTEM_PROMPT = `Eres un asistente de configuración para iotech, una plat
 
 Tu trabajo: dado lo que describe un instalador, devolvé un JSON con la configuración del dispositivo.
 
+El firmware de iotech es GENÉRICO — usa drivers activables por configuración. No necesitás generar código C, solo describir qué drivers activar y con qué pines.
+
+DRIVERS DISPONIBLES:
+- DHT11: temperatura + humedad, 1-wire
+- DHT22: temperatura + humedad, 1-wire  
+- BME280: temperatura + humedad + presión, I2C (0x76 o 0x77)
+- BMP280: temperatura + presión, I2C
+- DS18B20: temperatura, 1-wire
+- PIR: movimiento, GPIO digital
+- HC-SR04: distancia ultrasónica, GPIO trigger + echo
+- BH1750: luz (lux), I2C (0x23)
+- RELAY: actuador on/off, hasta 8 canales, active LOW
+- WS2812B: LED RGB direccionable
+- SERVO: servo motor, PWM
+- SSD1306: pantalla OLED 128x64, I2C (0x3C)
+- BUZZER: activo o pasivo, GPIO
+
+PINES GPIO DISPONIBLES:
+- Sensores digitales/I2C: 14, 27, 26, 25, 33, 32
+- Relays (active LOW): 23, 22, 21, 19, 18, 5, 17
+- ADC: 34, 35, 36, 39 (solo entrada analógica)
+- I2C por defecto: SDA=21, SCL=22 (se puede cambiar)
+
 REGLAS:
 1. Usá SOLO este formato JSON de respuesta. Nada de texto extra.
-2. Los pines GPIO del ESP32 disponibles para relays: 23, 22, 21, 19, 18, 5, 17 (módulo de 7 relays, active LOW).
-3. Los pines GPIO disponibles para sensores: 14, 27, 26, 25, 33, 32, 34, 35, 36, 39.
-4. Para DHT22 usar GPIO 14 por defecto.
-5. El firmware ya maneja: DHT22, DS18B20, relays (on/off), ADC (0-3.3V).
-6. Las reglas usan este formato: { condition: "datastreamKey >= valor", actions: [{ relay: numero, state: "on"|"off" }] }
-7. El nombre del template debe ser descriptivo y en español.
-8. Incluí SIEMPRE una sección "pines" con el diagrama de conexiones.
-9. Los relays se numeran de 1 a 7.
+2. El array "drivers" es OBLIGATORIO — cada entry activa un driver con su config de pines.
+3. Para relays, especificá channels (array con num + gpio + name).
+4. Para sensores, especificá gpio o i2c_addr según corresponda.
+5. Para I2C, asumí SDA=21, SCL=22 a menos que el instalador diga otra cosa.
+6. Las reglas usan datastream keys (ej: "temperature", "relay1").
+7. Incluí SIEMPRE "diagrama" con las conexiones físicas.
+8. El nombre del template en español, descriptivo.
+9. Los relays se numeran de 1 a N.
 
 Formato de respuesta OBLIGATORIO:
 {
-  "template": {
-    "name": "Nombre del template",
-    "description": "Descripción breve"
-  },
-  "datastreams": [
-    { "key": "temp", "name": "Temperatura", "type": "number", "unit": "°C", "direction": "input" }
+  "template": { "name": "...", "description": "..." },
+  "drivers": [
+    { "model": "DHT22", "gpio": 14 },
+    { "model": "RELAY", "channels": [
+      { "num": 1, "gpio": 23, "name": "Relay 1" }
+    ]}
   ],
-  "pines": {
-    "sensores": [
-      { "tipo": "DHT22", "gpio": 14, "nombre": "Temperatura" }
-    ],
-    "relays": [
-      { "numero": 1, "gpio": 23, "nombre": "Relay 1" },
-      { "numero": 2, "gpio": 22, "nombre": "Relay 2" }
-    ]
-  },
+  "datastreams": [
+    { "key": "temperature", "name": "Temperatura", "type": "number", "unit": "°C", "direction": "input" }
+  ],
   "rules": [
     {
-      "name": "Nombre de la regla",
-      "description": "Descripción",
-      "condition": { "datastream": "temp", "operator": ">=", "value": 12 },
+      "name": "...",
+      "description": "...",
+      "condition": { "datastream": "temperature", "operator": ">=", "value": 12 },
       "actions": [
-        { "type": "relay", "relay": 1, "state": "on" },
-        { "type": "relay", "relay": 3, "state": "off" }
+        { "type": "relay", "relay": 1, "state": "on" }
       ]
     }
   ],
-  "diagrama": "ESP32 GPIO14 → DHT22 datos\\nESP32 GPIO23 → Relay 1\\n..."
+  "diagrama": "ESP32 GPIO14 → DHT22 datos\\nESP32 3.3V → DHT22 VCC\\n..."
 }`;
 
 /**
@@ -151,14 +167,15 @@ function ruleBasedConfig(input) {
 
   // Detect sensor type
   const isDHT = lower.includes('dht') || lower.includes('humedad') || (lower.includes('temperatura') && !lower.includes('ds18'));
-  const sensorType = isDHT ? 'DHT22' : 'DS18B20';
+  const sensorModel = isDHT ? 'DHT22' : 'DS18B20';
   const sensorPin = 14;
 
-  // Build relay list
-  const relays = [];
-  for (let i = 1; i <= 7; i++) {
-    const gpios = [23, 22, 21, 19, 18, 5, 17];
-    relays.push({ numero: i, gpio: gpios[i - 1], nombre: `Relay ${i}` });
+  // Build relay channels
+  const gpios = [23, 22, 21, 19, 18, 5, 17];
+  const channels = [];
+  const maxRelay = Math.max(7, ...relayOn, ...relayOff, 1);
+  for (let i = 1; i <= maxRelay; i++) {
+    channels.push({ num: i, gpio: gpios[i - 1], name: `Relay ${i}` });
   }
 
   // Build actions
@@ -172,28 +189,28 @@ function ruleBasedConfig(input) {
     rules.push({
       name: `Control de temperatura a ${threshold}°C`,
       description: `Cuando temperatura >= ${threshold}°C, ejecutar acciones configuradas`,
-      condition: { datastream: 'temp', operator: '>=', value: threshold },
+      condition: { datastream: 'temperature', operator: '>=', value: threshold },
       actions,
       cooldown_seconds: 60,
     });
   }
 
   // Build diagram
-  const lines = [`ESP32 GPIO${sensorPin} → ${sensorType} datos`, `ESP32 3.3V → ${sensorType} VCC`, `ESP32 GND → ${sensorType} GND`];
-  relays.forEach(r => lines.push(`ESP32 GPIO${r.gpio} → ${r.nombre}`));
+  const lines = [`ESP32 GPIO${sensorPin} → ${sensorModel} datos`, `ESP32 3.3V → ${sensorModel} VCC`, `ESP32 GND → ${sensorModel} GND`];
+  channels.forEach(r => lines.push(`ESP32 GPIO${r.gpio} → ${r.name}`));
 
   return {
     template: {
-      name: relays.length > 0 ? `Control Térmico ${relays.length}CH` : 'Sensor de Temperatura',
-      description: `Template generado automáticamente: ${sensorType} + ${relays.length} relays`,
+      name: channels.length > 0 ? `Control Térmico ${channels.length}CH` : 'Sensor de Temperatura',
+      description: `Template generado: ${sensorModel} + ${channels.length} relays`,
     },
-    datastreams: [
-      { key: 'temp', name: 'Temperatura', type: 'number', unit: '°C', direction: 'input' },
+    drivers: [
+      { model: sensorModel, gpio: sensorPin },
+      { model: 'RELAY', channels },
     ],
-    pines: {
-      sensores: [{ tipo: sensorType, gpio: sensorPin, nombre: 'Temperatura' }],
-      relays,
-    },
+    datastreams: [
+      { key: 'temperature', name: 'Temperatura', type: 'number', unit: '°C', direction: 'input' },
+    ],
     rules,
     diagrama: lines.join('\\n'),
     _fallback: true,
