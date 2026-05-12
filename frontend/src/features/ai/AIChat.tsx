@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Wand2, Loader2, CheckCircle2, Copy, Cpu, Cable, AlertTriangle, Rocket, ChevronDown, ChevronRight, CpuChip, Wifi, Thermometer, Zap, Monitor } from 'lucide-react'
+import { Wand2, Loader2, CheckCircle2, Copy, Cpu, Cable, AlertTriangle, Rocket, ChevronDown, ChevronRight, Wifi, Thermometer, Zap, Monitor } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -86,7 +86,7 @@ export function AIChat() {
           {sidebarOpen && catalog && (
             <div className="space-y-2">
               {[
-                { key: 'boards',       icon: CpuChip,    label: 'Boards',      color: 'text-[var(--blue)]' },
+                { key: 'boards',       icon: Cpu,         label: 'Boards',      color: 'text-[var(--blue)]' },
                 { key: 'connectivity', icon: Wifi,       label: 'Conectividad', color: 'text-[var(--accent)]' },
                 { key: 'sensors',      icon: Thermometer, label: 'Sensores',    color: 'text-green-600' },
                 { key: 'actuators',    icon: Zap,         label: 'Actuadores',  color: 'text-amber-600' },
