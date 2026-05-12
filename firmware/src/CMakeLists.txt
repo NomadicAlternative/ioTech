@@ -6,6 +6,4 @@ idf_component_register(
         nvs_storage
         state_machine
         relay_controller
-        io_driver
-        json
 )

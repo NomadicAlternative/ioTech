@@ -126,7 +126,6 @@ bool serial_provisioning_receive(void)
     const char *device_token = json_str(root, "device_token");
     const char *tenant_id    = json_str(root, "tenant_id");
     const char *device_id    = json_str(root, "device_id");
-    cJSON *drivers_json      = cJSON_GetObjectItem(root, "drivers");
 
     if (!ssid || !password || !backend_url || !mqtt_url || !device_token || !tenant_id || !device_id) {
         ESP_LOGW(TAG, "Missing required fields in JSON payload");
@@ -159,14 +158,6 @@ bool serial_provisioning_receive(void)
         ESP_LOGE(TAG, "Failed to store device config: %s", esp_err_to_name(err));
         cJSON_Delete(root);
         return false;
-    }
-
-    /* Store drivers config */
-    if (drivers_json && cJSON_IsArray(drivers_json)) {
-        char *drivers_str = cJSON_PrintUnformatted(drivers_json);
-        nvs_store_drivers_config(drivers_str);
-        cJSON_free(drivers_str);
-        ESP_LOGI(TAG, "Stored %d driver(s) config", cJSON_GetArraySize(drivers_json));
     }
 
     cJSON_Delete(root);

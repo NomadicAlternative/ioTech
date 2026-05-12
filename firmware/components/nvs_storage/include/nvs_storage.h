@@ -71,9 +71,6 @@ esp_err_t nvs_load_device_config(device_config_t *out);
  */
 esp_err_t nvs_storage_erase_all(void);
 
-esp_err_t nvs_store_drivers_config(const char *json_str);
-esp_err_t nvs_load_drivers_config(char *buf, size_t buf_size);
-
 #ifdef __cplusplus
 }
 #endif

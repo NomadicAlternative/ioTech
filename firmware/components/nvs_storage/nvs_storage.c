@@ -149,33 +149,3 @@ esp_err_t nvs_storage_erase_all(void)
     ESP_LOGI(TAG, "NVS namespace '%s' erased", NVS_NS);
     return err;
 }
-
-/* ── Drivers config ─────────────────────────────────────────────────────── */
-
-#define KEY_DRIVERS_CFG  "drivers_cfg"
-
-esp_err_t nvs_store_drivers_config(const char *json_str)
-{
-    if (!json_str) return ESP_ERR_INVALID_ARG;
-    nvs_handle_t h;
-    esp_err_t err = nvs_open(NVS_NS, NVS_READWRITE, &h);
-    if (err != ESP_OK) return err;
-    err = nvs_set_str(h, KEY_DRIVERS_CFG, json_str);
-    if (err == ESP_OK) err = nvs_commit(h);
-    nvs_close(h);
-    return err;
-}
-
-esp_err_t nvs_load_drivers_config(char *buf, size_t buf_size)
-{
-    nvs_handle_t h;
-    esp_err_t err = nvs_open(NVS_NS, NVS_READONLY, &h);
-    if (err != ESP_OK) return err;
-    size_t required = 0;
-    err = nvs_get_str(h, KEY_DRIVERS_CFG, NULL, &required);
-    if (err == ESP_OK && required <= buf_size) {
-        err = nvs_get_str(h, KEY_DRIVERS_CFG, buf, &required);
-    }
-    nvs_close(h);
-    return err;
-}

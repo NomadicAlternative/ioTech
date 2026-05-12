@@ -13,6 +13,7 @@ import { fetchDeviceTemplate, sendDeviceCommand } from './api'
 import type { DeviceTemplate } from '@/features/widgets/types'
 import { FlashDeviceWizard } from './components/FlashDeviceWizard'
 import { OtaUpdateDialog } from './components/OtaUpdateDialog'
+import { ProvisioningModal } from './components/ProvisioningModal'
 
 const RELAY_COUNT = 7
 
@@ -29,6 +30,7 @@ export function DeviceDetailPage() {
   const [template, setTemplate] = useState<DeviceTemplate | null>(null)
   const [flashOpen, setFlashOpen] = useState(false)
   const [otaOpen, setOtaOpen] = useState(false)
+  const [provisioningOpen, setProvisioningOpen] = useState(false)
 
   // Derive hardware_model from the device template's name (stored as model identifier)
   const hardwareModel = template?.hardware_model ?? null
@@ -158,6 +160,10 @@ export function DeviceDetailPage() {
           <Button variant="default" size="sm" onClick={() => setFlashOpen(true)}>
             <Usb className="h-4 w-4 mr-2" />
             Flash & Provision
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setProvisioningOpen(true)}>
+            <Usb className="h-4 w-4 mr-2" />
+            Configurar dispositivo
           </Button>
           {hardwareModel && (
             <Button variant="outline" size="sm" onClick={() => setOtaOpen(true)}>
@@ -320,6 +326,14 @@ export function DeviceDetailPage() {
         deviceName={device.name}
         open={flashOpen}
         onClose={() => setFlashOpen(false)}
+      />
+
+      {/* Provisioning modal */}
+      <ProvisioningModal
+        deviceId={device.id}
+        deviceName={device.name}
+        open={provisioningOpen}
+        onClose={() => setProvisioningOpen(false)}
       />
 
       {/* OTA update dialog */}
