@@ -165,8 +165,6 @@ All errors return `{ error: { code, message, status, details? } }`.
 | PUT | /api/dashboards/:id/layout | Yes | Save layout JSON |
 
 ## Rules
-
-- Siempre dar el comando completo, nunca solo flags
 - Never commit secrets
 - Modular code — single responsibility per file
 - Validate all inputs with Joi schemas
@@ -174,4 +172,15 @@ All errors return `{ error: { code, message, status, details? } }`.
 - Conventional commits only
 - Save session summary to engram AND .agent/context.md at end of every session
 - No flashear firmware sin ESP32 conectado
+
+## Driver Roadmap
+
+**Fase 1 — Implementados (9 drivers)**:
+DHT22, RELAY, BME280, DS18B20, PIR, HC-SR04, WS2812B, SERVO, SSD1306
+
+**Fase 2 — Cuando haya hardware físico**:
+SHT30/31, CCS811, SGP30, PMS5003, BH1750, INA219, stepper 28BYJ-48, ST7735, ST7789, ILI9341, RFID RC522, Modbus RTU, RS485
+
+**Fase 3 — Crecimiento**:
+LoRa (SX1276/78/1262), ESP32-S3/C3/C6/H2, Zigbee/Thread, ePaper, cámara OV2640, MPU6050, VL53L0X, keypad, microSD, deep sleep, battery telemetry
 - Puerto serial se auto-detecta (ls /dev/cu.usbserial-*)
