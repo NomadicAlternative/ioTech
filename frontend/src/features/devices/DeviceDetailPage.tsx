@@ -200,7 +200,8 @@ export function DeviceDetailPage() {
         </Card>
       </div>
 
-      {/* Relay control */}
+      {/* Relay control — only if template has output datastreams */}
+      {(template?.datastreams?.filter(ds => ds.direction === 'output')?.length || 0) > 0 && (
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
@@ -264,6 +265,7 @@ export function DeviceDetailPage() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Datastreams — solo admin e installer */}
       {canSeeDatastreams && template && template.datastreams.length > 0 && (
