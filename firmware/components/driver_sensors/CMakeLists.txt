@@ -1,5 +1,6 @@
 idf_component_register(
     SRCS
+        driver_dht11.c
         driver_dht22.c
         driver_bme280.c
         driver_ds18b20.c
