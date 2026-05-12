@@ -12,8 +12,8 @@
  * 4. Done — the firmware auto-discovers it from provisioning config
  */
 
-#ifndef IOTECH_DRIVER_H
-#define IOTECH_DRIVER_H
+#ifndef IOTECH_IO_DRIVER_H
+#define IOTECH_IO_DRIVER_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -187,4 +187,4 @@ int driver_read_all_telemetry(char *buf, int buf_len);
  */
 bool driver_write_command(const char *topic, const cJSON *payload);
 
-#endif /* IOTECH_DRIVER_H */
+#endif /* IOTECH_IO_DRIVER_H */

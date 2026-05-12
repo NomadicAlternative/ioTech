@@ -6,7 +6,7 @@
 #include "esp_netif.h"
 #include "esp_event.h"
 #include "relay_controller.h"
-#include "driver.h"
+#include "io_driver.h"
 #include "cJSON.h"
 
 static const char *TAG = "main";
@@ -40,7 +40,7 @@ void app_main(void)
     /* Initialize relay GPIOs — all OFF before anything else */
     relay_controller_init();
 
-    /* Activate drivers from provisioning config (stored in NVS) */
+    /* Activate drivers from provisioning config stored in NVS */
     char drivers_buf[1024] = {0};
     if (nvs_load_drivers_config(drivers_buf, sizeof(drivers_buf)) == ESP_OK) {
         cJSON *drivers = cJSON_Parse(drivers_buf);

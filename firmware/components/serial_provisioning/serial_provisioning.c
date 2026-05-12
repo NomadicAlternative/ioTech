@@ -146,7 +146,7 @@ bool serial_provisioning_receive(void)
         return false;
     }
 
-    /* Write device config */
+    /* Write device config — all fields come from the dashboard, no HTTP provisioning needed */
     device_config_t dev = {0};
     strlcpy(dev.device_token,    device_token, sizeof(dev.device_token));
     strlcpy(dev.tenant_id,       tenant_id,    sizeof(dev.tenant_id));
@@ -161,12 +161,15 @@ bool serial_provisioning_receive(void)
         return false;
     }
 
-    /* Store drivers config for activation on boot */
+    /* Store drivers config */
     if (drivers_json && cJSON_IsArray(drivers_json)) {
         char *drivers_str = cJSON_PrintUnformatted(drivers_json);
         nvs_store_drivers_config(drivers_str);
         cJSON_free(drivers_str);
         ESP_LOGI(TAG, "Stored %d driver(s) config", cJSON_GetArraySize(drivers_json));
+    }
+        cJSON_Delete(root);
+        return false;
     }
 
     cJSON_Delete(root);

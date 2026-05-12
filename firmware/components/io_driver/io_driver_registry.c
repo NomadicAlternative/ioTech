@@ -4,7 +4,7 @@
  * All compiled-in drivers auto-register via driver_register().
  * Only drivers whose model appears in the provisioning config get activated.
  */
-#include "driver.h"
+#include "io_driver.h"
 #include "esp_log.h"
 #include <string.h>
 
