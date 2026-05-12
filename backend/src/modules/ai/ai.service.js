@@ -232,7 +232,7 @@ async function configure(prompt) {
  * Apply the AI-generated configuration: create template, device, and rules.
  */
 async function apply(tenantId, config) {
-  const { template, datastreams, pines, rules } = config;
+  const { template, datastreams, rules, drivers } = config;
   const hardwareModel = template.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '');
 
   // 1. Create device template
@@ -249,10 +249,11 @@ async function apply(tenantId, config) {
     hardware_model: hardwareModel,
   });
 
-  // 2. Create device
+  // 2. Create device with drivers stored in metadata
   const createdDevice = await devicesService.create(tenantId, {
     name: template.name,
     templateId: createdTemplate.id,
+    metadata: drivers ? { drivers } : {},
   });
 
   // 3. Create rules

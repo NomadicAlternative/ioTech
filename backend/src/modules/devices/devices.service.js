@@ -238,5 +238,6 @@ async function getProvisioningCredentials(tenantId, deviceId) {
     device_id: device.id,
     backend_url: `http://${localIp}:${port}`,
     mqtt_url: `mqtt://${localIp}:1883`,
+    drivers: (device.metadata && device.metadata.drivers) || undefined,
   };
 }

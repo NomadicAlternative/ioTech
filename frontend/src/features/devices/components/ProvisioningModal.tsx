@@ -100,6 +100,7 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
       claim_token: creds.claim_token,
       tenant_id: creds.tenant_id,
       device_id: creds.device_id,
+      drivers: creds.drivers,
     }) + '\n'
 
     const encoded = new TextEncoder().encode(payload)
