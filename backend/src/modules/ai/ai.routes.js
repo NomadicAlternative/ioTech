@@ -7,7 +7,22 @@ const tenantResolver = require('../../shared/middleware/tenantResolver');
 
 const router = Router();
 
-// All AI routes require authentication
+// ── Public routes (no auth required) ─────────────────────────────────────
+
+/**
+ * GET /api/ai/catalog
+ * Returns the capability catalog — all supported boards, sensors, actuators, displays.
+ */
+router.get('/catalog', async (req, res, next) => {
+  try {
+    res.json({ data: aiService.getCatalog() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── Authenticated routes ─────────────────────────────────────────────────
+
 router.use(authGuard, tenantResolver);
 
 /**

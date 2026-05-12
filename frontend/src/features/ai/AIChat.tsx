@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Wand2, Loader2, CheckCircle2, Copy, Cpu, Cable, AlertTriangle, Rocket } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Wand2, Loader2, CheckCircle2, Copy, Cpu, Cable, AlertTriangle, Rocket, ChevronDown, ChevronRight, CpuChip, Wifi, Thermometer, Zap, Monitor } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -27,6 +27,15 @@ export function AIChat() {
   const [applying, setApplying] = useState(false)
   const [applied, setApplied] = useState(false)
   const [appliedData, setAppliedData] = useState<{ deviceId?: string; claimToken?: string } | null>(null)
+  const [catalog, setCatalog] = useState<Record<string, { model: string; description: string; note?: string; protocol?: string }[]> | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    sensors: true, actuators: true, displays: false, connectivity: false, boards: false,
+  })
+
+  useEffect(() => {
+    api.get('/api/ai/catalog').then(r => setCatalog(r.data.data)).catch(() => {})
+  }, [])
 
     async function handleSubmit() {
     if (!input.trim() || loading) return
@@ -62,7 +71,70 @@ export function AIChat() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="flex gap-6 max-w-6xl mx-auto">
+      {/* ── Sidebar: Component Catalog ──────────────────────────────────── */}
+      <div className={`${sidebarOpen ? 'w-64' : 'w-10'} shrink-0 transition-all duration-200`}>
+        <div className="sticky top-4 space-y-4">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="w-full flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            {sidebarOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {sidebarOpen && 'Componentes'}
+          </button>
+
+          {sidebarOpen && catalog && (
+            <div className="space-y-2">
+              {[
+                { key: 'boards',       icon: CpuChip,    label: 'Boards',      color: 'text-[var(--blue)]' },
+                { key: 'connectivity', icon: Wifi,       label: 'Conectividad', color: 'text-[var(--accent)]' },
+                { key: 'sensors',      icon: Thermometer, label: 'Sensores',    color: 'text-green-600' },
+                { key: 'actuators',    icon: Zap,         label: 'Actuadores',  color: 'text-amber-600' },
+                { key: 'displays',     icon: Monitor,     label: 'Displays',    color: 'text-purple-600' },
+              ].map(({ key, icon: Icon, label, color }) => {
+                const items = catalog[key]
+                if (!items || items.length === 0) return null
+                const expanded = expandedSections[key]
+                return (
+                  <div key={key}>
+                    <button
+                      onClick={() => setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }))}
+                      className="w-full flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground py-1"
+                    >
+                      {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                      <Icon className={`h-3.5 w-3.5 ${color}`} />
+                      {label}
+                      <Badge variant="secondary" className="ml-auto text-[10px] px-1 py-0 h-4">{items.length}</Badge>
+                    </button>
+                    {expanded && (
+                      <div className="ml-4 space-y-0.5">
+                        {items.map((item: any) => (
+                          <div
+                            key={item.model}
+                            className="rounded-md px-2 py-1 text-xs cursor-pointer hover:bg-[var(--muted)] transition-colors group"
+                            onClick={() => setInput(prev => prev ? `${prev}, ${item.model}` : item.model)}
+                          >
+                            <p className="font-medium text-foreground">{item.model}</p>
+                            <p className="text-[11px] text-muted-foreground leading-tight">{item.description}</p>
+                            {(item.protocol || item.note) && (
+                              <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {item.protocol || item.note}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Main: Chat ──────────────────────────────────────────────────── */}
+      <div className="flex-1 min-w-0 space-y-6">
       <div>
         <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
           <Wand2 className="h-6 w-6 text-[var(--accent)]" />
@@ -212,6 +284,7 @@ export function AIChat() {
           )}
         </div>
       )}
+      </div>
     </div>
   )
 }

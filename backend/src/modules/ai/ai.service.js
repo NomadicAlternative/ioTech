@@ -282,4 +282,48 @@ async function apply(tenantId, config) {
   };
 }
 
-module.exports = { configure, apply };
+/**
+ * Capability catalog — all supported components.
+ * Keep in sync with firmware drivers.
+ */
+const CATALOG = {
+  boards: [
+    { model: 'ESP32',        description: 'ESP32 (WiFi + BLE)',       note: 'Principal' },
+    { model: 'ESP32-S3',     description: 'ESP32-S3 (WiFi + BLE + AI)', note: 'Cámara, edge ML' },
+    { model: 'ESP32-C3',     description: 'ESP32-C3 (WiFi + BLE)',    note: 'RISC-V, bajo consumo' },
+  ],
+  connectivity: [
+    { model: 'WIFI',   description: 'WiFi 2.4GHz',          note: 'Obligatorio' },
+    { model: 'MQTT',   description: 'MQTT (Mosquitto)',     note: 'Obligatorio' },
+    { model: 'BLE',    description: 'Bluetooth Low Energy', note: 'Beacons, nearby' },
+  ],
+  sensors: [
+    { model: 'DHT11',    description: 'Temperatura + Humedad básica',       protocol: '1-wire' },
+    { model: 'DHT22',    description: 'Temperatura + Humedad precisión',    protocol: '1-wire' },
+    { model: 'BME280',   description: 'Temperatura + Humedad + Presión',    protocol: 'I2C (0x76)' },
+    { model: 'BMP280',   description: 'Temperatura + Presión',              protocol: 'I2C' },
+    { model: 'DS18B20',  description: 'Temperatura digital',                protocol: '1-wire Dallas' },
+    { model: 'PIR',      description: 'Sensor de movimiento HC-SR501',      protocol: 'GPIO digital' },
+    { model: 'HC-SR04',  description: 'Distancia ultrasónica 2cm-4m',       protocol: 'GPIO trigger/echo' },
+    { model: 'BH1750',   description: 'Luz (lux) ambiental',                protocol: 'I2C (0x23)' },
+  ],
+  actuators: [
+    { model: 'RELAY',    description: 'Relé/módulo de relés 1-8 canales',   note: 'Active LOW' },
+    { model: 'WS2812B',  description: 'Tira LED RGB direccionable',          note: 'Neopixel' },
+    { model: 'SERVO',    description: 'Servomotor SG90 / MG996R 0-180°',    note: 'PWM' },
+    { model: 'BUZZER',   description: 'Buzzer activo/pasivo',                note: 'Alarma' },
+  ],
+  displays: [
+    { model: 'SSD1306',  description: 'OLED 128x64 monocromo',              protocol: 'I2C (0x3C)' },
+    { model: 'LCD1602',  description: 'LCD 16x2 caracteres con I2C',        protocol: 'I2C (0x27)' },
+  ],
+};
+
+/**
+ * Return the full capability catalog for the AI assistant UI.
+ */
+function getCatalog() {
+  return CATALOG;
+}
+
+module.exports = { configure, apply, getCatalog };
