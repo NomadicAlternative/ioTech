@@ -8,6 +8,9 @@
 #include "esp_log.h"
 #include <string.h>
 
+/* Forward declaration — defined at end of file */
+const char *capability_type_str(capability_type_t cap);
+
 #define MAX_DRIVERS 64
 
 static driver_t *registry[MAX_DRIVERS];

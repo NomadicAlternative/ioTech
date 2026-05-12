@@ -168,9 +168,6 @@ bool serial_provisioning_receive(void)
         cJSON_free(drivers_str);
         ESP_LOGI(TAG, "Stored %d driver(s) config", cJSON_GetArraySize(drivers_json));
     }
-        cJSON_Delete(root);
-        return false;
-    }
 
     cJSON_Delete(root);
     ESP_LOGI(TAG, "Serial provisioning complete — WiFi: '%s', backend: '%s'", ssid, backend_url);
