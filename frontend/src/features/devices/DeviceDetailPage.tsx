@@ -14,29 +14,20 @@ import type { DeviceTemplate } from '@/features/widgets/types'
 import { FlashDeviceWizard } from './components/FlashDeviceWizard'
 import { OtaUpdateDialog } from './components/OtaUpdateDialog'
 
-const RELAY_COUNT = 7
+  const RELAY_COUNT = template?.datastreams?.filter(ds => ds.direction === 'output')?.length || 0
 
-export function DeviceDetailPage() {
-  const { t } = useTranslation()
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const { currentDevice, fetchDevice, clearCurrent } = useDeviceStore()
-  const userRole = useAuthStore((s) => s.user?.role)
-  const canSeeDatastreams = userRole === 'admin' || userRole === 'installer'
+  const [relayStates, setRelayStates] = useState<boolean[]>([])
+  const [relaySending, setRelaySending] = useState<boolean[]>([])
+  const [relayAnimating, setRelayAnimating] = useState<boolean[]>([])
 
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [template, setTemplate] = useState<DeviceTemplate | null>(null)
-  const [flashOpen, setFlashOpen] = useState(false)
-  const [otaOpen, setOtaOpen] = useState(false)
-
-  // Derive hardware_model from the device template's name (stored as model identifier)
-  const hardwareModel = template?.hardware_model ?? null
-
-  // relay states: index 0 = relay 1, ..., index 6 = relay 7
-  const [relayStates, setRelayStates] = useState<boolean[]>(Array(RELAY_COUNT).fill(false))
-  const [relaySending, setRelaySending] = useState<boolean[]>(Array(RELAY_COUNT).fill(false))
-  const [relayAnimating, setRelayAnimating] = useState<boolean[]>(Array(RELAY_COUNT).fill(false))
+  // Resize relay arrays when template loads
+  useEffect(() => {
+    if (RELAY_COUNT > 0) {
+      setRelayStates(prev => prev.length === RELAY_COUNT ? prev : Array(RELAY_COUNT).fill(false))
+      setRelaySending(prev => prev.length === RELAY_COUNT ? prev : Array(RELAY_COUNT).fill(false))
+      setRelayAnimating(prev => prev.length === RELAY_COUNT ? prev : Array(RELAY_COUNT).fill(false))
+    }
+  }, [RELAY_COUNT])
 
   useEffect(() => {
     if (!id) return
@@ -200,7 +191,8 @@ export function DeviceDetailPage() {
         </Card>
       </div>
 
-      {/* Relay control */}
+      {/* Relay control — only if template has output datastreams */}
+      {RELAY_COUNT > 0 && (
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
@@ -264,6 +256,7 @@ export function DeviceDetailPage() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Datastreams — solo admin e installer */}
       {canSeeDatastreams && template && template.datastreams.length > 0 && (
