@@ -252,7 +252,7 @@ async function apply(tenantId, config) {
   // 2. Create device
   const createdDevice = await devicesService.create(tenantId, {
     name: template.name,
-    template_id: createdTemplate.id,
+    templateId: createdTemplate.id,
   });
 
   // 3. Create rules
