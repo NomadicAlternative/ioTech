@@ -37,7 +37,7 @@ static uint32_t s_reconnect_delay_ms = 2000;
 /* -----------------------------------------------------------------------
  * DHT11 Sensor Reading
  * --------------------------------------------------------------------- */
-#define DHT11_GPIO 14
+#define DHT11_GPIO 27
 
 static float dht11_temp = 0.0f;
 static float dht11_hum = 0.0f;
@@ -50,8 +50,8 @@ static bool dht11_read(float *temp, float *hum)
     esp_rom_delay_us(18000);
     gpio_set_level(DHT11_GPIO, 1);
     esp_rom_delay_us(40);
+    gpio_set_pull_mode(DHT11_GPIO, GPIO_PULLUP_ONLY);
     gpio_set_direction(DHT11_GPIO, GPIO_MODE_INPUT);
-    gpio_set_pull_mode(DHT11_GPIO, GPIO_PULLUP_ONLY);  /* internal pull-up */
 
     int64_t t = esp_timer_get_time();
     while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 100) return false; }
