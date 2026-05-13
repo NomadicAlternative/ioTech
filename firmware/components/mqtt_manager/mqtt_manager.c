@@ -75,7 +75,7 @@ static void dht11_read(void)
     for (int i = 0; i < 40; i++) {
         timeout = 0;
         while (gpio_get_level(DHT11_GPIO) == 0) { if (++timeout > 200) return; esp_rom_delay_us(1); }
-        ets_delay_us(30);
+        esp_rom_delay_us(30);
         if (gpio_get_level(DHT11_GPIO) == 1) data[i / 8] |= (1 << (7 - (i % 8)));
         timeout = 0;
         while (gpio_get_level(DHT11_GPIO) == 1) { if (++timeout > 200) return; esp_rom_delay_us(1); }
@@ -97,17 +97,17 @@ static void heartbeat_task(void *arg)
         vTaskDelay(pdMS_TO_TICKS(30000));
 
         // Read DHT11 and publish telemetry
-        float prev_temp = dht11_temp, prev_hum = dht11_hum;
-        dht11_temp = 0; dht11_hum = 0;
         dht11_read();
+        cJSON *root = cJSON_CreateObject();
         if (dht11_temp > 0 || dht11_hum > 0) {
-            cJSON *root = cJSON_CreateObject();
             cJSON_AddNumberToObject(root, "temperature", dht11_temp);
             cJSON_AddNumberToObject(root, "humidity", dht11_hum);
-            char *json = cJSON_PrintUnformatted(root);
-            if (json) { mqtt_publish_telemetry(json); cJSON_free(json); }
-            cJSON_Delete(root);
+        } else {
+            cJSON_AddStringToObject(root, "dht11", "error");
         }
+        char *json = cJSON_PrintUnformatted(root);
+        if (json) { mqtt_publish_telemetry(json); cJSON_free(json); }
+        cJSON_Delete(root);
 
         mqtt_publish_status("online");
     }
