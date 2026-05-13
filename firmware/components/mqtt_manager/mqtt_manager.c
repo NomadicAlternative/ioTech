@@ -153,6 +153,9 @@ static void mqtt_event_handler(void *handler_args,
         /* Publish "online" status */
         mqtt_publish_status("online");
 
+        /* Publish test telemetry */
+        mqtt_publish_telemetry("{\"uptime\":0}");
+
         /* Start heartbeat */
         if (!s_heartbeat_task) {
             xTaskCreate(heartbeat_task, "mqtt_heartbeat", 2048, NULL, 3, &s_heartbeat_task);
