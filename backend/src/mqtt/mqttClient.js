@@ -124,12 +124,12 @@ function initMqtt(deps) {
         } else if (tenantDevice.event === 'telemetry') {
           // Handle telemetry from org-scoped topic
           if (parsed.ok && telemetryService) {
-            telemetryService.ingest(tenantDevice.deviceId, parsed.value).catch((err) => {
+            telemetryService.ingest(tenantDevice.tenantId, tenantDevice.deviceId, parsed.value).catch((err) => {
               console.error('[MQTT] telemetry ingest error:', err && err.message ? err.message : err);
             });
             const socketSvc = getSocketService();
             if (socketSvc) {
-              socketSvc.emitTelemetry(tenantDevice.deviceId, parsed.value);
+              socketSvc.emitTelemetry(tenantDevice.tenantId, tenantDevice.deviceId, parsed.value);
             }
           }
         }
