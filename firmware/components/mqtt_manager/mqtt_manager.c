@@ -37,7 +37,7 @@ static uint32_t s_reconnect_delay_ms = 2000;
 /* -----------------------------------------------------------------------
  * DHT11 Sensor Reading
  * --------------------------------------------------------------------- */
-#define DHT11_GPIO 27
+#define DHT11_GPIO 14
 
 static float dht11_temp = 0.0f;
 static float dht11_hum = 0.0f;
@@ -45,7 +45,6 @@ static float dht11_hum = 0.0f;
 static bool dht11_read(float *temp, float *hum)
 {
     uint8_t data[5] = {0};
-    portDISABLE_INTERRUPTS();
 
     gpio_set_direction(DHT11_GPIO, GPIO_MODE_OUTPUT);
     gpio_set_level(DHT11_GPIO, 0);
@@ -56,21 +55,19 @@ static bool dht11_read(float *temp, float *hum)
     gpio_set_direction(DHT11_GPIO, GPIO_MODE_INPUT);
 
     int64_t t = esp_timer_get_time();
-    while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 100) { portENABLE_INTERRUPTS(); return false; } }
+    while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 100) return false; }
     t = esp_timer_get_time();
-    while (gpio_get_level(DHT11_GPIO) == 0) { if (esp_timer_get_time() - t > 100) { portENABLE_INTERRUPTS(); return false; } }
+    while (gpio_get_level(DHT11_GPIO) == 0) { if (esp_timer_get_time() - t > 100) return false; }
     t = esp_timer_get_time();
-    while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 100) { portENABLE_INTERRUPTS(); return false; } }
+    while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 100) return false; }
 
     for (int i = 0; i < 40; i++) {
         t = esp_timer_get_time();
-        while (gpio_get_level(DHT11_GPIO) == 0) { if (esp_timer_get_time() - t > 80) { portENABLE_INTERRUPTS(); return false; } }
+        while (gpio_get_level(DHT11_GPIO) == 0) { if (esp_timer_get_time() - t > 80) return false; }
         t = esp_timer_get_time();
         while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 80) break; }
         if (esp_timer_get_time() - t > 40) data[i / 8] |= (1 << (7 - (i % 8)));
     }
-
-    portENABLE_INTERRUPTS();
 
     if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) return false;
     *hum = (float)data[0];
