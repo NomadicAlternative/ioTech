@@ -12,7 +12,7 @@ static const char *TAG = "serial_prov";
 /* UART configuration */
 #define PROV_UART_NUM       UART_NUM_0
 #define PROV_UART_BUF_SIZE  512
-#define PROV_LINE_MAX       600   /* max JSON payload size */
+#define PROV_LINE_MAX       2048  /* max JSON payload size (was 600, increased for driver configs) */
 
 /* -----------------------------------------------------------------------
  * Helpers
