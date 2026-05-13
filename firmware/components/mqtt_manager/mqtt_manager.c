@@ -38,39 +38,58 @@ static uint32_t s_reconnect_delay_ms = 2000;
  * DHT11 Sensor Reading
  * --------------------------------------------------------------------- */
 #define DHT11_GPIO 14
-
+static bool dht11_initialized = false;
 static bool dht11_ok = false;
 static uint8_t dht11_data[5] = {0};
 static float dht11_temp = 0.0f;
 static float dht11_hum = 0.0f;
 
+static void dht11_init(void)
+{
+    gpio_set_pull_mode(DHT11_GPIO, GPIO_PULLUP_ONLY);
+    dht11_initialized = true;
+}
+
 static void dht11_read(void)
 {
+    if (!dht11_initialized) dht11_init();
+
     uint8_t data[5] = {0};
     dht11_ok = false;
 
+    /* Start signal: LOW 18ms, then HIGH 40us, then release */
     gpio_set_direction(DHT11_GPIO, GPIO_MODE_OUTPUT);
     gpio_set_level(DHT11_GPIO, 0);
-    esp_rom_delay_us(18000);
+    vTaskDelay(pdMS_TO_TICKS(20));           /* 20ms LOW (spec says min 18ms) */
     gpio_set_level(DHT11_GPIO, 1);
-    esp_rom_delay_us(40);
-    gpio_set_pull_mode(DHT11_GPIO, GPIO_PULLUP_ONLY);
+    esp_rom_delay_us(30);                    /* 30us HIGH */
     gpio_set_direction(DHT11_GPIO, GPIO_MODE_INPUT);
 
-    int64_t t = esp_timer_get_time();
-    while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 300) return; }
-    t = esp_timer_get_time();
-    while (gpio_get_level(DHT11_GPIO) == 0) { if (esp_timer_get_time() - t > 300) return; }
-    t = esp_timer_get_time();
-    while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 300) return; }
+    /* Wait for DHT11 response: LOW ~80us, HIGH ~80us */
+    int timeout = 0;
+    while (gpio_get_level(DHT11_GPIO) == 1) { if (++timeout > 1000) return; esp_rom_delay_us(1); }
+    timeout = 0;
+    while (gpio_get_level(DHT11_GPIO) == 0) { if (++timeout > 1000) return; esp_rom_delay_us(1); }
+    timeout = 0;
+    while (gpio_get_level(DHT11_GPIO) == 1) { if (++timeout > 1000) return; esp_rom_delay_us(1); }
 
+    /* Read 40 bits */
     for (int i = 0; i < 40; i++) {
-        t = esp_timer_get_time();
-        while (gpio_get_level(DHT11_GPIO) == 0) { if (esp_timer_get_time() - t > 150) return; }
-        t = esp_timer_get_time();
-        while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 150) break; }
-        if (esp_timer_get_time() - t > 40) data[i / 8] |= (1 << (7 - (i % 8)));
+        timeout = 0;
+        while (gpio_get_level(DHT11_GPIO) == 0) { if (++timeout > 1000) return; esp_rom_delay_us(1); }
+        esp_rom_delay_us(30);  /* wait for bit value to stabilize */
+        if (gpio_get_level(DHT11_GPIO) == 1) data[i / 8] |= (1 << (7 - (i % 8)));
+        timeout = 0;
+        while (gpio_get_level(DHT11_GPIO) == 1) { if (++timeout > 1000) return; esp_rom_delay_us(1); }
     }
+
+    memcpy(dht11_data, data, 5);
+    if (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) {
+        dht11_hum = (float)data[0];
+        dht11_temp = (float)data[2];
+        dht11_ok = true;
+    }
+}
 
     memcpy(dht11_data, data, 5);
     if (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) {
