@@ -2,11 +2,19 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/event_groups.h"
+#include "freertos/timers.h"
 #include "esp_log.h"
+#include "mqtt_client.h"
+#include "esp_tls.h"
+
+#include "mqtt_manager.h"
+#include "ota_manager.h"
+#include "nvs_storage.h"
+#include "sm_events.h"
+#include "relay_controller.h"
+#include "cJSON.h"
 #include "driver/gpio.h"
 #include "esp_timer.h"
-#include "cJSON.h"
 
 static const char *TAG = "mqtt_manager";
 
@@ -26,17 +34,17 @@ static TaskHandle_t              s_heartbeat_task = NULL;
 static uint32_t s_reconnect_delay_ms = 2000;
 #define MQTT_RECONNECT_MAX_MS 120000
 
-/* ── DHT11 Sensor Reading ────────────────────────────────────────────────── */
-
+/* -----------------------------------------------------------------------
+ * DHT11 Sensor Reading
+ * --------------------------------------------------------------------- */
 #define DHT11_GPIO 14
+
 static float dht11_temp = 0.0f;
 static float dht11_hum = 0.0f;
 
 static bool dht11_read(float *temp, float *hum)
 {
     uint8_t data[5] = {0};
-
-    // Send start signal: low 18ms, high 40us
     gpio_set_direction(DHT11_GPIO, GPIO_MODE_OUTPUT);
     gpio_set_level(DHT11_GPIO, 0);
     esp_rom_delay_us(18000);
@@ -44,7 +52,6 @@ static bool dht11_read(float *temp, float *hum)
     esp_rom_delay_us(40);
     gpio_set_direction(DHT11_GPIO, GPIO_MODE_INPUT);
 
-    // Wait for DHT11 response: low 80us + high 80us
     int64_t t = esp_timer_get_time();
     while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 100) return false; }
     t = esp_timer_get_time();
@@ -52,33 +59,28 @@ static bool dht11_read(float *temp, float *hum)
     t = esp_timer_get_time();
     while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 100) return false; }
 
-    // Read 40 bits
     for (int i = 0; i < 40; i++) {
         t = esp_timer_get_time();
         while (gpio_get_level(DHT11_GPIO) == 0) { if (esp_timer_get_time() - t > 80) return false; }
         t = esp_timer_get_time();
         while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 80) break; }
-        if (esp_timer_get_time() - t > 40) {
-            data[i / 8] |= (1 << (7 - (i % 8)));
-        }
+        if (esp_timer_get_time() - t > 40) data[i / 8] |= (1 << (7 - (i % 8)));
     }
 
     if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) return false;
-
     *hum = (float)data[0];
     *temp = (float)data[2];
     return true;
 }
 
 /* -----------------------------------------------------------------------
- * Heartbeat task: publishes status + DHT11 telemetry every 30s
+ * Heartbeat task: publishes DHT11 telemetry + status every 30s
  * --------------------------------------------------------------------- */
 static void heartbeat_task(void *arg)
 {
     for (;;) {
         vTaskDelay(pdMS_TO_TICKS(30000));
 
-        // Read DHT11
         if (dht11_read(&dht11_temp, &dht11_hum)) {
             cJSON *root = cJSON_CreateObject();
             cJSON_AddNumberToObject(root, "temperature", dht11_temp);
@@ -87,9 +89,6 @@ static void heartbeat_task(void *arg)
             mqtt_publish_telemetry(json);
             cJSON_free(json);
             cJSON_Delete(root);
-            ESP_LOGI(TAG, "DHT11: %.1f°C %.1f%%", dht11_temp, dht11_hum);
-        } else {
-            ESP_LOGW(TAG, "DHT11 read failed");
         }
 
         mqtt_publish_status("online");
