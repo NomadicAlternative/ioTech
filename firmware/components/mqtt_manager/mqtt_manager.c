@@ -55,17 +55,17 @@ static bool dht11_read(float *temp, float *hum)
     gpio_set_direction(DHT11_GPIO, GPIO_MODE_INPUT);
 
     int64_t t = esp_timer_get_time();
-    while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 100) return false; }
+    while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 300) return false; }
     t = esp_timer_get_time();
-    while (gpio_get_level(DHT11_GPIO) == 0) { if (esp_timer_get_time() - t > 100) return false; }
+    while (gpio_get_level(DHT11_GPIO) == 0) { if (esp_timer_get_time() - t > 300) return false; }
     t = esp_timer_get_time();
-    while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 100) return false; }
+    while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 300) return false; }
 
     for (int i = 0; i < 40; i++) {
         t = esp_timer_get_time();
-        while (gpio_get_level(DHT11_GPIO) == 0) { if (esp_timer_get_time() - t > 80) return false; }
+        while (gpio_get_level(DHT11_GPIO) == 0) { if (esp_timer_get_time() - t > 150) return false; }
         t = esp_timer_get_time();
-        while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 80) break; }
+        while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 150) break; }
         if (esp_timer_get_time() - t > 40) data[i / 8] |= (1 << (7 - (i % 8)));
     }
 
