@@ -91,14 +91,6 @@ static void dht11_read(void)
     }
 }
 
-    memcpy(dht11_data, data, 5);
-    if (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) {
-        dht11_hum = (float)data[0];
-        dht11_temp = (float)data[2];
-        dht11_ok = true;
-    }
-}
-
 /* -----------------------------------------------------------------------
  * Heartbeat task: publishes DHT11 telemetry + status every 30s
  * --------------------------------------------------------------------- */
