@@ -39,12 +39,15 @@ static uint32_t s_reconnect_delay_ms = 2000;
  * --------------------------------------------------------------------- */
 #define DHT11_GPIO 14
 
+static bool dht11_ok = false;
+static uint8_t dht11_data[5] = {0};
 static float dht11_temp = 0.0f;
 static float dht11_hum = 0.0f;
 
-static bool dht11_read(float *temp, float *hum)
+static void dht11_read(void)
 {
     uint8_t data[5] = {0};
+    dht11_ok = false;
 
     gpio_set_direction(DHT11_GPIO, GPIO_MODE_OUTPUT);
     gpio_set_level(DHT11_GPIO, 0);
@@ -55,24 +58,26 @@ static bool dht11_read(float *temp, float *hum)
     gpio_set_direction(DHT11_GPIO, GPIO_MODE_INPUT);
 
     int64_t t = esp_timer_get_time();
-    while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 300) return false; }
+    while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 300) return; }
     t = esp_timer_get_time();
-    while (gpio_get_level(DHT11_GPIO) == 0) { if (esp_timer_get_time() - t > 300) return false; }
+    while (gpio_get_level(DHT11_GPIO) == 0) { if (esp_timer_get_time() - t > 300) return; }
     t = esp_timer_get_time();
-    while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 300) return false; }
+    while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 300) return; }
 
     for (int i = 0; i < 40; i++) {
         t = esp_timer_get_time();
-        while (gpio_get_level(DHT11_GPIO) == 0) { if (esp_timer_get_time() - t > 150) return false; }
+        while (gpio_get_level(DHT11_GPIO) == 0) { if (esp_timer_get_time() - t > 150) return; }
         t = esp_timer_get_time();
         while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 150) break; }
         if (esp_timer_get_time() - t > 40) data[i / 8] |= (1 << (7 - (i % 8)));
     }
 
-    if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) return false;
-    *hum = (float)data[0];
-    *temp = (float)data[2];
-    return true;
+    memcpy(dht11_data, data, 5);
+    if (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) {
+        dht11_hum = (float)data[0];
+        dht11_temp = (float)data[2];
+        dht11_ok = true;
+    }
 }
 
 /* -----------------------------------------------------------------------
@@ -83,14 +88,18 @@ static void heartbeat_task(void *arg)
     for (;;) {
         vTaskDelay(pdMS_TO_TICKS(30000));
 
-        // Publish telemetry (DHT11 + timestamp)
+        // Read DHT11 and publish telemetry
+        dht11_read();
         cJSON *root = cJSON_CreateObject();
-        int ok = dht11_read(&dht11_temp, &dht11_hum);
-        if (ok) {
+        if (dht11_ok) {
             cJSON_AddNumberToObject(root, "temperature", dht11_temp);
             cJSON_AddNumberToObject(root, "humidity", dht11_hum);
         } else {
             cJSON_AddStringToObject(root, "dht11", "error");
+            char hex[32];
+            snprintf(hex, sizeof(hex), "%02x%02x%02x%02x%02x",
+                     dht11_data[0], dht11_data[1], dht11_data[2], dht11_data[3], dht11_data[4]);
+            cJSON_AddStringToObject(root, "raw", hex);
         }
         cJSON_AddNumberToObject(root, "uptime", esp_timer_get_time() / 1000000);
         char *json = cJSON_PrintUnformatted(root);
