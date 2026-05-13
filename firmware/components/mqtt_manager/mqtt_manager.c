@@ -86,17 +86,21 @@ static void heartbeat_task(void *arg)
     for (;;) {
         vTaskDelay(pdMS_TO_TICKS(30000));
 
-        int ok = dht11_read(&dht11_temp, &dht11_hum);
+        // Publish telemetry (DHT11 + timestamp)
         cJSON *root = cJSON_CreateObject();
+        int ok = dht11_read(&dht11_temp, &dht11_hum);
         if (ok) {
             cJSON_AddNumberToObject(root, "temperature", dht11_temp);
             cJSON_AddNumberToObject(root, "humidity", dht11_hum);
         } else {
             cJSON_AddStringToObject(root, "dht11", "error");
         }
+        cJSON_AddNumberToObject(root, "uptime", esp_timer_get_time() / 1000000);
         char *json = cJSON_PrintUnformatted(root);
-        mqtt_publish_telemetry(json);
-        cJSON_free(json);
+        if (json) {
+            mqtt_publish_telemetry(json);
+            cJSON_free(json);
+        }
         cJSON_Delete(root);
 
         mqtt_publish_status("online");
