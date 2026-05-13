@@ -39,33 +39,25 @@ static uint32_t s_reconnect_delay_ms = 2000;
  * --------------------------------------------------------------------- */
 #define DHT11_GPIO 14
 static bool dht11_initialized = false;
-static bool dht11_ok = false;
-static uint8_t dht11_data[5] = {0};
 static float dht11_temp = 0.0f;
 static float dht11_hum = 0.0f;
 
-static void dht11_init(void)
-{
-    gpio_set_pull_mode(DHT11_GPIO, GPIO_PULLUP_ONLY);
-    dht11_initialized = true;
-}
-
 static void dht11_read(void)
 {
-    if (!dht11_initialized) dht11_init();
+    if (!dht11_initialized) {
+        gpio_set_pull_mode(DHT11_GPIO, GPIO_PULLUP_ONLY);
+        dht11_initialized = true;
+    }
 
     uint8_t data[5] = {0};
-    dht11_ok = false;
 
-    /* Start signal: LOW 18ms, then HIGH 40us, then release */
     gpio_set_direction(DHT11_GPIO, GPIO_MODE_OUTPUT);
     gpio_set_level(DHT11_GPIO, 0);
-    vTaskDelay(pdMS_TO_TICKS(20));           /* 20ms LOW (spec says min 18ms) */
+    vTaskDelay(pdMS_TO_TICKS(20));
     gpio_set_level(DHT11_GPIO, 1);
-    esp_rom_delay_us(30);                    /* 30us HIGH */
+    esp_rom_delay_us(30);
     gpio_set_direction(DHT11_GPIO, GPIO_MODE_INPUT);
 
-    /* Wait for DHT11 response: LOW ~80us, HIGH ~80us */
     int timeout = 0;
     while (gpio_get_level(DHT11_GPIO) == 1) { if (++timeout > 1000) return; esp_rom_delay_us(1); }
     timeout = 0;
@@ -73,21 +65,18 @@ static void dht11_read(void)
     timeout = 0;
     while (gpio_get_level(DHT11_GPIO) == 1) { if (++timeout > 1000) return; esp_rom_delay_us(1); }
 
-    /* Read 40 bits */
     for (int i = 0; i < 40; i++) {
         timeout = 0;
         while (gpio_get_level(DHT11_GPIO) == 0) { if (++timeout > 1000) return; esp_rom_delay_us(1); }
-        esp_rom_delay_us(30);  /* wait for bit value to stabilize */
+        esp_rom_delay_us(30);
         if (gpio_get_level(DHT11_GPIO) == 1) data[i / 8] |= (1 << (7 - (i % 8)));
         timeout = 0;
         while (gpio_get_level(DHT11_GPIO) == 1) { if (++timeout > 1000) return; esp_rom_delay_us(1); }
     }
 
-    memcpy(dht11_data, data, 5);
     if (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) {
         dht11_hum = (float)data[0];
         dht11_temp = (float)data[2];
-        dht11_ok = true;
     }
 }
 
@@ -100,25 +89,17 @@ static void heartbeat_task(void *arg)
         vTaskDelay(pdMS_TO_TICKS(30000));
 
         // Read DHT11 and publish telemetry
+        float prev_temp = dht11_temp, prev_hum = dht11_hum;
+        dht11_temp = 0; dht11_hum = 0;
         dht11_read();
-        cJSON *root = cJSON_CreateObject();
-        if (dht11_ok) {
+        if (dht11_temp > 0 || dht11_hum > 0) {
+            cJSON *root = cJSON_CreateObject();
             cJSON_AddNumberToObject(root, "temperature", dht11_temp);
             cJSON_AddNumberToObject(root, "humidity", dht11_hum);
-        } else {
-            cJSON_AddStringToObject(root, "dht11", "error");
-            char hex[32];
-            snprintf(hex, sizeof(hex), "%02x%02x%02x%02x%02x",
-                     dht11_data[0], dht11_data[1], dht11_data[2], dht11_data[3], dht11_data[4]);
-            cJSON_AddStringToObject(root, "raw", hex);
+            char *json = cJSON_PrintUnformatted(root);
+            if (json) { mqtt_publish_telemetry(json); cJSON_free(json); }
+            cJSON_Delete(root);
         }
-        cJSON_AddNumberToObject(root, "uptime", esp_timer_get_time() / 1000000);
-        char *json = cJSON_PrintUnformatted(root);
-        if (json) {
-            mqtt_publish_telemetry(json);
-            cJSON_free(json);
-        }
-        cJSON_Delete(root);
 
         mqtt_publish_status("online");
     }
