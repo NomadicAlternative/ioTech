@@ -10,6 +10,7 @@ const SUBSCRIBE_TOPIC_LEGACY = 'devices/+/telemetry';
 // Pattern: org/{tenantId}/device/{deviceId}/status
 // OTA notify (future): org/{tenantId}/device/{deviceId}/ota/notify
 const SUBSCRIBE_TOPIC_STATUS = 'org/+/device/+/status';
+const SUBSCRIBE_TOPIC_TELEMETRY = 'org/+/device/+/telemetry';
 
 let client = null;
 
@@ -47,6 +48,14 @@ function initMqtt(deps) {
         console.error('Failed to subscribe to', SUBSCRIBE_TOPIC_STATUS, err);
       } else {
         console.log('Subscribed to', SUBSCRIBE_TOPIC_STATUS, 'granted=', granted);
+      }
+    });
+    // Subscribe to new tenant-namespaced telemetry topic
+    client.subscribe(SUBSCRIBE_TOPIC_TELEMETRY, (err, granted) => {
+      if (err) {
+        console.error('Failed to subscribe to', SUBSCRIBE_TOPIC_TELEMETRY, err);
+      } else {
+        console.log('Subscribed to', SUBSCRIBE_TOPIC_TELEMETRY, 'granted=', granted);
       }
     });
   });
@@ -111,6 +120,17 @@ function initMqtt(deps) {
           if (socketSvc) {
             const onlineStatus = statusPayload.status || payloadStr;
             socketSvc.emitDeviceStatus(tenantDevice.tenantId, tenantDevice.deviceId, onlineStatus);
+          }
+        } else if (tenantDevice.event === 'telemetry') {
+          // Handle telemetry from org-scoped topic
+          if (parsed.ok && telemetryService) {
+            telemetryService.ingest(tenantDevice.deviceId, parsed.value).catch((err) => {
+              console.error('[MQTT] telemetry ingest error:', err && err.message ? err.message : err);
+            });
+            const socketSvc = getSocketService();
+            if (socketSvc) {
+              socketSvc.emitTelemetry(tenantDevice.deviceId, parsed.value);
+            }
           }
         }
         // Future: add more event handlers here (ota/notify, etc.)
