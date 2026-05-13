@@ -51,6 +51,7 @@ static bool dht11_read(float *temp, float *hum)
     gpio_set_level(DHT11_GPIO, 1);
     esp_rom_delay_us(40);
     gpio_set_direction(DHT11_GPIO, GPIO_MODE_INPUT);
+    gpio_set_pull_mode(DHT11_GPIO, GPIO_PULLUP_ONLY);  /* internal pull-up */
 
     int64_t t = esp_timer_get_time();
     while (gpio_get_level(DHT11_GPIO) == 1) { if (esp_timer_get_time() - t > 100) return false; }
