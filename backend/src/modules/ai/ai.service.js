@@ -224,10 +224,16 @@ function ruleBasedConfig(input) {
  */
 async function configure(prompt) {
   const llmResult = await callLLM(prompt);
-  if (llmResult && llmResult.template) {
-    return { ...llmResult, _source: 'ai' };
+  const raw = (llmResult && llmResult.template) ? llmResult : ruleBasedConfig(prompt);
+
+  // Validate against contract schema — reject invalid AI output
+  const validation = validateAiConfig(raw);
+  if (validation.error) {
+    logger.error(`[ai.service] AI generated invalid config: ${validation.error}`);
+    throw new ValidationError(validation.error);
   }
-  return { ...ruleBasedConfig(prompt), _source: 'rule-based-fallback' };
+
+  return { ...validation.value, _source: (llmResult && llmResult.template) ? 'ai' : 'rule-based-fallback' };
 }
 
 /**
