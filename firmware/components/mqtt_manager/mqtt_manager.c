@@ -34,58 +34,56 @@ static TaskHandle_t              s_heartbeat_task = NULL;
 static uint32_t s_reconnect_delay_ms = 2000;
 #define MQTT_RECONNECT_MAX_MS 120000
 
-/* -----------------------------------------------------------------------
- * DHT11 Sensor Reading
- * --------------------------------------------------------------------- */
-#define DHT11_GPIO 14
-static bool dht11_initialized = false;
-static float dht11_temp = 0.0f;
-static float dht11_hum = 0.0f;
+/* ── DHT22 Sensor (3.3V compatible) ─────────────────────────────────────── */
 
-static void dht11_read(void)
+#define DHT_GPIO 14
+static float dht_temp = 0.0f;
+static float dht_hum = 0.0f;
+
+static void dht_read(void)
 {
     static bool initialized = false;
     if (!initialized) {
-        gpio_set_pull_mode(DHT11_GPIO, GPIO_PULLUP_ONLY);
+        gpio_set_pull_mode(DHT_GPIO, GPIO_PULLUP_ONLY);
         initialized = true;
     }
 
     uint8_t data[5] = {0};
-    dht11_temp = 0;
-    dht11_hum = 0;
+    dht_temp = 0;
+    dht_hum = 0;
 
-    /* Start signal: LOW 18ms, HIGH 30us */
-    gpio_set_direction(DHT11_GPIO, GPIO_MODE_OUTPUT);
-    gpio_set_level(DHT11_GPIO, 0);
-    vTaskDelay(pdMS_TO_TICKS(20));
-    gpio_set_level(DHT11_GPIO, 1);
+    /* Start signal: LOW 1ms, HIGH 30us */
+    gpio_set_direction(DHT_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_level(DHT_GPIO, 0);
+    vTaskDelay(pdMS_TO_TICKS(2));
+    gpio_set_level(DHT_GPIO, 1);
     esp_rom_delay_us(30);
-    gpio_set_direction(DHT11_GPIO, GPIO_MODE_INPUT);
+    gpio_set_direction(DHT_GPIO, GPIO_MODE_INPUT);
 
-    /* Wait for response: LOW ~80us then HIGH ~80us */
+    /* Wait for response */
     int timeout = 0;
-    while (gpio_get_level(DHT11_GPIO) == 1) { if (++timeout > 200) return; esp_rom_delay_us(1); }
-    if (timeout > 200) return;  /* no response */
+    while (gpio_get_level(DHT_GPIO) == 1) { if (++timeout > 200) return; esp_rom_delay_us(1); }
     timeout = 0;
-    while (gpio_get_level(DHT11_GPIO) == 0) { if (++timeout > 200) return; esp_rom_delay_us(1); }
+    while (gpio_get_level(DHT_GPIO) == 0) { if (++timeout > 200) return; esp_rom_delay_us(1); }
     timeout = 0;
-    while (gpio_get_level(DHT11_GPIO) == 1) { if (++timeout > 200) return; esp_rom_delay_us(1); }
+    while (gpio_get_level(DHT_GPIO) == 1) { if (++timeout > 200) return; esp_rom_delay_us(1); }
 
     /* Read 40 bits */
     for (int i = 0; i < 40; i++) {
         timeout = 0;
-        while (gpio_get_level(DHT11_GPIO) == 0) { if (++timeout > 200) return; esp_rom_delay_us(1); }
+        while (gpio_get_level(DHT_GPIO) == 0) { if (++timeout > 200) return; esp_rom_delay_us(1); }
         esp_rom_delay_us(30);
-        if (gpio_get_level(DHT11_GPIO) == 1) data[i / 8] |= (1 << (7 - (i % 8)));
+        if (gpio_get_level(DHT_GPIO) == 1) data[i / 8] |= (1 << (7 - (i % 8)));
         timeout = 0;
-        while (gpio_get_level(DHT11_GPIO) == 1) { if (++timeout > 200) return; esp_rom_delay_us(1); }
+        while (gpio_get_level(DHT_GPIO) == 1) { if (++timeout > 200) return; esp_rom_delay_us(1); }
     }
 
     /* Checksum */
-    if (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) {
-        dht11_hum = (float)data[0];
-        dht11_temp = (float)data[2];
-    }
+    if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) return;
+
+    /* DHT22: 16-bit values / 10 */
+    dht_hum = (float)((data[0] << 8) | data[1]) / 10.0f;
+    dht_temp = (float)((data[2] << 8) | data[3]) / 10.0f;
 }
 
 /* -----------------------------------------------------------------------
@@ -96,14 +94,14 @@ static void heartbeat_task(void *arg)
     for (;;) {
         vTaskDelay(pdMS_TO_TICKS(30000));
 
-        // Read DHT11 and publish telemetry
-        dht11_read();
+        // Read DHT22 and publish telemetry
+        dht_read();
         cJSON *root = cJSON_CreateObject();
-        if (dht11_temp > 0 || dht11_hum > 0) {
-            cJSON_AddNumberToObject(root, "temperature", dht11_temp);
-            cJSON_AddNumberToObject(root, "humidity", dht11_hum);
+        if (dht_temp > 0 || dht_hum > 0) {
+            cJSON_AddNumberToObject(root, "temperature", dht_temp);
+            cJSON_AddNumberToObject(root, "humidity", dht_hum);
         } else {
-            cJSON_AddStringToObject(root, "dht11", "error");
+            cJSON_AddStringToObject(root, "dht", "error");
         }
         char *json = cJSON_PrintUnformatted(root);
         if (json) { mqtt_publish_telemetry(json); cJSON_free(json); }
@@ -158,9 +156,6 @@ static void mqtt_event_handler(void *handler_args,
 
         /* Publish "online" status */
         mqtt_publish_status("online");
-
-        /* Publish test telemetry */
-        mqtt_publish_telemetry("{\"uptime\":0}");
 
         /* Start heartbeat */
         if (!s_heartbeat_task) {
