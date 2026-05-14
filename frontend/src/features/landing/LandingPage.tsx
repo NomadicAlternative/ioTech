@@ -82,7 +82,11 @@ export function LandingPage() {
       </nav>
 
       <section className="relative pt-32 pb-20 px-6 overflow-hidden">
-        <canvas ref={canvasRef} className="absolute inset-0 w-full h-[400px] opacity-40 pointer-events-none"/>
+        <div className="absolute inset-0 z-0">
+          <img src="/hero-bg.png" alt="" className="w-full h-full object-cover opacity-20" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[var(--prussian-blue)]/60 via-[var(--prussian-blue)]/40 to-[var(--prussian-blue)]" />
+        </div>
+        <canvas ref={canvasRef} className="absolute inset-0 w-full h-[400px] opacity-40 pointer-events-none z-10"/>
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 text-xs font-medium text-[var(--orange)] bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full mb-8"><Zap className="h-3 w-3"/>{t('landing.hero.badge')}</div>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">{t('landing.hero.title1')} <span className="bg-gradient-to-r from-[var(--orange)] to-amber-300 bg-clip-text text-transparent">{t('landing.hero.title2')}</span></h1>
