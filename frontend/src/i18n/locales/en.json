@@ -38,6 +38,26 @@
     "signIn": "Sign in",
     "invalidCredentials": "Invalid credentials"
   },
+  "register": {
+    "subtitle": "Create your installer account",
+    "companyName": "Company name",
+    "companyPlaceholder": "e.g. Electric Installations Inc.",
+    "email": "Email",
+    "password": "Password",
+    "contactEmail": "Contact email (optional)",
+    "submit": "Create account",
+    "creating": "Creating account...",
+    "hasAccount": "Already have an account?",
+    "login": "Sign in",
+    "success": {
+      "title": "Registration successful!",
+      "message": "Your account was created. Redirecting to login..."
+    },
+    "errors": {
+      "required": "All fields are required",
+      "passwordLength": "Password must be at least 8 characters"
+    }
+  },
   "dashboard": {
     "list": {
       "title": "Dashboards",

@@ -39,6 +39,26 @@
     "signIn": "Ingresar",
     "invalidCredentials": "Credenciales inválidas"
   },
+  "register": {
+    "subtitle": "Creá tu cuenta de instalador",
+    "companyName": "Nombre de la empresa",
+    "companyPlaceholder": "Ej: Instalaciones Eléctricas SA",
+    "email": "Email",
+    "password": "Contraseña",
+    "contactEmail": "Email de contacto (opcional)",
+    "submit": "Crear cuenta",
+    "creating": "Creando cuenta...",
+    "hasAccount": "¿Ya tenés cuenta?",
+    "login": "Ingresá",
+    "success": {
+      "title": "¡Registro exitoso!",
+      "message": "Tu cuenta fue creada. Redirigiendo al login..."
+    },
+    "errors": {
+      "required": "Todos los campos son obligatorios",
+      "passwordLength": "La contraseña debe tener al menos 8 caracteres"
+    }
+  },
   "dashboard": {
     "list": {
       "title": "Dashboards",

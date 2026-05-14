@@ -154,7 +154,7 @@ router.post('/register', validate(schemas.register), async (req, res, next) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/installer-register', authGuard, superAdmin, validate(schemas.installerRegister), async (req, res, next) => {
+router.post('/installer-register', validate(schemas.installerRegister), async (req, res, next) => {
   try {
     const result = await authService.installerRegister(req.body);
     res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, REFRESH_COOKIE_OPTIONS);
