@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useDeviceStore } from './deviceStore'
+import { useClientContext } from '@/stores/clientContext'
 import { listTemplates, listClients } from './api'
 import type { DeviceTemplate, Client } from '@/features/widgets/types'
 import { EditDeviceDialog } from './components/EditDeviceDialog'
@@ -30,10 +31,10 @@ import { EditDeviceDialog } from './components/EditDeviceDialog'
 function StatusBadge({ isOnline, status }: { isOnline: boolean; status: string }) {
   const { t } = useTranslation()
   const label = isOnline
-    ? t('devices.status.online')
+    ? t('filteredDevices.status.online')
     : status === 'offline'
-      ? t('devices.status.offline')
-      : (status || t('devices.status.unknown'))
+      ? t('filteredDevices.status.offline')
+      : (status || t('filteredDevices.status.unknown'))
 
   const style = isOnline
     ? { background: '#dcfce7', color: '#15803d' }
@@ -65,6 +66,10 @@ export function DeviceListPage() {
   const navigate = useNavigate()
   const { devices, pagination, search, fetchDevices, createDevice, deleteDevice, setSearch } =
     useDeviceStore()
+  const { activeClient } = useClientContext()
+  const filteredDevices = activeClient
+    ? filteredDevices.filter(d => (d as any).clientId === activeClient.id)
+    : filteredDevices
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -97,7 +102,7 @@ export function DeviceListPage() {
   useEffect(() => {
     setLoading(true)
     fetchDevices(1, 10, '')
-      .catch((err) => setError(err instanceof Error ? err.message : t('devices.list.errorLoad')))
+      .catch((err) => setError(err instanceof Error ? err.message : t('filteredDevices.list.errorLoad')))
       .finally(() => setLoading(false))
   }, [fetchDevices])
 
@@ -109,7 +114,7 @@ export function DeviceListPage() {
     searchTimerRef.current = setTimeout(() => {
       setLoading(true)
       fetchDevices(1, pagination.limit, value)
-        .catch((err) => setError(err instanceof Error ? err.message : t('devices.list.errorSearch')))
+        .catch((err) => setError(err instanceof Error ? err.message : t('filteredDevices.list.errorSearch')))
         .finally(() => setLoading(false))
     }, 300)
   }
@@ -117,7 +122,7 @@ export function DeviceListPage() {
   function handlePageChange(newPage: number) {
     setLoading(true)
     fetchDevices(newPage, pagination.limit, search)
-      .catch((err) => setError(err instanceof Error ? err.message : t('devices.list.errorPaginate')))
+      .catch((err) => setError(err instanceof Error ? err.message : t('filteredDevices.list.errorPaginate')))
       .finally(() => setLoading(false))
   }
 
@@ -165,7 +170,7 @@ export function DeviceListPage() {
       setLoading(true)
       await fetchDevices(1, pagination.limit, search).finally(() => setLoading(false))
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : t('devices.create.errorCreate'))
+      setCreateError(err instanceof Error ? err.message : t('filteredDevices.create.errorCreate'))
     } finally {
       setCreating(false)
     }
@@ -188,7 +193,7 @@ export function DeviceListPage() {
       await deleteDevice(deleteId)
       setDeleteId(null)
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : t('devices.delete.errorDelete'))
+      setDeleteError(err instanceof Error ? err.message : t('filteredDevices.delete.errorDelete'))
     } finally {
       setDeleting(false)
     }
@@ -201,14 +206,14 @@ export function DeviceListPage() {
       {/* Header */}
       <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">{t('devices.list.title')}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">{t('filteredDevices.list.title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {t('devices.list.subtitle')}
+            {t('filteredDevices.list.subtitle')}
           </p>
         </div>
         <Button onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-2" />
-          {t('devices.list.newButton')}
+          {t('filteredDevices.list.newButton')}
         </Button>
       </div>
 
@@ -224,7 +229,7 @@ export function DeviceListPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           className="pl-9"
-          placeholder={t('devices.list.searchPlaceholder')}
+          placeholder={t('filteredDevices.list.searchPlaceholder')}
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
         />
@@ -235,13 +240,13 @@ export function DeviceListPage() {
         <table className="w-full text-sm">
           <thead className="border-b border-[var(--border)]">
             <tr>
-              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">{t('devices.list.colName')}</th>
-              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">{t('devices.list.colStatus')}</th>
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">{t('filteredDevices.list.colName')}</th>
+              <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">{t('filteredDevices.list.colStatus')}</th>
               <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider hidden md:table-cell">
-                {t('devices.list.colTemplate')}
+                {t('filteredDevices.list.colTemplate')}
               </th>
               <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider hidden lg:table-cell">
-                {t('devices.list.colLastSeen')}
+                {t('filteredDevices.list.colLastSeen')}
               </th>
               <th className="px-4 py-3" />
             </tr>
@@ -266,16 +271,16 @@ export function DeviceListPage() {
                 </tr>
               ))}
 
-            {!loading && devices.length === 0 && (
+            {!loading && filteredDevices.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-4 py-16 text-center">
                   <div className="flex flex-col items-center gap-3 text-muted-foreground">
                     <Server className="h-12 w-12 opacity-30" />
                     <p className="font-medium">
-                      {search ? t('devices.list.emptySearch') : t('devices.list.empty')}
+                      {search ? t('filteredDevices.list.emptySearch') : t('filteredDevices.list.empty')}
                     </p>
                     {!search && (
-                      <p className="text-xs">{t('devices.list.emptySubtitle')}</p>
+                      <p className="text-xs">{t('filteredDevices.list.emptySubtitle')}</p>
                     )}
                   </div>
                 </td>
@@ -283,11 +288,11 @@ export function DeviceListPage() {
             )}
 
             {!loading &&
-              devices.map((device) => (
+              filteredDevices.map((device) => (
                 <tr
                   key={device.id}
                   className="border-t border-[var(--border)] hover:bg-[var(--blue)]/3 cursor-pointer group transition-colors"
-                  onClick={() => navigate(`/app/devices/${device.id}`)}
+                  onClick={() => navigate(`/app/filteredDevices/${device.id}`)}
                 >
                   <td className="px-4 py-3 font-medium">{device.name}</td>
                   <td className="px-4 py-3">
@@ -335,7 +340,7 @@ export function DeviceListPage() {
       {!loading && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            {t('devices.list.pagination', {
+            {t('filteredDevices.list.pagination', {
               page: pagination.page,
               totalPages: pagination.totalPages,
               total: pagination.total,
@@ -374,7 +379,7 @@ export function DeviceListPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('devices.create.title')}</DialogTitle>
+            <DialogTitle>{t('filteredDevices.create.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {createError && (
@@ -387,18 +392,18 @@ export function DeviceListPage() {
               <Input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                placeholder={t('devices.create.namePlaceholder')}
+                placeholder={t('filteredDevices.create.namePlaceholder')}
                 autoFocus
               />
             </div>
             <div className="space-y-1">
-              <Label>{t('devices.create.templateLabel')}</Label>
+              <Label>{t('filteredDevices.create.templateLabel')}</Label>
               {loadingDropdowns ? (
                 <div className="h-9 bg-muted animate-pulse rounded-md" />
               ) : (
                 <Select value={newTemplateId} onValueChange={(v) => setNewTemplateId(v ?? '')}>
                   <SelectTrigger>
-                    <SelectValue placeholder={t('devices.create.templatePlaceholder')} />
+                    <SelectValue placeholder={t('filteredDevices.create.templatePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {templates.map((tmpl) => (
@@ -411,13 +416,13 @@ export function DeviceListPage() {
               )}
             </div>
             <div className="space-y-1">
-              <Label>{t('devices.create.clientLabel')}</Label>
+              <Label>{t('filteredDevices.create.clientLabel')}</Label>
               {loadingDropdowns ? (
                 <div className="h-9 bg-muted animate-pulse rounded-md" />
               ) : (
                 <Select value={newClientId} onValueChange={(v) => setNewClientId(v ?? '')}>
                   <SelectTrigger>
-                    <SelectValue placeholder={t('devices.create.clientPlaceholder')} />
+                    <SelectValue placeholder={t('filteredDevices.create.clientPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {clients.map((c) => (
@@ -430,7 +435,7 @@ export function DeviceListPage() {
               )}
             </div>
             <div className="space-y-1">
-              <Label>{t('devices.create.metadataLabel')}</Label>
+              <Label>{t('filteredDevices.create.metadataLabel')}</Label>
               <textarea
                 className="w-full rounded-md border bg-background px-3 py-2 text-sm font-mono min-h-[80px] focus:outline-none focus:ring-2 focus:ring-ring"
                 value={newMetadata}
@@ -483,7 +488,7 @@ export function DeviceListPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('devices.delete.title')}</DialogTitle>
+            <DialogTitle>{t('filteredDevices.delete.title')}</DialogTitle>
           </DialogHeader>
           <div className="py-2 space-y-3">
             {deleteError && (
@@ -492,7 +497,7 @@ export function DeviceListPage() {
               </div>
             )}
             <p className="text-sm text-muted-foreground">
-              {t('devices.delete.confirm')}
+              {t('filteredDevices.delete.confirm')}
             </p>
           </div>
           <DialogFooter>
