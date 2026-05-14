@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 
 interface Client {
   id: string
@@ -20,6 +20,9 @@ export const useClientContext = create<ClientContextState>()(
       setActiveClient: (client) => set({ activeClient: client }),
       clearClient: () => set({ activeClient: null }),
     }),
-    { name: 'iotech-client-context' }
+    {
+      name: 'iotech-client-context',
+      storage: createJSONStorage(() => localStorage),
+    }
   )
 )
