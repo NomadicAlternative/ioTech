@@ -52,7 +52,7 @@ export function RegisterPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--prussian-blue)] via-[#1A2F52] to-[var(--prussian-blue)]">
         <div className="w-full max-w-md mx-4 rounded-2xl bg-[var(--card)] p-8 shadow-sm border border-[var(--border)] text-center space-y-4">
           <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
           <h2 className="text-xl font-bold">¡Registro exitoso!</h2>
@@ -63,14 +63,14 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--prussian-blue)] via-[#1A2F52] to-[var(--prussian-blue)]">
       <div className="w-full max-w-md mx-4 rounded-2xl bg-[var(--card)] p-8 shadow-sm border border-[var(--border)]">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold flex items-center justify-center gap-2">
+          <h1 className="text-2xl font-bold flex items-center justify-center gap-2 text-white">
             <Wand2 className="h-6 w-6 text-[var(--accent)]" />
             ioTech
           </h1>
-          <p className="text-muted-foreground mt-2">Creá tu cuenta de instalador</p>
+          <p className="text-[var(--muted-blue)] mt-2">Creá tu cuenta de instalador</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -107,7 +107,7 @@ export function RegisterPage() {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
+        <p className="text-center text-sm text-[var(--muted-blue)] mt-6">
           ¿Ya tenés cuenta?{' '}
           <a href="/login" className="text-[var(--accent)] hover:underline font-medium">Ingresá</a>
         </p>
