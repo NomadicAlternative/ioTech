@@ -4,13 +4,19 @@ const Joi = require('joi');
 
 const create = Joi.object({
   name: Joi.string().min(1).max(120).required(),
-  contact_email: Joi.string().email(),
+  email: Joi.string().email().allow('', null),
+  phone: Joi.string().max(30).allow('', null),
+  address: Joi.string().max(255).allow('', null),
+  contact_email: Joi.string().email().allow('', null),
   metadata: Joi.object(),
 });
 
 const update = Joi.object({
   name: Joi.string().min(1).max(120),
-  contact_email: Joi.string().email(),
+  email: Joi.string().email().allow('', null),
+  phone: Joi.string().max(30).allow('', null),
+  address: Joi.string().max(255).allow('', null),
+  contact_email: Joi.string().email().allow('', null),
   metadata: Joi.object(),
 });
 
