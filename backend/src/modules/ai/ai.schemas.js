@@ -15,11 +15,15 @@ const ruleCondition = Joi.object({
 });
 
 const ruleAction = Joi.object({
-  type: Joi.string().valid('relay', 'command').required(),
+  type: Joi.string().required(),  // accept any type — validated at execution time
   relay: Joi.number().integer().min(1).max(8),
   state: Joi.string().valid('on', 'off'),
   action: Joi.string(),
   payload: Joi.object(),
+  angle: Joi.number().min(0).max(180),      // servo
+  rgb: Joi.object({ r: Joi.number(), g: Joi.number(), b: Joi.number() }),  // LED
+  text: Joi.string(),                        // display
+  tone: Joi.number(),                        // buzzer
 });
 
 const rule = Joi.object({
