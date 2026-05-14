@@ -1,26 +1,13 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Plus, Server, Edit, Trash2, ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useDeviceStore } from './deviceStore'
+import { useClientContext } from '@/stores/clientContext'
 import { listTemplates, listClients } from './api'
 import type { DeviceTemplate, Client } from '@/features/widgets/types'
 import { EditDeviceDialog } from './components/EditDeviceDialog'
@@ -65,6 +52,12 @@ export function DeviceListPage() {
   const navigate = useNavigate()
   const { devices, pagination, search, fetchDevices, createDevice, deleteDevice, setSearch } =
     useDeviceStore()
+  const { activeClient, setActiveClient } = useClientContext()
+
+  const filteredDevices = useMemo(() => {
+    if (!activeClient) return devices
+    return devices.filter(d => (d as any).clientId === activeClient.id)
+  }, [devices, activeClient])
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -212,6 +205,30 @@ export function DeviceListPage() {
         </Button>
       </div>
 
+      {/* Client filter */}
+      <div className="flex items-center gap-2 text-sm">
+        <span className="text-muted-foreground">Cliente:</span>
+        <select
+          className="rounded-lg border border-[var(--border)] bg-card px-3 py-1.5 text-sm"
+          value={activeClient?.id || ''}
+          onChange={e => {
+            const id = e.target.value
+            if (!id) { setActiveClient(null); return }
+            const c = clients.find((cl: any) => cl.id === id)
+            if (c) setActiveClient({ id: c.id, name: c.name })
+          }}>
+          <option value="">Todos los clientes</option>
+          {clients.map((c: any) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+        {activeClient && (
+          <span className="text-xs text-[var(--accent)]">
+            {filteredDevices.length} dispositivo{filteredDevices.length !== 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
+
       {/* Error */}
       {error && (
         <div className="rounded-md bg-destructive/10 text-destructive px-4 py-3 text-sm">
@@ -266,7 +283,7 @@ export function DeviceListPage() {
                 </tr>
               ))}
 
-            {!loading && devices.length === 0 && (
+            {!loading && filteredDevices.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-4 py-16 text-center">
                   <div className="flex flex-col items-center gap-3 text-muted-foreground">
@@ -283,7 +300,7 @@ export function DeviceListPage() {
             )}
 
             {!loading &&
-              devices.map((device) => (
+              filteredDevices.map((device) => (
                 <tr
                   key={device.id}
                   className="border-t border-[var(--border)] hover:bg-[var(--blue)]/3 cursor-pointer group transition-colors"
