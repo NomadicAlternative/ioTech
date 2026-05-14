@@ -44,7 +44,7 @@ static void dht_read(void)
 {
     static bool initialized = false;
     if (!initialized) {
-        gpio_set_pull_mode(DHT_GPIO, GPIO_PULLUP_ONLY);
+        /* DHT22 module has built-in pull-up, don't add internal one */
         initialized = true;
     }
 
