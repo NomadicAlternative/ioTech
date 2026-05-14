@@ -1,13 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/features/auth/authStore'
-import { useClientContext } from '@/stores/clientContext'
-import { listClients } from '@/features/clients/api'
 import i18n from '@/i18n/i18n'
 import {
   LayoutDashboard, Cpu, FileCode2, Users, Settings, LogOut, Globe, ShieldCheck,
-  Bot, Download, Cable, Building2, Menu, X, Wand2, ChevronDown, Check,
+  Bot, Download, Cable, Building2, Menu, X, Wand2,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -29,13 +27,6 @@ export function AppShell() {
   const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin)
   const currentLang = i18n.language?.startsWith('es') ? 'es' : 'en'
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { activeClient, setActiveClient } = useClientContext()
-  const [clients, setClients] = useState<any[]>([])
-  const [clientMenuOpen, setClientMenuOpen] = useState(false)
-
-  useEffect(() => {
-    listClients().then(data => setClients(data)).catch(() => {})
-  }, [])
 
   function closeSidebar() { setSidebarOpen(false) }
 
@@ -178,51 +169,14 @@ export function AppShell() {
             className="lg:hidden p-2 -ml-2 rounded-md hover:bg-muted text-muted-foreground">
             <Menu className="w-5 h-5" />
           </button>
-
-          {/* Client Switcher */}
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <button onClick={() => setClientMenuOpen(!clientMenuOpen)}
-                className="flex items-center gap-2 text-sm text-foreground hover:bg-muted px-3 py-1.5 rounded-lg transition-colors">
-                <Building2 className="h-4 w-4 text-[var(--muted-foreground)]" />
-                <span className="max-w-[140px] truncate">
-                  {activeClient?.name || 'Sin cliente'}
-                </span>
-                <ChevronDown className="h-3.5 w-3.5 text-[var(--muted-foreground)]" />
-              </button>
-              {clientMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setClientMenuOpen(false)} />
-                  <div className="absolute top-full left-0 mt-1 w-64 bg-card border border-[var(--border)] rounded-xl shadow-xl z-50 py-1">
-                    <button onClick={() => { setActiveClient(null); setClientMenuOpen(false) }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${!activeClient ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'hover:bg-muted'}`}>
-                      <Check className={`h-4 w-4 ${!activeClient ? 'opacity-100' : 'opacity-0'}`} />
-                      Sin cliente (todos)
-                    </button>
-                    <div className="border-t border-[var(--border)] my-1" />
-                    {clients.map((c: any) => (
-                      <button key={c.id} onClick={() => { setActiveClient(c); setClientMenuOpen(false) }}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${activeClient?.id === c.id ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'hover:bg-muted'}`}>
-                        <Check className={`h-4 w-4 shrink-0 ${activeClient?.id === c.id ? 'opacity-100' : 'opacity-0'}`} />
-                        <span className="truncate">{c.name}</span>
-                      </button>
-                    ))}
-                    {clients.length === 0 && (
-                      <p className="px-3 py-2 text-xs text-muted-foreground">No hay clientes. Creá uno en Clientes.</p>
-                    )}
-                  </div>
-                </>
-              )}
+          <div className="hidden lg:block" />
+          {user?.role && (
+            <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full"
+                 style={{ background: 'color-mix(in oklch, var(--brand-imperial) 12%, transparent)', color: 'var(--brand-imperial)' }}>
+              <ShieldCheck className="w-3.5 h-3.5" />
+              {user.role.toUpperCase()}
             </div>
-
-            {user?.role && (
-              <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full"
-                   style={{ background: 'color-mix(in oklch, var(--brand-imperial) 12%, transparent)', color: 'var(--brand-imperial)' }}>
-                <ShieldCheck className="w-3.5 h-3.5" />
-                {user.role.toUpperCase()}
-              </div>
-            )}
-          </div>
+          )}
         </header>
 
         <main className="flex-1 overflow-auto p-4 lg:p-6 bg-background">
