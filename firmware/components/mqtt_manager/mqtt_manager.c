@@ -36,7 +36,7 @@ static uint32_t s_reconnect_delay_ms = 2000;
 
 /* ── DHT22 Sensor (3.3V compatible) ─────────────────────────────────────── */
 
-#define DHT_GPIO 33
+#define DHT_GPIO 32
 static float dht_temp = 0.0f;
 static float dht_hum = 0.0f;
 
@@ -52,10 +52,12 @@ static void dht_read(void)
     dht_temp = 0;
     dht_hum = 0;
 
-    /* Start signal: LOW 1ms, HIGH 30us */
+    /* Start signal: HIGH→LOW 1ms→HIGH 30us→release */
     gpio_set_direction(DHT_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_level(DHT_GPIO, 1);
+    esp_rom_delay_us(250);
     gpio_set_level(DHT_GPIO, 0);
-    vTaskDelay(pdMS_TO_TICKS(2));
+    esp_rom_delay_us(1000);  /* 1ms LOW */
     gpio_set_level(DHT_GPIO, 1);
     esp_rom_delay_us(30);
     gpio_set_direction(DHT_GPIO, GPIO_MODE_INPUT);
