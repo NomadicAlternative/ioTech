@@ -70,7 +70,7 @@ function initSocket(httpServer) {
   // Singleton service exposed to mqttClient
   socketService = {
     emitTelemetry(tenantId, deviceId, data, receivedAt, id) {
-      io.to(`tenant:${tenantId}`).to(`device:${deviceId}`).emit('telemetry:new', {
+      io.to(`tenant:${tenantId}`).emit('telemetry:new', {
         id,
         deviceId,
         data,
