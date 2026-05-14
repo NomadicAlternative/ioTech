@@ -36,7 +36,7 @@ static uint32_t s_reconnect_delay_ms = 2000;
 
 /* ── DHT22 Sensor (3.3V compatible) ─────────────────────────────────────── */
 
-#define DHT_GPIO 14
+#define DHT_GPIO 33
 static float dht_temp = 0.0f;
 static float dht_hum = 0.0f;
 
