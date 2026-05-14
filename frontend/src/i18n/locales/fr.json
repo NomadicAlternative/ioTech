@@ -1,0 +1,82 @@
+{
+  "landing": {
+    "nav": {
+      "features": "Fonctionnalités",
+      "how": "Comment ça marche",
+      "pricing": "Tarifs",
+      "login": "Connexion",
+      "start": "Essayer gratuitement"
+    },
+    "hero": {
+      "badge": "Plateforme IoT pour Installateurs Professionnels",
+      "title1": "Vos appareils IoT",
+      "title2": "sans code",
+      "subtitle": "Connectez capteurs, relais et actionneurs. L'IA configure tout.",
+      "cta": "Commencer",
+      "demo": "Voir la démo"
+    },
+    "flow": {
+      "title": "Comment ça marche ?",
+      "subtitle": "Trois étapes. Sans code. Sans configuration compliquée."
+    },
+    "flow1": {
+      "title": "1. Connecter",
+      "desc": "Connect sensors and actuators to an ESP32. AI detects the hardware and generates the configuration."
+    },
+    "flow2": {
+      "title": "2. Flasher",
+      "desc": "One click and the firmware loads onto the ESP32 via USB. The device connects to the internet."
+    },
+    "flow3": {
+      "title": "3. Contrôler",
+      "desc": "Real-time dashboard with temperature, relays, automatic rules. All from your browser."
+    },
+    "features": {
+      "title": "Tout ce dont vous avez besoin",
+      "subtitle": "Une plateforme, des possibilités infinies."
+    },
+    "f1": {
+      "title": "11 capteurs supportés",
+      "desc": "DHT22, BME280, PIR, HC-SR04, DS18B20 and more."
+    },
+    "f2": {
+      "title": "Actionneurs",
+      "desc": "Relays, servos, RGB LEDs, buzzers, water pumps."
+    },
+    "f3": {
+      "title": "Règles automatiques",
+      "desc": "\"If temperature > 30°C, turn on ventilation\"."
+    },
+    "f4": {
+      "title": "Alertes en temps réel",
+      "desc": "Notifications when something goes out of range."
+    },
+    "f5": {
+      "title": "Mises à jour OTA",
+      "desc": "Update firmware on all your devices over WiFi."
+    },
+    "f6": {
+      "title": "Tableau de bord professionnel",
+      "desc": "Charts, gauges, switches. Fully customizable."
+    },
+    "ai": {
+      "badge": "Assistant IA",
+      "title1": "Décrivez votre projet.",
+      "title2": "L'IA le construit."
+    },
+    "ai_demo": {
+      "prompt": "I have an ESP32 with DHT22 sensor, a 7-relay module, and I want relay 1 to activate when temperature exceeds 30°C.",
+      "response1": "Template created: Thermal Control 7CH",
+      "response2": "GPIO14 → DHT22 · GPIO23 → Relay 1 · Rule: temp ≥ 30°C → relay 1 ON"
+    },
+    "pricing": {
+      "title": "Commencez aujourd'hui, gratuitement",
+      "subtitle": "Créez votre compte installateur. Sans carte bancaire.",
+      "price": "$0",
+      "period": "/mo",
+      "note": "Pendant la bêta. Tarification par dispositif ensuite.",
+      "cta": "Créer un compte gratuit"
+    },
+    "footer": "© 2026 ioTech — Plateforme IoT pour Installateurs Professionnels."
+  }
+}

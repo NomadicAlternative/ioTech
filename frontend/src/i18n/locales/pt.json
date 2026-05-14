@@ -1,0 +1,82 @@
+{
+  "landing": {
+    "nav": {
+      "features": "Recursos",
+      "how": "Como funciona",
+      "pricing": "Preços",
+      "login": "Entrar",
+      "start": "Começar grátis"
+    },
+    "hero": {
+      "badge": "Plataforma IoT para Instaladores Profissionais",
+      "title1": "Seus dispositivos IoT",
+      "title2": "sem código",
+      "subtitle": "Conecte sensores, relés e atuadores. A IA configura tudo.",
+      "cta": "Começar agora",
+      "demo": "Ver demo"
+    },
+    "flow": {
+      "title": "Como funciona?",
+      "subtitle": "Três passos. Sem código. Sem configurações complicadas."
+    },
+    "flow1": {
+      "title": "1. Conectar",
+      "desc": "Connect sensors and actuators to an ESP32. AI detects the hardware and generates the configuration."
+    },
+    "flow2": {
+      "title": "2. Gravar",
+      "desc": "One click and the firmware loads onto the ESP32 via USB. The device connects to the internet."
+    },
+    "flow3": {
+      "title": "3. Controlar",
+      "desc": "Real-time dashboard with temperature, relays, automatic rules. All from your browser."
+    },
+    "features": {
+      "title": "Tudo que você precisa",
+      "subtitle": "Uma plataforma, infinitas possibilidades."
+    },
+    "f1": {
+      "title": "11 sensores suportados",
+      "desc": "DHT22, BME280, PIR, HC-SR04, DS18B20 and more."
+    },
+    "f2": {
+      "title": "Atuadores",
+      "desc": "Relays, servos, RGB LEDs, buzzers, water pumps."
+    },
+    "f3": {
+      "title": "Regras automáticas",
+      "desc": "\"If temperature > 30°C, turn on ventilation\"."
+    },
+    "f4": {
+      "title": "Alertas em tempo real",
+      "desc": "Notifications when something goes out of range."
+    },
+    "f5": {
+      "title": "Atualizações OTA",
+      "desc": "Atualize o firmware de todos os dispositivos por WiFi."
+    },
+    "f6": {
+      "title": "Dashboard Profissional",
+      "desc": "Charts, gauges, switches. Fully customizable."
+    },
+    "ai": {
+      "badge": "Assistente IA",
+      "title1": "Descreva seu projeto.",
+      "title2": "A IA constrói."
+    },
+    "ai_demo": {
+      "prompt": "Tenho um ESP32 com DHT22 e módulo de 7 relés. Quero que o relé 1 ative acima de 30°C.",
+      "response1": "Template criado: Controle Térmico 7CH",
+      "response2": "GPIO14 → DHT22 · GPIO23 → Relay 1 · Rule: temp ≥ 30°C → relay 1 ON"
+    },
+    "pricing": {
+      "title": "Comece hoje, grátis",
+      "subtitle": "Crie sua conta de instalador. Sem cartão de crédito.",
+      "price": "$0",
+      "period": "/mo",
+      "note": "Durante o beta. Preço por dispositivo depois.",
+      "cta": "Criar conta grátis"
+    },
+    "footer": "© 2026 ioTech — Plataforma IoT para Instaladores Profissionais."
+  }
+}

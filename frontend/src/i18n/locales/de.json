@@ -1,0 +1,82 @@
+{
+  "landing": {
+    "nav": {
+      "features": "Funktionen",
+      "how": "So funktioniert's",
+      "pricing": "Preise",
+      "login": "Anmelden",
+      "start": "Kostenlos starten"
+    },
+    "hero": {
+      "badge": "IoT-Plattform für professionelle Installateure",
+      "title1": "Ihre IoT-Geräte",
+      "title2": "ohne Code",
+      "subtitle": "Verbinden Sie Sensoren, Relais und Aktoren. KI konfiguriert alles. Beschreiben Sie einfach, was Sie brauchen.",
+      "cta": "Jetzt starten",
+      "demo": "Demo ansehen"
+    },
+    "flow": {
+      "title": "Wie funktioniert es?",
+      "subtitle": "Drei Schritte. Kein Code. Keine komplizierten Konfigurationen."
+    },
+    "flow1": {
+      "title": "1. Verbinden",
+      "desc": "Sensoren und Aktoren an ESP32 anschließen. KI erkennt die Hardware."
+    },
+    "flow2": {
+      "title": "2. Flashen",
+      "desc": "Ein Klick und die Firmware wird per USB auf den ESP32 geladen."
+    },
+    "flow3": {
+      "title": "3. Steuern",
+      "desc": "Echtzeit-Dashboard mit Temperatur, Relais, automatischen Regeln."
+    },
+    "features": {
+      "title": "Alles was Sie brauchen",
+      "subtitle": "Eine Plattform, unendliche Möglichkeiten."
+    },
+    "f1": {
+      "title": "11 unterstützte Sensoren",
+      "desc": "DHT22, BME280, PIR, HC-SR04, DS18B20 und mehr."
+    },
+    "f2": {
+      "title": "Aktoren",
+      "desc": "Relais, Servos, RGB-LEDs, Summer, Wasserpumpen."
+    },
+    "f3": {
+      "title": "Automatische Regeln",
+      "desc": "\"If temperature > 30°C, turn on ventilation\"."
+    },
+    "f4": {
+      "title": "Echtzeit-Benachrichtigungen",
+      "desc": "Notifications when something goes out of range."
+    },
+    "f5": {
+      "title": "OTA-Updates",
+      "desc": "Firmware aller Geräte per WiFi aktualisieren."
+    },
+    "f6": {
+      "title": "Professionelles Dashboard",
+      "desc": "Charts, gauges, switches. Fully customizable."
+    },
+    "ai": {
+      "badge": "KI-Assistent",
+      "title1": "Beschreiben Sie Ihr Projekt.",
+      "title2": "KI erstellt es."
+    },
+    "ai_demo": {
+      "prompt": "Ich habe einen ESP32 mit DHT22 und 7-Relais-Modul. Relais 1 soll bei über 30°C aktivieren.",
+      "response1": "Template erstellt: Thermische Steuerung 7CH",
+      "response2": "GPIO14 → DHT22 · GPIO23 → Relay 1 · Rule: temp ≥ 30°C → relay 1 ON"
+    },
+    "pricing": {
+      "title": "Heute starten, kostenlos",
+      "subtitle": "Erstellen Sie Ihr Installateur-Konto. Keine Kreditkarte.",
+      "price": "$0",
+      "period": "/mo",
+      "note": "Während der Beta. Später Preis pro Gerät.",
+      "cta": "Kostenlos registrieren"
+    },
+    "footer": "© 2026 ioTech — IoT-Plattform für professionelle Installateure."
+  }
+}
