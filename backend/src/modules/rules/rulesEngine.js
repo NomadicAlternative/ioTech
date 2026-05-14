@@ -1,5 +1,7 @@
 'use strict';
 
+const logger = require('../../shared/logger');
+
 /**
  * Rules Engine — Pure evaluation logic for automation rules.
  *
@@ -261,7 +263,13 @@ async function executeAction(rule, tenantId) {
     };
   }
 
-  throw new Error(`Unknown action type: ${action_type}`);
+  // Unknown action type — log, notify, but don't crash
+  logger.warn(`[rulesEngine] Unsupported action type: ${action_type} — rule saved, execution pending`);
+  return {
+    action: action_type,
+    status: 'pending',
+    message: `Handler for "${action_type}" not yet deployed. Rule saved and will execute when available.`,
+  };
 }
 
 // ─── evaluateBatteryLowRules() ───────────────────────────────────────────────
