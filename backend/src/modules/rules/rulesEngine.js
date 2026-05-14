@@ -36,17 +36,17 @@ function resetCooldownCache() {
  */
 function compare(value, operator, threshold) {
   switch (operator) {
-    case 'gt':
+    case 'gt': case '>':
       return value > threshold;
-    case 'gte':
+    case 'gte': case '>=':
       return value >= threshold;
-    case 'lt':
+    case 'lt': case '<':
       return value < threshold;
-    case 'lte':
+    case 'lte': case '<=':
       return value <= threshold;
-    case 'eq':
+    case 'eq': case '==': case '===':
       return value === threshold;
-    case 'neq':
+    case 'neq': case '!=': case '!==':
       return value !== threshold;
     default:
       throw new Error(`Unknown operator: ${operator}`);
