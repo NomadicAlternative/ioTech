@@ -212,6 +212,15 @@ async function executeAction(rule, tenantId) {
   const { action_type, action_config } = rule;
 
   if (action_type === 'relay') {
+    // Support both formats: { relay, state } and { actions: [{ relay, state }] }
+    const actions = action_config.actions;
+    if (actions && Array.isArray(actions) && actions.length > 0) {
+      return {
+        action: 'relay',
+        relay: actions[0].relay,
+        state: actions[0].state,
+      };
+    }
     return {
       action: 'relay',
       relay: action_config.relay,
