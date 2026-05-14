@@ -102,8 +102,12 @@ export function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">{t('landing.flow.title')}</h2>
           <p className="text-[var(--muted-blue)] text-center max-w-xl mx-auto mb-16">{t('landing.flow.subtitle')}</p>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
             {flow.map(({icon:I,tkey:k})=>(<div key={k} className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 hover:bg-white/[0.04] hover:border-[var(--orange)]/20 transition-all duration-300"><div className="w-12 h-12 rounded-xl bg-[var(--orange)]/10 flex items-center justify-center mb-6"><I className="h-6 w-6 text-[var(--orange)]"/></div><h3 className="text-xl font-semibold mb-3">{t(`landing.${k}.title`)}</h3><p className="text-[var(--muted-blue)] leading-relaxed">{t(`landing.${k}.desc`)}</p></div>))}
+          </div>
+          {/* Dashboard preview */}
+          <div className="rounded-2xl border border-white/5 overflow-hidden shadow-2xl shadow-black/30">
+            <img src="/dashboard-preview.png" alt="Dashboard preview" className="w-full" />
           </div>
         </div>
       </section>
