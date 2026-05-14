@@ -52,12 +52,12 @@ static void dht_read(void)
     dht_temp = 0;
     dht_hum = 0;
 
-    /* Start signal: HIGH→LOW 1ms→HIGH 30us→release */
+    /* Start signal: HIGH→LOW 20ms→HIGH 30us→release (compatible DHT11+DHT22) */
     gpio_set_direction(DHT_GPIO, GPIO_MODE_OUTPUT);
     gpio_set_level(DHT_GPIO, 1);
     esp_rom_delay_us(250);
     gpio_set_level(DHT_GPIO, 0);
-    esp_rom_delay_us(1000);  /* 1ms LOW */
+    esp_rom_delay_us(20000);  /* 20ms LOW (DHT11 needs 18ms, DHT22 ok with longer) */
     gpio_set_level(DHT_GPIO, 1);
     esp_rom_delay_us(30);
     gpio_set_direction(DHT_GPIO, GPIO_MODE_INPUT);
@@ -83,9 +83,22 @@ static void dht_read(void)
     /* Checksum */
     if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) return;
 
-    /* DHT22: 16-bit values / 10 */
-    dht_hum = (float)((data[0] << 8) | data[1]) / 10.0f;
-    dht_temp = (float)((data[2] << 8) | data[3]) / 10.0f;
+    /* Auto-detect: DHT11 has bytes 1,3 = 0 (8-bit). DHT22 uses 16-bit /10.
+       Also accept: if checksum passes and all low bytes are 0, it's DHT11. */
+    if (data[1] == 0 && data[3] == 0) {
+        /* DHT11: integer humidity and temperature */
+        dht_hum = (float)data[0];
+        dht_temp = (float)data[2];
+    } else {
+        /* DHT22: 16-bit values / 10 */
+        dht_hum = (float)((data[0] << 8) | data[1]) / 10.0f;
+        if (data[2] & 0x80) {
+            /* Negative temperature (bit 15 set) */
+            dht_temp = (float)(((data[2] & 0x7F) << 8) | data[3]) / -10.0f;
+        } else {
+            dht_temp = (float)((data[2] << 8) | data[3]) / 10.0f;
+        }
+    }
 }
 
 /* -----------------------------------------------------------------------
