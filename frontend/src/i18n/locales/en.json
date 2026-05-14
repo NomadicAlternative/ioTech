@@ -83,9 +83,9 @@
       "saved": "Saved",
       "errorSaving": "Error saving",
       "shareButton": "Share",
-    "done": "Done",
-    "close": "Close",
-    "sending": "Sending…",
+      "done": "Done",
+      "close": "Close",
+      "sending": "Sending…",
       "emptyCanvas": "Click a widget from the palette to add it"
     },
     "share": {
@@ -320,5 +320,94 @@
     "provisionButton": "Provision via USB",
     "browserUnsupported": "Browser not supported",
     "browserUnsupportedDesc": "Web Serial API is only available in Chrome and Edge. Please use one of these browsers to provision devices via USB."
+  },
+  "landing": {
+    "nav": {
+      "features": "Features",
+      "how": "How it works",
+      "pricing": "Pricing",
+      "login": "Login",
+      "start": "Start free"
+    },
+    "hero": {
+      "badge": "IoT Platform for Professional Installers",
+      "title1": "Your IoT devices",
+      "title2": "without code",
+      "subtitle": "Connect sensors, relays and actuators. AI configures everything. Just describe what you need and sell IoT solutions to your clients.",
+      "cta": "Get started",
+      "demo": "See demo"
+    },
+    "flow": {
+      "title": "How does it work?",
+      "subtitle": "Three steps. No code. No complicated configurations."
+    },
+    "flow1": {
+      "title": "1. Connect",
+      "desc": "Connect sensors and actuators to an ESP32. AI detects the hardware and generates the configuration."
+    },
+    "flow2": {
+      "title": "2. Flash",
+      "desc": "One click and the firmware loads onto the ESP32 via USB. The device connects to the internet."
+    },
+    "flow3": {
+      "title": "3. Control",
+      "desc": "Real-time dashboard with temperature, relays, automatic rules. All from your browser."
+    },
+    "features": {
+      "title": "Everything you need",
+      "subtitle": "One platform, infinite possibilities. From home automation to smart agriculture."
+    },
+    "f1": {
+      "title": "11 supported sensors",
+      "desc": "DHT22, BME280, PIR, HC-SR04, DS18B20 and more."
+    },
+    "f2": {
+      "title": "Actuators",
+      "desc": "Relays, servos, RGB LEDs, buzzers, water pumps."
+    },
+    "f3": {
+      "title": "Automatic rules",
+      "desc": "\"If temperature > 30°C, turn on ventilation\"."
+    },
+    "f4": {
+      "title": "Real-time alerts",
+      "desc": "Notifications when something goes out of range."
+    },
+    "f5": {
+      "title": "OTA updates",
+      "desc": "Update firmware on all your devices over WiFi."
+    },
+    "f6": {
+      "title": "Professional Dashboard",
+      "desc": "Charts, gauges, switches. Fully customizable."
+    },
+    "ai": {
+      "badge": "AI Assistant",
+      "title1": "Describe your project.",
+      "title2": "AI builds it."
+    },
+    "ai_demo": {
+      "prompt": "I have an ESP32 with DHT22 sensor, a 7-relay module, and I want relay 1 to activate when temperature exceeds 30°C.",
+      "response1": "Template created: Thermal Control 7CH",
+      "response2": "GPIO14 → DHT22 · GPIO23 → Relay 1 · Rule: temp ≥ 30°C → relay 1 ON"
+    },
+    "pricing": {
+      "title": "Start today, free",
+      "subtitle": "Create your installer account. No credit card. No feature limits.",
+      "price": "$0",
+      "period": "/mo",
+      "note": "During beta. Per-device pricing later.",
+      "features": [
+        "Unlimited devices",
+        "Unlimited clients",
+        "AI Assistant",
+        "Professional dashboard",
+        "OTA updates",
+        "Automatic rules",
+        "Priority support"
+      ],
+      "cta": "Create free account"
+    },
+    "footer": "© 2026 ioTech — IoT Platform for Professional Installers."
   }
 }

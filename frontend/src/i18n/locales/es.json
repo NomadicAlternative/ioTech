@@ -84,9 +84,9 @@
       "saved": "Guardado",
       "errorSaving": "Error al guardar",
       "shareButton": "Compartir",
-    "done": "Listo",
-    "close": "Cerrar",
-    "sending": "Enviando…",
+      "done": "Listo",
+      "close": "Cerrar",
+      "sending": "Enviando…",
       "emptyCanvas": "Hacé clic en un widget de la paleta para agregarlo"
     },
     "share": {
@@ -312,5 +312,94 @@
       "phonePlaceholder": "+54 11 1234-5678",
       "addressPlaceholder": "Av. Corrientes 1234, CABA"
     }
+  },
+  "landing": {
+    "nav": {
+      "features": "Funciones",
+      "how": "Cómo funciona",
+      "pricing": "Precios",
+      "login": "Ingresar",
+      "start": "Comenzar gratis"
+    },
+    "hero": {
+      "badge": "Plataforma IoT para instaladores profesionales",
+      "title1": "Tus dispositivos IoT",
+      "title2": "sin código",
+      "subtitle": "Conecta sensores, relays y actuadores. La IA configura todo. Solo describe lo que necesitas y vende soluciones IoT a tus clientes.",
+      "cta": "Comenzar ahora",
+      "demo": "Ver demo"
+    },
+    "flow": {
+      "title": "¿Cómo funciona?",
+      "subtitle": "Tres pasos. Sin código. Sin configuraciones complicadas."
+    },
+    "flow1": {
+      "title": "1. Conecta",
+      "desc": "Conecta sensores y actuadores a un ESP32. La IA detecta el hardware y genera la configuración."
+    },
+    "flow2": {
+      "title": "2. Flashea",
+      "desc": "Con un clic, el firmware se carga en el ESP32 por USB. El dispositivo se conecta a internet."
+    },
+    "flow3": {
+      "title": "3. Controla",
+      "desc": "Dashboard en tiempo real con temperatura, relays, reglas automáticas. Todo desde el navegador."
+    },
+    "features": {
+      "title": "Todo lo que necesitas",
+      "subtitle": "Una plataforma, infinitas posibilidades. Desde domótica hasta agricultura inteligente."
+    },
+    "f1": {
+      "title": "11 sensores soportados",
+      "desc": "DHT22, BME280, PIR, HC-SR04, DS18B20 y más."
+    },
+    "f2": {
+      "title": "Actuadores",
+      "desc": "Relays, servos, LEDs RGB, buzzers, bombas de agua."
+    },
+    "f3": {
+      "title": "Reglas automáticas",
+      "desc": "\"Si temperatura > 30°C, activar ventilación\"."
+    },
+    "f4": {
+      "title": "Alertas en tiempo real",
+      "desc": "Notificaciones cuando algo sale de rango."
+    },
+    "f5": {
+      "title": "OTA updates",
+      "desc": "Actualiza el firmware de todos tus dispositivos por WiFi."
+    },
+    "f6": {
+      "title": "Dashboard profesional",
+      "desc": "Gráficos, indicadores, interruptores. Todo personalizable."
+    },
+    "ai": {
+      "badge": "Asistente IA",
+      "title1": "Describe tu proyecto.",
+      "title2": "La IA lo construye."
+    },
+    "ai_demo": {
+      "prompt": "Tengo un ESP32 con sensor DHT22, un módulo de 7 relays, y quiero que cuando la temperatura supere los 30°C se active el relay de ventilación.",
+      "response1": "Template creado: Control Térmico 7CH",
+      "response2": "GPIO14 → DHT22 · GPIO23 → Relay 1 · Regla: temp ≥ 30°C → relay 1 ON"
+    },
+    "pricing": {
+      "title": "Empieza hoy, gratis",
+      "subtitle": "Crea tu cuenta de instalador. Sin tarjeta de crédito. Sin límites en funciones.",
+      "price": "0",
+      "period": "/mes",
+      "note": "Durante el beta. Precios por dispositivo después.",
+      "features": [
+        "Dispositivos ilimitados",
+        "Clientes ilimitados",
+        "Asistente IA",
+        "Dashboard profesional",
+        "OTA updates",
+        "Reglas automáticas",
+        "Soporte prioritario"
+      ],
+      "cta": "Crear cuenta gratis"
+    },
+    "footer": "© 2026 ioTech — Plataforma IoT para instaladores profesionales."
   }
 }
