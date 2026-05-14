@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 interface Client {
   id: string
@@ -10,7 +11,12 @@ interface ClientContextState {
   setActiveClient: (client: Client | null) => void
 }
 
-export const useClientContext = create<ClientContextState>((set) => ({
-  activeClient: null,
-  setActiveClient: (client) => set({ activeClient: client }),
-}))
+export const useClientContext = create<ClientContextState>()(
+  persist(
+    (set) => ({
+      activeClient: null,
+      setActiveClient: (client) => set({ activeClient: client }),
+    }),
+    { name: 'iotech-client' }
+  )
+)
