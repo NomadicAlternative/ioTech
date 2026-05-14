@@ -21,11 +21,18 @@ export function useSocket() {
   return useContext(SocketContext)
 }
 
-interface TelemetryEvent {
+/**
+ * Backend emits a flat structure per emitTelemetry():
+ *   { id, deviceId, data: { temperature: 25.1, humidity: 41.5 }, receivedAt }
+ *
+ * The telemetryStore expects per-stream events, so we explode the `data`
+ * object into individual setTelemetry() calls — one per datastream key.
+ */
+interface BackendTelemetryPayload {
   deviceId: string
-  datastreamKey: string
-  value: unknown
-  timestamp: number
+  data: Record<string, unknown>
+  receivedAt?: string
+  id?: string
 }
 
 /**
@@ -87,14 +94,16 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       console.warn('[Socket] connection error', err.message)
     })
 
-    // Backend emits 'telemetry:new' (socketServer.js line 73)
-    newSocket.on('telemetry:new', (event: TelemetryEvent) => {
-      setTelemetry(
-        event.deviceId,
-        event.datastreamKey,
-        event.value,
-        event.timestamp || Date.now()
-      )
+    // Backend emits 'telemetry:new' with { deviceId, data: { temperature: 25.1, ... }, receivedAt }
+    // The store expects per-stream calls — explode the data object into individual setTelemetry() calls.
+    newSocket.on('telemetry:new', (event: BackendTelemetryPayload) => {
+      const { deviceId, data, receivedAt } = event
+      const ts = receivedAt ? new Date(receivedAt).getTime() : Date.now()
+      if (data && typeof data === 'object') {
+        for (const [key, value] of Object.entries(data)) {
+          setTelemetry(deviceId, key, value, ts)
+        }
+      }
     })
 
     // Real-time device online/offline — no polling needed

@@ -7,6 +7,8 @@ const mockSocketDisconnect = vi.fn()
 const mockSocket = {
   on: mockSocketOn,
   disconnect: mockSocketDisconnect,
+  connect: vi.fn(),
+  connected: true,
   id: 'socket-test-id',
 }
 
@@ -67,7 +69,7 @@ describe('SocketProvider', () => {
     })
   })
 
-  it('registers a telemetry event listener on connect', async () => {
+  it('registers a telemetry:new event listener on connect', async () => {
     await act(async () => {
       useAuthStore.setState({
         isAuthenticated: true,
@@ -79,11 +81,11 @@ describe('SocketProvider', () => {
     renderProvider()
 
     await waitFor(() => {
-      expect(mockSocketOn).toHaveBeenCalledWith('telemetry', expect.any(Function))
+      expect(mockSocketOn).toHaveBeenCalledWith('telemetry:new', expect.any(Function))
     })
   })
 
-  it('updates telemetryStore when telemetry event fires', async () => {
+  it('explodes data object and updates telemetryStore per stream', async () => {
     await act(async () => {
       useAuthStore.setState({
         isAuthenticated: true,
@@ -95,27 +97,29 @@ describe('SocketProvider', () => {
     renderProvider()
 
     await waitFor(() => {
-      expect(mockSocketOn).toHaveBeenCalledWith('telemetry', expect.any(Function))
+      expect(mockSocketOn).toHaveBeenCalledWith('telemetry:new', expect.any(Function))
     })
 
-    const telemetryCallback = getEventCallback('telemetry')
+    const telemetryCallback = getEventCallback('telemetry:new')
     expect(telemetryCallback).toBeDefined()
 
     act(() => {
       telemetryCallback!({
         deviceId: 'dev-1',
-        datastreamKey: 'temperature',
-        value: 22.5,
-        timestamp: 12345,
+        data: { temperature: 22.5, humidity: 60 },
+        receivedAt: '2026-05-14T15:30:00.000Z',
       })
     })
 
-    const entry = useTelemetryStore.getState().getTelemetry('dev-1:temperature')
-    expect(entry?.value).toBe(22.5)
-    expect(entry?.ts).toBe(12345)
+    const tempEntry = useTelemetryStore.getState().getTelemetry('dev-1:temperature')
+    expect(tempEntry?.value).toBe(22.5)
+    expect(tempEntry?.ts).toBe(new Date('2026-05-14T15:30:00.000Z').getTime())
+
+    const humEntry = useTelemetryStore.getState().getTelemetry('dev-1:humidity')
+    expect(humEntry?.value).toBe(60)
   })
 
-  it('uses Date.now() as ts when event has no timestamp', async () => {
+  it('uses Date.now() as ts when event has no receivedAt', async () => {
     const fakeNow = 99999
     vi.spyOn(Date, 'now').mockReturnValue(fakeNow)
 
@@ -130,22 +134,20 @@ describe('SocketProvider', () => {
     renderProvider()
 
     await waitFor(() => {
-      expect(mockSocketOn).toHaveBeenCalledWith('telemetry', expect.any(Function))
+      expect(mockSocketOn).toHaveBeenCalledWith('telemetry:new', expect.any(Function))
     })
 
-    const telemetryCallback = getEventCallback('telemetry')
+    const telemetryCallback = getEventCallback('telemetry:new')
 
     act(() => {
       telemetryCallback!({
         deviceId: 'dev-2',
-        datastreamKey: 'humidity',
-        value: 60,
-        timestamp: 0, // falsy → Date.now() fallback
+        data: { humidity: 60 },
+        // no receivedAt → Date.now() fallback
       })
     })
 
     const entry = useTelemetryStore.getState().getTelemetry('dev-2:humidity')
-    // timestamp=0 is falsy, so Date.now() is used
     expect(entry?.ts).toBe(fakeNow)
   })
 
