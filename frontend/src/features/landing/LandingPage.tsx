@@ -2,7 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Cpu, Wifi, LayoutDashboard, Zap, ArrowRight, CheckCircle2, ChevronDown, Cable, Thermometer, Bell, Globe, BarChart3 } from 'lucide-react'
 
-const LANGS = ['es','en','de','pt','fr','it']
+const LANGS = [
+  { code: 'en', label: 'EN', flag: '🇬🇧' },
+  { code: 'es', label: 'ES', flag: '🇪🇸' },
+  { code: 'de', label: 'DE', flag: '🇩🇪' },
+  { code: 'pt', label: 'PT', flag: '🇧🇷' },
+  { code: 'fr', label: 'FR', flag: '🇫🇷' },
+  { code: 'it', label: 'IT', flag: '🇮🇹' },
+]
 
 function scrollTo(id: string) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }) }
 
@@ -50,8 +57,23 @@ export function LandingPage() {
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
-              <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1 text-sm text-[var(--muted-blue)] hover:text-white px-2 py-1 rounded-lg hover:bg-white/5"><Globe className="h-3.5 w-3.5"/>{i18n.language?.split('-')[0]?.toUpperCase()||'ES'}<ChevronDown className="h-3 w-3"/></button>
-              {langOpen && <div className="absolute top-full right-0 mt-1 bg-[#1A2F52] border border-white/10 rounded-xl p-1 shadow-xl z-50">{LANGS.map(l=><button key={l} onClick={()=>{i18n.changeLanguage(l);setLangOpen(false)}} className={`w-full text-left px-3 py-1.5 rounded-lg text-sm ${i18n.language?.split('-')[0]===l?'bg-[var(--orange)]/20 text-[var(--orange)]':'text-[var(--muted-blue)] hover:text-white'}`}>{l.toUpperCase()}</button>)}</div>}
+              <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1 text-sm text-[var(--muted-blue)] hover:text-white px-2 py-1 rounded-lg hover:bg-white/5">
+                <Globe className="h-3.5 w-3.5"/>
+                {LANGS.find(l => l.code === (i18n.language?.split('-')[0] || 'en'))?.flag}
+                {LANGS.find(l => l.code === (i18n.language?.split('-')[0] || 'en'))?.label || 'EN'}
+                <ChevronDown className="h-3 w-3"/>
+              </button>
+              {langOpen && <div className="absolute top-full right-0 mt-1 bg-[#1A2F52] border border-white/10 rounded-xl p-1 shadow-xl z-50">
+                {LANGS.map(l => (
+                  <button key={l.code} onClick={() => { i18n.changeLanguage(l.code); setLangOpen(false) }}
+                    className={`flex items-center gap-2 w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                      (i18n.language?.split('-')[0] || 'en') === l.code ? 'bg-[var(--orange)]/20 text-[var(--orange)]' : 'text-[var(--muted-blue)] hover:text-white'
+                    }`}>
+                    <span>{l.flag}</span>
+                    <span>{l.label}</span>
+                  </button>
+                ))}
+              </div>}
             </div>
             <a href="/login" className="text-sm text-[var(--muted-blue)] hover:text-white">{t('landing.nav.login')}</a>
             <a href="/register" className="text-sm bg-[var(--orange)] text-black font-medium px-4 py-2 rounded-full hover:bg-amber-400 transition-all hover:scale-105">{t('landing.nav.start')}</a>
