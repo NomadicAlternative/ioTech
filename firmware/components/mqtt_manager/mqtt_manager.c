@@ -83,34 +83,9 @@ static void dht_read(void)
     /* Checksum */
     if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) return;
 
-    /* Auto-detect DHT11 vs DHT22 */
-    if (data[1] == 0 && data[3] == 0) {
-        dht_hum = (float)data[0];
-        dht_temp = (float)data[2];
-    } else {
-        float h = (float)((data[0] << 8) | data[1]) / 10.0f;
-        float t = (float)((data[2] << 8) | data[3]) / 10.0f;
-        if (data[2] & 0x80) t = -t;
-        dht_hum = h;
-        dht_temp = t;
-    }
-
-    /* Debug: include raw bytes in telemetry for one cycle */
-    static int debug_count = 0;
-    if (debug_count < 3) {
-        cJSON *root = cJSON_CreateObject();
-        char hex[32];
-        snprintf(hex, sizeof(hex), "%02x %02x %02x %02x %02x",
-                 data[0], data[1], data[2], data[3], data[4]);
-        cJSON_AddStringToObject(root, "dht_raw", hex);
-        cJSON_AddStringToObject(root, "dht_type", (data[1] == 0 && data[3] == 0) ? "DHT11" : "DHT22");
-        cJSON_AddNumberToObject(root, "temperature", dht_temp);
-        cJSON_AddNumberToObject(root, "humidity", dht_hum);
-        char *json = cJSON_PrintUnformatted(root);
-        if (json) { mqtt_publish_telemetry(json); cJSON_free(json); }
-        cJSON_Delete(root);
-        debug_count++;
-    }
+    /* DHT11 mode: 8-bit values (bytes 1 and 3 are always 0) */
+    dht_hum = (float)data[0];
+    dht_temp = (float)data[2];
 }
 
 /* -----------------------------------------------------------------------
