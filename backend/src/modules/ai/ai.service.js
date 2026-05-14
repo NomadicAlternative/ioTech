@@ -6,6 +6,8 @@ const logger = require('../../shared/logger');
 const templatesService = require('../device-templates/device-templates.service');
 const devicesService = require('../devices/devices.service');
 const rulesService = require('../rules/rules.service');
+const { validateAiConfig } = require('./ai.schemas');
+const { ValidationError } = require('../../shared/errors');
 
 /**
  * System prompt that teaches the LLM everything about iotech's
@@ -232,6 +234,13 @@ async function configure(prompt) {
  * Apply the AI-generated configuration: create template, device, and rules.
  */
 async function apply(tenantId, config) {
+  // Validate against contract schema BEFORE touching DB
+  const validation = validateAiConfig(config);
+  if (validation.error) {
+    throw new ValidationError(validation.error);
+  }
+  config = validation.value;  // use sanitized version
+
   const { template, datastreams, rules, drivers } = config;
   const hardwareModel = template.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '');
 
