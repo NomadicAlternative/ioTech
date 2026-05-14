@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RegisterPage } from '@/features/auth/RegisterPage'
+import { LandingPage } from '@/features/landing/LandingPage'
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
 import { DashboardListPage } from '@/features/dashboard/DashboardListPage'
 import { DashboardViewPage } from '@/features/dashboard/DashboardViewPage'
@@ -43,7 +44,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/app/dashboards" replace />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/app" element={<SocketProvider><ProtectedRoute /></SocketProvider>}>
