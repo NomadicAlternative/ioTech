@@ -83,8 +83,8 @@ export function LandingPage() {
 
       <section className="relative pt-32 pb-20 px-6 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img src="/hero-bg.png" alt="" className="w-full h-full object-cover opacity-20" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[var(--prussian-blue)]/60 via-[var(--prussian-blue)]/40 to-[var(--prussian-blue)]" />
+          <img src="/hero-bg.png" alt="" className="w-full h-full object-cover opacity-40" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[var(--prussian-blue)]/20 via-transparent to-[var(--prussian-blue)]" />
         </div>
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-[400px] opacity-40 pointer-events-none z-10"/>
         <div className="max-w-5xl mx-auto text-center relative z-10">
