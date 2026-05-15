@@ -15,9 +15,10 @@ export async function fetchDashboard(id: string): Promise<Dashboard> {
 
 export async function createDashboard(
   name: string,
-  description: string
+  description: string,
+  clientId?: string
 ): Promise<Dashboard> {
-  const res = await api.post<{ data: Dashboard }>('/api/dashboards', { name, description })
+  const res = await api.post<{ data: Dashboard }>('/api/dashboards', { name, description, clientId })
   return res.data.data
 }
 

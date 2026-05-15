@@ -22,7 +22,7 @@ interface DashboardState {
 interface DashboardActions {
   fetchDashboards: () => Promise<void>
   fetchDashboard: (id: string) => Promise<void>
-  createDashboard: (name: string, description: string) => Promise<Dashboard>
+  createDashboard: (name: string, description: string, clientId?: string) => Promise<Dashboard>
   updateDashboard: (id: string, data: Partial<Pick<Dashboard, 'name' | 'description'>>) => Promise<void>
   deleteDashboard: (id: string) => Promise<void>
   /**
@@ -98,8 +98,8 @@ export const useDashboardStore = create<DashboardStore>((set, get) => {
       set({ currentDashboard: dashboard, layout: widgets })
     },
 
-    createDashboard: async (name, description) => {
-      const dashboard = await dashboardApi.createDashboard(name, description)
+    createDashboard: async (name, description, clientId) => {
+      const dashboard = await dashboardApi.createDashboard(name, description, clientId)
       set((state) => ({ dashboards: [dashboard, ...state.dashboards] }))
       return dashboard
     },
