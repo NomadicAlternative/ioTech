@@ -186,6 +186,7 @@ All errors return `{ error: { code, message, status, details? } }`.
 - Multi-tenant via RLS — always use `withTenant()`
 - Conventional commits only
 - Save session summary to engram AND .agent/context.md at end of every session
+- ⚠️ engram MCP: session summary se guarda bajo el proyecto del working directory al iniciar opencode. Para que quede en "iotech", abrí opencode DESDE /Users/diegogarcia/Desktop/IoTech/ioTech/
 - No flashear firmware sin ESP32 conectado
 
 ## Driver Roadmap
