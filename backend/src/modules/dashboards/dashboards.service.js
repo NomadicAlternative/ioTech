@@ -71,6 +71,7 @@ async function create(tenantId, userId, data) {
     description: data.description || null,
     layout: JSON.stringify(layout),
     installer_id: userId,
+    client_id: data.clientId || null,
     created_at: new Date(),
     updated_at: new Date(),
   });

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Plus, LayoutDashboard, Edit, Trash2, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useClientContext } from '@/stores/clientContext'
 import {
   Card,
   CardContent,
@@ -26,6 +27,12 @@ export function DashboardListPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { dashboards, fetchDashboards, createDashboard, deleteDashboard } = useDashboardStore()
+  const { activeClient } = useClientContext()
+
+  const filteredDashboards = useMemo(() => {
+    if (!activeClient) return dashboards
+    return dashboards.filter(d => (d as any).clientId === activeClient.id)
+  }, [dashboards, activeClient])
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -121,7 +128,7 @@ export function DashboardListPage() {
 
       {!loading && dashboards.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {dashboards.map((dashboard) => (
+          {filteredDashboards.map((dashboard) => (
             <Card
               key={dashboard.id}
               className="cursor-pointer hover:shadow-md transition-all group border hover:border-[var(--blue)]/20 relative overflow-hidden"
