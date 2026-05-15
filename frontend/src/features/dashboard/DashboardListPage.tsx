@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Plus, LayoutDashboard, Edit, Trash2, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useClientContext } from '@/stores/clientContext'
 import {
   Card,
   CardContent,
