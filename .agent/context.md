@@ -135,8 +135,23 @@ ioTech/
 
 ## Next Steps
 
-1. **Firmware file upload** — upload de binarios (hoy es URL externa)
-4. **Installer UI registration** — formulario de registro en el frontend
+1. **Verificar telemetría DHT22** con auto-detect en firmware
+2. **Super admin panel** — métricas cross-installer, facturación
+3. **Integración de pago** — Stripe/MercadoPago
+4. **Firmware genérico** — io_driver architecture modular
+5. **Completar i18n** — DE, PT, FR, IT para toda la app
+
+## Últimos cambios (2026-05-14/15)
+
+- Landing page multilingüe (6 idiomas) con partículas animadas
+- Installer registration público (/register)
+- DHT11/DHT22 auto-detect en firmware (GPIO32, busy-wait)
+- Rules engine: 3 bugs arreglados + 15 contract tests
+- AI schema contract: validación antes de cada write
+- Client context: filtro por cliente en Devices y Dashboards
+- SocketProvider: fix de explosión de datos de telemetría
+- Provisioning: botón de eliminar device
+- Clientes: email, phone, address se guardan (schema fix)
 
 ## API Overview
 
