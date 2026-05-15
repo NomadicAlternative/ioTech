@@ -137,7 +137,21 @@ export function DashboardListPage() {
 
       {/* Dashboard grid */}
       {!loading && filteredDashboards.length === 0 && (
-      ...
+        <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+          <LayoutDashboard className="h-16 w-16 text-muted-foreground/40" />
+          <div>
+            <p className="text-lg font-medium">{t('dashboard.list.empty')}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t('dashboard.list.emptySubtitle')}
+            </p>
+          </div>
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            {t('dashboard.list.createButton')}
+          </Button>
+        </div>
+      )}
+
       {!loading && filteredDashboards.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredDashboards.map((dashboard) => (
