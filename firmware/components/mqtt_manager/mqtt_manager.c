@@ -83,9 +83,14 @@ static void dht_read(void)
     /* Checksum */
     if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) return;
 
-    /* DHT11 mode: 8-bit values (bytes 1 and 3 are always 0) */
-    dht_hum = (float)data[0];
-    dht_temp = (float)data[2];
+    /* Checksum */
+    if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) return;
+
+    /* DHT22: 16-bit values / 10 */
+    dht_hum = (float)((data[0] << 8) | data[1]) / 10.0f;
+    float t = (float)((data[2] << 8) | data[3]) / 10.0f;
+    if (data[2] & 0x80) t = -t;   /* negative temperature */
+    dht_temp = t;
 }
 
 /* -----------------------------------------------------------------------
