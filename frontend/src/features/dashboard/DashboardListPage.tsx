@@ -22,7 +22,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { useDashboardStore } from './dashboardStore'
 import { useClientContext } from '@/stores/clientContext'
-import { listClients } from '@/features/clients/api'
+import { listClients } from '@/features/devices/api'
 
 export function DashboardListPage() {
   const { t } = useTranslation()
