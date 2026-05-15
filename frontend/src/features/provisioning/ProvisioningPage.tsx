@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Cable, AlertTriangle, Cpu, RefreshCw } from 'lucide-react'
+import { Cable, AlertTriangle, Cpu, RefreshCw, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { listDevices } from '@/features/devices/api'
+import { listDevices, deleteDevice } from '@/features/devices/api'
 import type { Device } from '@/features/widgets/types'
 import { ProvisioningModal } from '@/features/devices/components/ProvisioningModal'
 
@@ -45,6 +45,16 @@ export function ProvisioningPage() {
   function handleProvision(device: Device) {
     setSelectedDevice(device)
     setModalOpen(true)
+  }
+
+  async function handleDelete(device: Device) {
+    if (!confirm(`¿Eliminar "${device.name}"?`)) return
+    try {
+      await deleteDevice(device.id)
+      loadDevices()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al eliminar')
+    }
   }
 
   function handleModalClose() {
@@ -147,14 +157,16 @@ export function ProvisioningPage() {
                 </div>
               </div>
 
-              <Button
-                size="sm"
-                onClick={() => handleProvision(device)}
-                disabled={!supported || device.status !== 'unclaimed'}
-              >
-                <Cable className="w-4 h-4 mr-2" />
-                {t('provisioning.provisionButton', 'Provision via USB')}
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => handleProvision(device)}
+                  disabled={!supported || device.status !== 'unclaimed'}>
+                  <Cable className="w-4 h-4 mr-2" />
+                  {t('provisioning.provisionButton', 'Provision via USB')}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleDelete(device)}>
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           ))}
         </div>
