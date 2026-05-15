@@ -232,6 +232,9 @@ export function DeviceListPage() {
             if (c) setActiveClient({ id: c.id, name: c.name })
           }}>
           <option value="">Todos los clientes</option>
+          {activeClient && !clients.find((c: any) => c.id === activeClient.id) && (
+            <option value={activeClient.id}>{activeClient.name}</option>
+          )}
           {clients.map((c: any) => (
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
