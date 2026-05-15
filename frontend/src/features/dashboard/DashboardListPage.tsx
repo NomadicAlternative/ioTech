@@ -22,12 +22,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { useDashboardStore } from './dashboardStore'
+import { useClientContext } from '@/stores/clientContext'
+import { listClients } from '@/features/clients/api'
 
 export function DashboardListPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { dashboards, fetchDashboards, createDashboard, deleteDashboard } = useDashboardStore()
-  const { activeClient } = useClientContext()
+  const { activeClient, setActiveClient } = useClientContext()
+  const [clients, setClients] = useState<any[]>([])
 
   const filteredDashboards = useMemo(() => {
     if (!activeClient) return dashboards
@@ -43,8 +46,9 @@ export function DashboardListPage() {
 
   useEffect(() => {
     fetchDashboards()
-      .catch((err) => setError(err.message))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Error al cargar'))
       .finally(() => setLoading(false))
+    listClients().then(setClients).catch(() => {})
   }, [fetchDashboards])
 
   const handleCreate = async () => {
@@ -83,6 +87,28 @@ export function DashboardListPage() {
           <Plus className="h-4 w-4 mr-2" />
           {t('dashboard.list.newButton')}
         </Button>
+      </div>
+
+      {/* Client filter */}
+      <div className="flex items-center gap-2 text-sm">
+        <span className="text-muted-foreground">Cliente:</span>
+        <select
+          className="rounded-lg border border-[var(--border)] bg-card px-3 py-1.5 text-sm"
+          value={activeClient?.id || ''}
+          onChange={e => {
+            const id = e.target.value
+            if (!id) { setActiveClient(null); return }
+            const c = clients.find((cl: any) => cl.id === id)
+            if (c) setActiveClient({ id: c.id, name: c.name })
+          }}>
+          <option value="">Todos los clientes</option>
+          {activeClient && !clients.find((c: any) => c.id === activeClient.id) && (
+            <option value={activeClient.id}>{activeClient.name}</option>
+          )}
+          {clients.map((c: any) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
       </div>
 
       {/* Error */}
