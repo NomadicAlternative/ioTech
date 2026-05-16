@@ -69,6 +69,7 @@
       "widgets_one": "{{count}} widget",
       "widgets_other": "{{count}} widgets",
       "failedCreate": "Failed to create dashboard",
+      "failedDelete": "Failed to delete dashboard",
       "confirmDelete": "Delete this dashboard?"
     },
     "create": {

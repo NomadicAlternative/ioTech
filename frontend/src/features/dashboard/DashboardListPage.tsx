@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Plus, LayoutDashboard, Edit, Trash2, Clock } from 'lucide-react'
@@ -38,14 +38,25 @@ export function DashboardListPage() {
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const errorTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const [createOpen, setCreateOpen] = useState(false)
   const [newName, setNewName] = useState('')
   const [newDesc, setNewDesc] = useState('')
   const [creating, setCreating] = useState(false)
 
+  const showError = (msg: string) => {
+    setError(msg)
+    clearTimeout(errorTimerRef.current)
+    errorTimerRef.current = setTimeout(() => setError(null), 5000)
+  }
+
+  useEffect(() => {
+    return () => clearTimeout(errorTimerRef.current)
+  }, [])
+
   useEffect(() => {
     fetchDashboards()
-      .catch((err) => setError(err instanceof Error ? err.message : 'Error al cargar'))
+      .catch((err) => showError(err instanceof Error ? err.message : 'Error al cargar'))
       .finally(() => setLoading(false))
     listClients().then(setClients).catch(() => {})
   }, [fetchDashboards])
@@ -60,7 +71,7 @@ export function DashboardListPage() {
       setNewDesc('')
       navigate(`/app/dashboards/${dashboard.id}/edit`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('dashboard.list.failedCreate'))
+      showError(err instanceof Error ? err.message : t('dashboard.list.failedCreate'))
     } finally {
       setCreating(false)
     }
@@ -69,7 +80,11 @@ export function DashboardListPage() {
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
     if (!confirm(t('dashboard.list.confirmDelete'))) return
-    await deleteDashboard(id).catch(() => {/* ignore */})
+    try {
+      await deleteDashboard(id)
+    } catch {
+      showError(t('dashboard.list.failedDelete', 'Error al eliminar el dashboard'))
+    }
   }
 
   return (
