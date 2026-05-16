@@ -8,6 +8,8 @@ const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const swaggerConfig = require('./config/swagger');
 const errorHandler = require('./shared/middleware/errorHandler');
+const authGuard = require('./shared/middleware/authGuard');
+const trialExpiry = require('./shared/middleware/trialExpiry');
 
 const authRoutes = require('./modules/auth/auth.routes');
 const devicesRoutes = require('./modules/devices/devices.routes');
@@ -51,19 +53,27 @@ function createApp() {
   });
 
   // ── Module routers ────────────────────────────────────────────────────────
+  // Auth routes — no authGuard, no trialExpiry
   app.use('/api/auth', authRoutes);
-  app.use('/api/devices', devicesRoutes);
-  app.use('/api/device-templates', deviceTemplatesRoutes);
-  app.use('/api/installers', installersRoutes);
-  app.use('/api/clients', clientsRoutes);
-  app.use('/api/telemetry', telemetryRoutes);
-  app.use('/api/provisioning', provisioningRoutes);
-  app.use('/api/firmware', firmwareRoutes);
-  app.use('/api/devices', otaRouter);
-  app.use('/api/dashboards', dashboardsRoutes);
-  app.use('/api/rules', rulesRoutes);
-  app.use('/api/admin', adminRoutes);
-  app.use('/api/ai', aiRoutes);
+
+  // Tenant-scoped routes — require auth + trial check
+  const tenantScope = [authGuard, trialExpiry];
+  app.use('/api/devices', ...tenantScope, devicesRoutes);
+  app.use('/api/device-templates', ...tenantScope, deviceTemplatesRoutes);
+  app.use('/api/installers', ...tenantScope, installersRoutes);
+  app.use('/api/clients', ...tenantScope, clientsRoutes);
+  app.use('/api/telemetry', ...tenantScope, telemetryRoutes);
+  app.use('/api/provisioning', ...tenantScope, provisioningRoutes);
+  app.use('/api/firmware', ...tenantScope, firmwareRoutes);
+  app.use('/api/devices', ...tenantScope, otaRouter);
+  app.use('/api/dashboards', ...tenantScope, dashboardsRoutes);
+  app.use('/api/rules', ...tenantScope, rulesRoutes);
+  app.use('/api/ai', ...tenantScope, aiRoutes);
+
+  // Admin routes — authGuard + superAdmin (trialExpiry NOT applied)
+  app.use('/api/admin', authGuard, adminRoutes);
+
+  // Internal MQTT auth — separate auth mechanism
   app.use('/internal/mqtt', mqttAuthGuardRouter);
 
   // ── Swagger / OpenAPI docs (no auth required) ────────────────────────────

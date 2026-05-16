@@ -6,7 +6,7 @@ const register = Joi.object({
   tenantId: Joi.string().uuid().required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(1).required(),
-  role: Joi.string().valid('admin', 'installer'),
+  role: Joi.string().valid('super_admin', 'admin', 'installer'),
 });
 
 const login = Joi.object({
@@ -30,4 +30,13 @@ const installerRegister = Joi.object({
   metadata: Joi.object(),
 });
 
-module.exports = { register, login, refresh, installerRegister };
+const changePassword = Joi.object({
+  currentPassword: Joi.string().min(1).required(),
+  newPassword: Joi.string().min(8).required(),
+});
+
+const forgotPassword = Joi.object({
+  email: Joi.string().email().required(),
+});
+
+module.exports = { register, login, refresh, installerRegister, changePassword, forgotPassword };

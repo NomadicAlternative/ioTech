@@ -2,9 +2,11 @@
 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const authModel = require('./auth.model');
 const db = require('../../shared/db/knex');
+const { sendPasswordReset } = require('../../shared/email');
 const { validateEmail, validatePassword } = require('../../shared/validators');
 const {
   ValidationError,
@@ -197,13 +199,16 @@ async function installerRegister(data) {
   // Use a raw transaction (not withTenant) since the tenant doesn't exist yet
   // — RLS policies will apply after the tenant is created
   await db.transaction(async (trx) => {
-    // 1. Create tenant
+    // 1. Create tenant with trial grant (TRIAL-003)
     await trx('tenants').insert({
       id: tenantId,
       name,
       email,
       contact_email: contactEmail || null,
       metadata: JSON.stringify(metadata || {}),
+      trial_ends_at: trx.raw("NOW() + INTERVAL '3 days'"),
+      status: 'trial',
+      plan: 'base',
     });
 
     // 2. Create user (admin role for the installer)
@@ -244,4 +249,60 @@ async function installerRegister(data) {
   };
 }
 
-module.exports = { register, login, refreshToken, logout, installerRegister };
+/**
+ * Change the authenticated user's password.
+ * Verifies the current password before updating.
+ *
+ * @param {string} userId
+ * @param {string} currentPassword
+ * @param {string} newPassword
+ * @throws {UnauthorizedError} When current password is incorrect
+ */
+async function changePassword(userId, currentPassword, newPassword) {
+  const user = await db('users').where({ id: userId }).first();
+  if (!user) {
+    throw new UnauthorizedError('User not found');
+  }
+
+  const valid = await bcrypt.compare(currentPassword, user.password_hash);
+  if (!valid) {
+    throw new UnauthorizedError('Current password is incorrect');
+  }
+
+  const newHash = await bcrypt.hash(newPassword, 10);
+  await db('users').where({ id: userId }).update({
+    password_hash: newHash,
+    updated_at: new Date(),
+  });
+
+  logger.info(`[auth.service] Password changed for user ${user.email} (${userId})`);
+}
+
+/**
+ * Generate a new random password and send it by email.
+ * Does NOT reveal whether the email exists (prevents enumeration).
+ *
+ * @param {string} email
+ */
+async function forgotPassword(email) {
+  const user = await db('users').where({ email }).first();
+  if (!user) {
+    // User not found — silently succeed to prevent email enumeration
+    logger.info(`[auth.service] Forgot password requested for unknown email: ${email}`);
+    return;
+  }
+
+  const newPassword = crypto.randomBytes(10).toString('hex');
+  const newHash = await bcrypt.hash(newPassword, 10);
+
+  await db('users').where({ id: user.id }).update({
+    password_hash: newHash,
+    updated_at: new Date(),
+  });
+
+  await sendPasswordReset(email, newPassword);
+
+  logger.info(`[auth.service] Password reset for user ${email} (${user.id})`);
+}
+
+module.exports = { register, login, refreshToken, logout, installerRegister, changePassword, forgotPassword };

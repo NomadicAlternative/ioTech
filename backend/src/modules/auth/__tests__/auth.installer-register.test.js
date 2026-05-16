@@ -44,6 +44,8 @@ jest.mock('../../../shared/db/knex', () => {
       where: jest.fn().mockReturnThis(),
       first: jest.fn(),
     }));
+    // Add raw() for SQL expressions like NOW() + INTERVAL
+    mockTrx.raw = jest.fn((sql) => ({ __raw: sql }));
     return cb(mockTrx);
   });
 
@@ -181,6 +183,37 @@ describe('authService.installerRegister()', () => {
         password: 'short',
       })
     ).rejects.toThrow(ValidationError);
+  });
+
+  it('sets trial_ends_at, status=trial, and plan=base on new tenant', async () => {
+    // Capture the actual insert call arguments to the transaction mock
+    let capturedTenantInsert;
+    const originalTransaction = mockDb.transaction;
+    mockDb.transaction = jest.fn(async (cb) => {
+      const trxTableInsert = jest.fn().mockResolvedValue([{ id: 'mock-uuid' }]);
+      const mockTrx = jest.fn(() => ({
+        insert: trxTableInsert,
+        where: jest.fn().mockReturnThis(),
+        first: jest.fn(),
+      }));
+      mockTrx.raw = jest.fn((sql) => ({ __raw: sql }));
+      await cb(mockTrx);
+      // The FIRST insert call on trx is the tenant insert
+      capturedTenantInsert = trxTableInsert.mock.calls[0]?.[0];
+      return undefined;
+    });
+
+    await authService.installerRegister({
+      name: 'Trial Installer',
+      email: EMAIL,
+      password: PASSWORD,
+    });
+
+    expect(capturedTenantInsert).toBeDefined();
+    expect(capturedTenantInsert).toHaveProperty('trial_ends_at');
+    expect(capturedTenantInsert).toHaveProperty('status', 'trial');
+    expect(capturedTenantInsert).toHaveProperty('plan', 'base');
+    expect(capturedTenantInsert.name).toBe('Trial Installer');
   });
 
   it('generates two different JWT tokens (access + refresh)', async () => {
