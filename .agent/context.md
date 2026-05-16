@@ -135,8 +135,8 @@ ioTech/
 
 ## Next Steps
 
-1. **Verificar telemetría DHT22** con auto-detect en firmware
-2. **Super admin panel** — métricas cross-installer, facturación
+1. ~~Verificar telemetría DHT22 con auto-detect en firmware~~ ✅
+2. **Super admin panel** — SDD proposal creada, specs pendientes (`docs/sdd/super-admin/proposal.md`)
 3. **Integración de pago** — Stripe/MercadoPago
 4. **Firmware genérico** — io_driver architecture modular
 5. **Completar i18n** — DE, PT, FR, IT para toda la app
@@ -152,6 +152,18 @@ ioTech/
 - SocketProvider: fix de explosión de datos de telemetría
 - Provisioning: botón de eliminar device
 - Clientes: email, phone, address se guardan (schema fix)
+
+### Session 2026-05-15
+- ✅ **Verificación DHT22**: auto-detect FUNCIONA — dispositivo `15268547` ("Control de temperatura con DHT22 y relé") manda ~25°C / 44% cada 30s. `{"dht":"error"}` ocasional, inofensivo.
+- ✅ **Fix silent delete**: `DashboardListPage.tsx` — `catch(()=>{})` reemplazado por `try/catch` con banner de error auto-dismiss (5s). i18n keys agregadas.
+- 🧹 **DB cleanup**: 5 dashboards huérfanos eliminados (pertenecían a `admin@iotech.dev`, no se borraron por el silent catch).
+- 🔧 **SDD model config**: `opencode.json` actualizado — orchestrator a v4-pro, design/tasks a reasoner, spec/verify a v4-pro. Sub-agentes optimizados por tipo de tarea.
+- 📋 **SDD super-admin**: Proposal creada (`docs/sdd/super-admin/proposal.md`). 4 fases: Auth & Role, Admin Backend, Frontend Admin, Trial Foundation. **Pendiente**: specs.
+
+### Activo ahora
+- **Dispositivo DHT22**: `15268547-9d2d-4033-8a1e-c2d3d1f73a44` (Control de temperatura con DHT22 y relé), template `e47524c1`, installer `test@instalador.com`
+- **Dashboard activo**: `temphumedad` (f4f91fb9), muestra temperatura y humedad en tiempo real
+- **Serial port**: `/dev/cu.usbserial-110`
 
 ## API Overview
 
