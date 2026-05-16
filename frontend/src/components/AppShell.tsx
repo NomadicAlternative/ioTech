@@ -8,7 +8,7 @@ import {
   Bot, Download, Cable, Building2, Menu, X, Wand2,
 } from 'lucide-react'
 
-const NAV_ITEMS = [
+const INSTALLER_NAV_ITEMS = [
   { to: '/app/dashboards', icon: LayoutDashboard, labelKey: 'nav.dashboards' },
   { to: '/app/devices',    icon: Cpu,             labelKey: 'nav.devices' },
   { to: '/app/rules',      icon: Bot,             labelKey: 'nav.rules' },
@@ -18,6 +18,11 @@ const NAV_ITEMS = [
   { to: '/app/provision',  icon: Cable,            labelKey: 'nav.provision' },
   { to: '/app/clients',    icon: Users,            labelKey: 'nav.clients' },
   { to: '/app/settings',   icon: Settings,         labelKey: 'nav.settings' },
+]
+
+const ADMIN_NAV_ITEMS = [
+  { to: '/app/admin/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
+  { to: '/app/tenants',         icon: Building2,       labelKey: 'nav.installers' },
 ]
 
 export function AppShell() {
@@ -30,9 +35,11 @@ export function AppShell() {
 
   function closeSidebar() { setSidebarOpen(false) }
 
+  const navItems = isSuperAdmin ? ADMIN_NAV_ITEMS : INSTALLER_NAV_ITEMS
+
   const NavItems = () => (
     <>
-      {NAV_ITEMS.map(({ to, icon: Icon, labelKey }) => (
+      {navItems.map(({ to, icon: Icon, labelKey }) => (
         <NavLink
           key={to}
           to={to}
@@ -54,28 +61,6 @@ export function AppShell() {
           )}
         </NavLink>
       ))}
-
-      {isSuperAdmin && (
-        <NavLink
-          to="/app/tenants"
-          onClick={closeSidebar}
-          className={({ isActive }) =>
-            [
-              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
-              isActive
-                ? 'bg-sidebar-primary/30 text-sidebar-primary-foreground before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-amber-400'
-                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
-            ].join(' ')
-          }
-        >
-          {({ isActive }) => (
-            <>
-              <Building2 className={`w-4 h-4 shrink-0 ${isActive ? 'opacity-100' : 'opacity-60'}`} />
-              {t('nav.tenants', 'Tenants')}
-            </>
-          )}
-        </NavLink>
-      )}
     </>
   )
 

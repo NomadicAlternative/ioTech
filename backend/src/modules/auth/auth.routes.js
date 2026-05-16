@@ -319,4 +319,76 @@ router.post('/logout', async (req, res, next) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/auth/change-password:
+ *   post:
+ *     summary: Change the authenticated user's password
+ *     tags:
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [currentPassword, newPassword]
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 8
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Current password is incorrect
+ */
+router.post('/change-password', authGuard, validate(schemas.changePassword), async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    await authService.changePassword(req.user.userId, currentPassword, newPassword);
+    res.json({ message: 'Password changed successfully' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @openapi
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Request a new password (sent by email)
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: If the email exists, a new password has been sent
+ */
+router.post('/forgot-password', validate(schemas.forgotPassword), async (req, res, next) => {
+  try {
+    await authService.forgotPassword(req.body.email);
+    // Always return 200 to prevent email enumeration
+    res.json({ message: 'If the email is registered, a new password has been sent.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

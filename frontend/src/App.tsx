@@ -14,7 +14,10 @@ import { RulesPage } from '@/features/rules/RulesPage'
 import { FirmwareListPage } from '@/features/firmware/FirmwareListPage'
 import { ProvisioningPage } from '@/features/provisioning/ProvisioningPage'
 import { TenantsPage } from '@/features/admin/TenantsPage'
+import { DashboardPage } from '@/features/admin/DashboardPage'
+import { InstallerDetailPage } from '@/features/admin/InstallerDetailPage'
 import { AIChat } from '@/features/ai/AIChat'
+import { SettingsPage } from '@/features/settings/SettingsPage'
 import { SocketProvider } from '@/providers/SocketProvider'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
@@ -62,8 +65,10 @@ export default function App() {
           <Route path="firmware" element={<FirmwareListPage />} />
           <Route path="provision" element={<ErrorBoundary><ProvisioningPage /></ErrorBoundary>} />
           <Route path="tenants" element={<ErrorBoundary><TenantsPage /></ErrorBoundary>} />
+          <Route path="admin/dashboard" element={<ErrorBoundary><DashboardPage /></ErrorBoundary>} />
+          <Route path="admin/tenants/:id" element={<ErrorBoundary><InstallerDetailPage /></ErrorBoundary>} />
           <Route path="ai" element={<ErrorBoundary><AIChat /></ErrorBoundary>} />
-          <Route path="settings" element={<PlaceholderPage name="Settings" />} />
+          <Route path="settings" element={<ErrorBoundary><SettingsPage /></ErrorBoundary>} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

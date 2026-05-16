@@ -130,6 +130,98 @@ describe('authStore', () => {
     expect(state.user?.email).toBe('bob@example.com')
     expect(state.isAuthenticated).toBe(true)
   })
+
+  // ─── isSuperAdmin from role (AUTH-004) ──────────────────────────────────
+
+  it('login sets isSuperAdmin=true when role is super_admin', async () => {
+    const payload = {
+      sub: 'sa-1',
+      email: 'anyone@example.com',
+      role: 'super_admin',
+      tenantId: 'sa-tenant',
+    }
+    const fakeToken = makeFakeJwt(payload)
+
+    vi.mocked(api.post).mockResolvedValueOnce({ data: { accessToken: fakeToken } })
+
+    await act(async () => {
+      await useAuthStore.getState().login('anyone@example.com', 'secret')
+    })
+
+    expect(useAuthStore.getState().isSuperAdmin).toBe(true)
+  })
+
+  it('login sets isSuperAdmin=false when role is installer (not in email list)', async () => {
+    const payload = {
+      sub: 'inst-1',
+      email: 'admin@iotech.dev', // ← this email WAS in the old hardcoded list
+      role: 'installer',          // ← but role is NOT super_admin
+      tenantId: 't-1',
+    }
+    const fakeToken = makeFakeJwt(payload)
+
+    vi.mocked(api.post).mockResolvedValueOnce({ data: { accessToken: fakeToken } })
+
+    await act(async () => {
+      await useAuthStore.getState().login('admin@iotech.dev', 'secret')
+    })
+
+    // AUTH-004: isSuperAdmin derives from role, NOT email
+    expect(useAuthStore.getState().isSuperAdmin).toBe(false)
+  })
+
+  it('refreshToken sets isSuperAdmin=true when role is super_admin', async () => {
+    const payload = {
+      sub: 'sa-2',
+      email: 'super@example.com',
+      role: 'super_admin',
+      tenantId: 'any',
+    }
+    const fakeToken = makeFakeJwt(payload)
+
+    vi.mocked(api.post).mockResolvedValueOnce({ data: { accessToken: fakeToken } })
+
+    await act(async () => {
+      await useAuthStore.getState().refreshToken()
+    })
+
+    expect(useAuthStore.getState().isSuperAdmin).toBe(true)
+  })
+
+  it('isSuperAdmin is false for installer role in refreshToken too', async () => {
+    const payload = {
+      sub: 'inst-2',
+      email: 'admin@iotech.dev', // old-email — should NOT grant admin now
+      role: 'installer',
+      tenantId: 't-2',
+    }
+    const fakeToken = makeFakeJwt(payload)
+
+    vi.mocked(api.post).mockResolvedValueOnce({ data: { accessToken: fakeToken } })
+
+    await act(async () => {
+      await useAuthStore.getState().refreshToken()
+    })
+
+    expect(useAuthStore.getState().isSuperAdmin).toBe(false)
+  })
+
+  it('isSuperAdmin resets to false on logout', async () => {
+    useAuthStore.setState({
+      user: { id: 'u1', email: 'sa@test.com', role: 'super_admin', tenantId: 't1' },
+      accessToken: 'token',
+      isAuthenticated: true,
+      isSuperAdmin: true,
+    })
+
+    vi.mocked(api.post).mockResolvedValueOnce({})
+
+    await act(async () => {
+      await useAuthStore.getState().logout()
+    })
+
+    expect(useAuthStore.getState().isSuperAdmin).toBe(false)
+  })
 })
 
 // ─── dashboardStore ───────────────────────────────────────────────────────────

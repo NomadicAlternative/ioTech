@@ -5,7 +5,8 @@ import { useAuthStore } from './authStore'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Cpu, AlertCircle, Activity, Shield, ArrowRight, Radio, LayoutDashboard, Gauge } from 'lucide-react'
+import { Cpu, AlertCircle, Activity, Shield, ArrowRight, Radio, LayoutDashboard, Gauge, ArrowLeft, Check, Mail } from 'lucide-react'
+import api from '@/lib/axios'
 
 export function LoginPage() {
   const { t } = useTranslation()
@@ -13,8 +14,26 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [forgotMode, setForgotMode] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotSent, setForgotSent] = useState(false)
+  const [forgotError, setForgotError] = useState<string | null>(null)
   const login = useAuthStore((s) => s.login)
   const navigate = useNavigate()
+
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault()
+    setForgotError(null)
+    setLoading(true)
+    try {
+      await api.post('/api/auth/forgot-password', { email: forgotEmail })
+      setForgotSent(true)
+    } catch {
+      setForgotError('Error al enviar. Intenta de nuevo.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -310,35 +329,130 @@ export function LoginPage() {
               />
             </div>
 
-            {error && (
-              <div
-                className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm"
-                style={{ background: '#fee2e2', color: '#b91c1c' }}
-              >
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                {error}
-              </div>
-            )}
+              {error && (
+                <div
+                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm"
+                  style={{ background: '#fee2e2', color: '#b91c1c' }}
+                >
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </div>
+              )}
 
-            <Button
-              type="submit"
-              onClick={handleSubmit}
-              className="w-full h-11 font-semibold text-sm gap-2 group"
-              disabled={loading}
-              style={{ background: 'var(--brand-imperial)' }}
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                  {t('auth.signingIn')}
-                </span>
+              {!forgotMode ? (
+                <>
+                  <Button
+                    type="submit"
+                    onClick={handleSubmit}
+                    className="w-full h-11 font-semibold text-sm gap-2 group"
+                    disabled={loading}
+                    style={{ background: 'var(--brand-imperial)' }}
+                  >
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        {t('auth.signingIn')}
+                      </span>
+                    ) : (
+                      <>
+                        {t('auth.signIn')}
+                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                      </>
+                    )}
+                  </Button>
+
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      className="text-sm lg:text-muted-foreground text-white/60 hover:underline transition-colors"
+                      onClick={() => { setForgotMode(true); setForgotError(null) }}
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  </div>
+                </>
               ) : (
                 <>
-                  {t('auth.signIn')}
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                  {forgotSent ? (
+                    <div className="text-center space-y-3">
+                      <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400">
+                        <Check className="w-5 h-5" />
+                        <span className="font-medium">Correo enviado</span>
+                      </div>
+                      <p className="text-sm lg:text-muted-foreground text-white/60">
+                        Si el email está registrado, recibirás una nueva contraseña.
+                      </p>
+                      <button
+                        type="button"
+                        className="text-sm lg:text-muted-foreground text-white/60 hover:underline transition-colors"
+                        onClick={() => { setForgotMode(false); setForgotSent(false); setForgotEmail('') }}
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5 inline mr-1" />
+                        Volver al inicio de sesión
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="forgot-email" className="text-sm font-semibold lg:text-foreground text-white/90">
+                          Email de recuperación
+                        </Label>
+                        <Input
+                          id="forgot-email"
+                          type="email"
+                          placeholder="tu@email.com"
+                          autoComplete="email"
+                          required
+                          value={forgotEmail}
+                          onChange={(e) => setForgotEmail(e.target.value)}
+                          className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-border border-white/20 focus-visible:ring-[#14213D]"
+                        />
+                      </div>
+
+                      {forgotError && (
+                        <div
+                          className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm"
+                          style={{ background: '#fee2e2', color: '#b91c1c' }}
+                        >
+                          <AlertCircle className="w-4 h-4 shrink-0" />
+                          {forgotError}
+                        </div>
+                      )}
+
+                      <Button
+                        type="submit"
+                        onClick={handleForgotPassword}
+                        className="w-full h-11 font-semibold text-sm gap-2"
+                        disabled={loading || !forgotEmail}
+                        style={{ background: 'var(--brand-imperial)' }}
+                      >
+                        {loading ? (
+                          <span className="flex items-center gap-2">
+                            <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                            Enviando...
+                          </span>
+                        ) : (
+                          <>
+                            <Mail className="w-4 h-4" />
+                            Enviar nueva contraseña
+                          </>
+                        )}
+                      </Button>
+
+                      <div className="text-center">
+                        <button
+                          type="button"
+                          className="text-sm lg:text-muted-foreground text-white/60 hover:underline transition-colors"
+                          onClick={() => { setForgotMode(false); setForgotError(null) }}
+                        >
+                          <ArrowLeft className="w-3.5 h-3.5 inline mr-1" />
+                          Volver al inicio de sesión
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
-            </Button>
           </div>
         </div>
       </div>

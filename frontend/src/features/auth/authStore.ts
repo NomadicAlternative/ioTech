@@ -77,7 +77,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
     })
     const { accessToken } = res.data
     const user = decodeJwtPayload(accessToken)
-    const isSuperAdmin = ['admin@iotech.dev', 'diego@instalador.com'].includes(user.email)
+    const isSuperAdmin = user.role === 'super_admin'
     set({ accessToken, user, isAuthenticated: true, isSuperAdmin })
   },
 
@@ -87,7 +87,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
     } catch {
       // best-effort
     }
-    set({ user: null, accessToken: null, isAuthenticated: false })
+    set({ user: null, accessToken: null, isAuthenticated: false, isSuperAdmin: false })
   },
 
   refreshToken: async () => {
@@ -95,7 +95,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
     const res = await api.post<{ accessToken: string }>('/api/auth/refresh')
     const { accessToken } = res.data
     const user = decodeJwtPayload(accessToken)
-    const isSuperAdmin = ['admin@iotech.dev', 'diego@instalador.com'].includes(user.email)
+    const isSuperAdmin = user.role === 'super_admin'
     set({ accessToken, user, isAuthenticated: true, isSuperAdmin })
   },
 

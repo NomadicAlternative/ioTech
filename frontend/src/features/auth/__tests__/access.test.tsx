@@ -183,3 +183,102 @@ describe('RoleGuard', () => {
     expect(screen.queryByTestId('edit-button')).not.toBeInTheDocument()
   })
 })
+
+// ─── Admin Route Guards (ADMIN-004) ───────────────────────────────────────────
+describe('Admin Route Guards', () => {
+  beforeEach(resetAuth)
+
+  it('renders admin dashboard route for super_admin', () => {
+    setAuth('super_admin')
+
+    render(
+      <MemoryRouter initialEntries={['/app/admin/dashboard']}>
+        <Routes>
+          <Route path="/app" element={<ProtectedRoute />} />
+          <Route
+            path="/app/admin/dashboard"
+            element={
+              <RoleGuard role="super_admin">
+                <div data-testid="admin-dashboard">Admin Dashboard</div>
+              </RoleGuard>
+            }
+          />
+          <Route path="/login" element={<div data-testid="login-page">Login</div>} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    expect(screen.getByTestId('admin-dashboard')).toBeInTheDocument()
+  })
+
+  it('blocks admin dashboard for installer role', () => {
+    setAuth('installer')
+
+    render(
+      <MemoryRouter initialEntries={['/app/admin/dashboard']}>
+        <Routes>
+          <Route path="/app" element={<ProtectedRoute />} />
+          <Route
+            path="/app/admin/dashboard"
+            element={
+              <RoleGuard role="super_admin">
+                <div data-testid="admin-dashboard">Admin Dashboard</div>
+              </RoleGuard>
+            }
+          />
+          <Route path="/login" element={<div data-testid="login-page">Login</div>} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    expect(screen.queryByTestId('admin-dashboard')).not.toBeInTheDocument()
+    expect(screen.getByText('403 — Forbidden')).toBeInTheDocument()
+  })
+
+  it('renders admin tenant detail route for super_admin', () => {
+    setAuth('super_admin')
+
+    render(
+      <MemoryRouter initialEntries={['/app/admin/tenants/t-123']}>
+        <Routes>
+          <Route path="/app" element={<ProtectedRoute />} />
+          <Route
+            path="/app/admin/tenants/:id"
+            element={
+              <RoleGuard role="super_admin">
+                <div data-testid="tenant-detail">Tenant Detail</div>
+              </RoleGuard>
+            }
+          />
+          <Route path="/login" element={<div data-testid="login-page">Login</div>} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    expect(screen.getByTestId('tenant-detail')).toBeInTheDocument()
+  })
+
+  it('blocks admin tenant detail for installer role', () => {
+    setAuth('installer')
+
+    render(
+      <MemoryRouter initialEntries={['/app/admin/tenants/t-456']}>
+        <Routes>
+          <Route path="/app" element={<ProtectedRoute />} />
+          <Route
+            path="/app/admin/tenants/:id"
+            element={
+              <RoleGuard role="super_admin">
+                <div data-testid="tenant-detail">Tenant Detail</div>
+              </RoleGuard>
+            }
+          />
+          <Route path="/login" element={<div data-testid="login-page">Login</div>} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    expect(screen.queryByTestId('tenant-detail')).not.toBeInTheDocument()
+    expect(screen.getByText('403 — Forbidden')).toBeInTheDocument()
+  })
+})
