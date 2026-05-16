@@ -4,6 +4,7 @@ const { Router } = require('express');
 const authGuard = require('../../shared/middleware/authGuard');
 const superAdmin = require('../../shared/middleware/superAdmin');
 const adminService = require('./admin.service');
+const adminSchemas = require('./admin.schemas');
 
 const router = Router();
 
@@ -100,6 +101,96 @@ router.post('/tenants/:id/reset-password', async (req, res, next) => {
   try {
     const { password } = req.body;
     const result = await adminService.resetPassword(req.params.id, password);
+    res.json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @openapi
+ * /api/admin/dashboard:
+ *   get:
+ *     summary: Get cross-tenant KPI counts (super-admin only)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard KPI data
+ */
+router.get('/dashboard', async (req, res, next) => {
+  try {
+    const { error, value } = adminSchemas.dashboardQuery.validate(req.query);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const data = await adminService.getDashboard();
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @openapi
+ * /api/admin/tenants/{id}:
+ *   get:
+ *     summary: Get tenant detail with device and user counts (super-admin only)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Tenant detail with device/user counts
+ *       404:
+ *         description: Tenant not found
+ */
+router.get('/tenants/:id', async (req, res, next) => {
+  try {
+    const { error, value } = adminSchemas.tenantIdParams.validate(req.params);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const data = await adminService.getTenantDetail(value.id);
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @openapi
+ * /api/admin/tenants/{id}:
+ *   delete:
+ *     summary: Delete a tenant and ALL associated data (super-admin only, IRREVERSIBLE)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Tenant and all associated data deleted
+ *       404:
+ *         description: Tenant not found
+ */
+router.delete('/tenants/:id', async (req, res, next) => {
+  try {
+    const result = await adminService.deleteTenant(req.params.id);
     res.json({ data: result });
   } catch (err) {
     next(err);
