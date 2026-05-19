@@ -6,6 +6,7 @@ const validate = require('../../shared/middleware/validate');
 const authGuard = require('../../shared/middleware/authGuard');
 const superAdmin = require('../../shared/middleware/superAdmin');
 const schemas = require('./auth.schemas');
+const { loginLimiter, registerLimiter, refreshLimiter, logoutLimiter } = require('./rateLimiter');
 
 const router = Router();
 
@@ -77,7 +78,7 @@ const REFRESH_COOKIE_OPTIONS = {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/register', validate(schemas.register), async (req, res, next) => {
+router.post('/register', registerLimiter, validate(schemas.register), async (req, res, next) => {
   try {
     const result = await authService.register(req.body);
     res.status(201).json(result);
@@ -213,7 +214,7 @@ router.post('/installer-register', validate(schemas.installerRegister), async (r
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/login', validate(schemas.login), async (req, res, next) => {
+router.post('/login', loginLimiter, validate(schemas.login), async (req, res, next) => {
   try {
     const { tenantId, email, password } = req.body;
     const result = await authService.login(tenantId, email, password);
@@ -265,7 +266,7 @@ router.post('/login', validate(schemas.login), async (req, res, next) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/refresh', async (req, res, next) => {
+router.post('/refresh', refreshLimiter, async (req, res, next) => {
   try {
     const token = req.cookies?.[REFRESH_COOKIE_NAME];
     if (!token) {
@@ -306,7 +307,7 @@ router.post('/refresh', async (req, res, next) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/logout', async (req, res, next) => {
+router.post('/logout', logoutLimiter, async (req, res, next) => {
   try {
     const token = req.cookies?.[REFRESH_COOKIE_NAME];
     if (token) {
