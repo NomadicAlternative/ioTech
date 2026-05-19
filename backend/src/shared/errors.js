@@ -59,6 +59,13 @@ class ConflictError extends AppError {
   }
 }
 
+/** 429 — Too many requests (rate limit) */
+class TooManyRequestsError extends AppError {
+  constructor(message = 'Too many requests') {
+    super(message, 429, 'RATE_LIMIT_EXCEEDED');
+  }
+}
+
 module.exports = {
   AppError,
   NotFoundError,
@@ -66,4 +73,5 @@ module.exports = {
   UnauthorizedError,
   ForbiddenError,
   ConflictError,
+  TooManyRequestsError,
 };
