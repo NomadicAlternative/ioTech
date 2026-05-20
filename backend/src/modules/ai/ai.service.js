@@ -50,6 +50,7 @@ REGLAS:
 7. Incluí SIEMPRE "diagrama" con las conexiones físicas.
 8. El nombre del template en español, descriptivo.
 9. Los relays se numeran de 1 a N.
+10. Cada datastream puede incluir campos opcionales: "driver_name" (nombre del driver, máx 16 chars), "gpio" (0-48, usar null si no aplica), "i2c_addr" (string como "0x76", null si no es I2C), "config" (objeto con config específica, null o {}).
 
 Formato de respuesta OBLIGATORIO:
 {
@@ -61,7 +62,7 @@ Formato de respuesta OBLIGATORIO:
     ]}
   ],
   "datastreams": [
-    { "key": "temperature", "name": "Temperatura", "type": "number", "unit": "°C", "direction": "input" }
+    { "key": "temperature", "name": "Temperatura", "type": "number", "unit": "°C", "direction": "input", "driver_name": "DHT22", "gpio": 32, "i2c_addr": null, "config": {} }
   ],
   "rules": [
     {
@@ -104,7 +105,7 @@ async function callLLM(prompt) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model,
@@ -155,7 +156,12 @@ function ruleBasedConfig(input) {
   while ((match = relayPattern.exec(lower)) !== null) {
     const num = parseInt(match[1]);
     const before = lower.substring(Math.max(0, match.index - 50), match.index);
-    if (before.includes('activ') || before.includes('prender') || before.includes('encender') || before.includes('on')) {
+    if (
+      before.includes('activ') ||
+      before.includes('prender') ||
+      before.includes('encender') ||
+      before.includes('on')
+    ) {
       relayOn.push(num);
     }
     if (before.includes('apagar') || before.includes('desactiv') || before.includes('off')) {
@@ -168,7 +174,10 @@ function ruleBasedConfig(input) {
   const threshold = tempMatch ? parseInt(tempMatch[1]) : 12;
 
   // Detect sensor type
-  const isDHT = lower.includes('dht') || lower.includes('humedad') || (lower.includes('temperatura') && !lower.includes('ds18'));
+  const isDHT =
+    lower.includes('dht') ||
+    lower.includes('humedad') ||
+    (lower.includes('temperatura') && !lower.includes('ds18'));
   const sensorModel = isDHT ? 'DHT22' : 'DS18B20';
   const sensorPin = 14;
 
@@ -182,8 +191,8 @@ function ruleBasedConfig(input) {
 
   // Build actions
   const actions = [];
-  relayOn.forEach(r => actions.push({ type: 'relay', relay: r, state: 'on' }));
-  relayOff.forEach(r => actions.push({ type: 'relay', relay: r, state: 'off' }));
+  relayOn.forEach((r) => actions.push({ type: 'relay', relay: r, state: 'on' }));
+  relayOff.forEach((r) => actions.push({ type: 'relay', relay: r, state: 'off' }));
 
   // Build rules
   const rules = [];
@@ -198,8 +207,12 @@ function ruleBasedConfig(input) {
   }
 
   // Build diagram
-  const lines = [`ESP32 GPIO${sensorPin} → ${sensorModel} datos`, `ESP32 3.3V → ${sensorModel} VCC`, `ESP32 GND → ${sensorModel} GND`];
-  channels.forEach(r => lines.push(`ESP32 GPIO${r.gpio} → ${r.name}`));
+  const lines = [
+    `ESP32 GPIO${sensorPin} → ${sensorModel} datos`,
+    `ESP32 3.3V → ${sensorModel} VCC`,
+    `ESP32 GND → ${sensorModel} GND`,
+  ];
+  channels.forEach((r) => lines.push(`ESP32 GPIO${r.gpio} → ${r.name}`));
 
   return {
     template: {
@@ -224,7 +237,7 @@ function ruleBasedConfig(input) {
  */
 async function configure(prompt) {
   const llmResult = await callLLM(prompt);
-  const raw = (llmResult && llmResult.template) ? llmResult : ruleBasedConfig(prompt);
+  const raw = llmResult && llmResult.template ? llmResult : ruleBasedConfig(prompt);
 
   // Validate against contract schema — reject invalid AI output
   const validation = validateAiConfig(raw);
@@ -233,7 +246,10 @@ async function configure(prompt) {
     throw new ValidationError(validation.error);
   }
 
-  return { ...validation.value, _source: (llmResult && llmResult.template) ? 'ai' : 'rule-based-fallback' };
+  return {
+    ...validation.value,
+    _source: llmResult && llmResult.template ? 'ai' : 'rule-based-fallback',
+  };
 }
 
 /**
@@ -245,21 +261,28 @@ async function apply(tenantId, config) {
   if (validation.error) {
     throw new ValidationError(validation.error);
   }
-  config = validation.value;  // use sanitized version
+  config = validation.value; // use sanitized version
 
   const { template, datastreams, rules, drivers } = config;
-  const hardwareModel = template.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '');
+  const hardwareModel = template.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+$/, '');
 
   // 1. Create device template
   const createdTemplate = await templatesService.create(tenantId, {
     name: template.name,
     description: template.description,
-    datastreams: datastreams.map(ds => ({
+    datastreams: datastreams.map((ds) => ({
       key: ds.key,
       name: ds.name,
       type: ds.type,
       unit: ds.unit || null,
       direction: ds.direction,
+      driver_name: ds.driver_name || null,
+      gpio: ds.gpio || null,
+      i2c_addr: ds.i2c_addr || null,
+      config: ds.config || null,
     })),
     hardware_model: hardwareModel,
   });
@@ -273,7 +296,7 @@ async function apply(tenantId, config) {
 
   // 3. Create rules
   const createdRules = [];
-  for (const rule of (rules || [])) {
+  for (const rule of rules || []) {
     const r = await rulesService.create(tenantId, {
       name: rule.name,
       description: rule.description || '',
@@ -287,7 +310,9 @@ async function apply(tenantId, config) {
     createdRules.push(r);
   }
 
-  logger.info(`[ai.service] Applied config: template=${createdTemplate.id} device=${createdDevice.id} rules=${createdRules.length}`);
+  logger.info(
+    `[ai.service] Applied config: template=${createdTemplate.id} device=${createdDevice.id} rules=${createdRules.length}`
+  );
 
   return {
     template: createdTemplate,
@@ -304,34 +329,38 @@ async function apply(tenantId, config) {
  */
 const CATALOG = {
   boards: [
-    { model: 'ESP32',        description: 'ESP32 (WiFi + BLE)',       note: 'Principal' },
-    { model: 'ESP32-S3',     description: 'ESP32-S3 (WiFi + BLE + AI)', note: 'Cámara, edge ML' },
-    { model: 'ESP32-C3',     description: 'ESP32-C3 (WiFi + BLE)',    note: 'RISC-V, bajo consumo' },
+    { model: 'ESP32', description: 'ESP32 (WiFi + BLE)', note: 'Principal' },
+    { model: 'ESP32-S3', description: 'ESP32-S3 (WiFi + BLE + AI)', note: 'Cámara, edge ML' },
+    { model: 'ESP32-C3', description: 'ESP32-C3 (WiFi + BLE)', note: 'RISC-V, bajo consumo' },
   ],
   connectivity: [
-    { model: 'WIFI',   description: 'WiFi 2.4GHz',          note: 'Obligatorio' },
-    { model: 'MQTT',   description: 'MQTT (Mosquitto)',     note: 'Obligatorio' },
-    { model: 'BLE',    description: 'Bluetooth Low Energy', note: 'Beacons, nearby' },
+    { model: 'WIFI', description: 'WiFi 2.4GHz', note: 'Obligatorio' },
+    { model: 'MQTT', description: 'MQTT (Mosquitto)', note: 'Obligatorio' },
+    { model: 'BLE', description: 'Bluetooth Low Energy', note: 'Beacons, nearby' },
   ],
   sensors: [
-    { model: 'DHT11',    description: 'Temperatura + Humedad básica',       protocol: '1-wire' },
-    { model: 'DHT22',    description: 'Temperatura + Humedad precisión',    protocol: '1-wire' },
-    { model: 'BME280',   description: 'Temperatura + Humedad + Presión',    protocol: 'I2C (0x76)' },
-    { model: 'BMP280',   description: 'Temperatura + Presión',              protocol: 'I2C' },
-    { model: 'DS18B20',  description: 'Temperatura digital',                protocol: '1-wire Dallas' },
-    { model: 'PIR',      description: 'Sensor de movimiento HC-SR501',      protocol: 'GPIO digital' },
-    { model: 'HC-SR04',  description: 'Distancia ultrasónica 2cm-4m',       protocol: 'GPIO trigger/echo' },
-    { model: 'BH1750',   description: 'Luz (lux) ambiental',                protocol: 'I2C (0x23)' },
+    { model: 'DHT11', description: 'Temperatura + Humedad básica', protocol: '1-wire' },
+    { model: 'DHT22', description: 'Temperatura + Humedad precisión', protocol: '1-wire' },
+    { model: 'BME280', description: 'Temperatura + Humedad + Presión', protocol: 'I2C (0x76)' },
+    { model: 'BMP280', description: 'Temperatura + Presión', protocol: 'I2C' },
+    { model: 'DS18B20', description: 'Temperatura digital', protocol: '1-wire Dallas' },
+    { model: 'PIR', description: 'Sensor de movimiento HC-SR501', protocol: 'GPIO digital' },
+    {
+      model: 'HC-SR04',
+      description: 'Distancia ultrasónica 2cm-4m',
+      protocol: 'GPIO trigger/echo',
+    },
+    { model: 'BH1750', description: 'Luz (lux) ambiental', protocol: 'I2C (0x23)' },
   ],
   actuators: [
-    { model: 'RELAY',    description: 'Relé/módulo de relés 1-8 canales',   note: 'Active LOW' },
-    { model: 'WS2812B',  description: 'Tira LED RGB direccionable',          note: 'Neopixel' },
-    { model: 'SERVO',    description: 'Servomotor SG90 / MG996R 0-180°',    note: 'PWM' },
-    { model: 'BUZZER',   description: 'Buzzer activo/pasivo',                note: 'Alarma' },
+    { model: 'RELAY', description: 'Relé/módulo de relés 1-8 canales', note: 'Active LOW' },
+    { model: 'WS2812B', description: 'Tira LED RGB direccionable', note: 'Neopixel' },
+    { model: 'SERVO', description: 'Servomotor SG90 / MG996R 0-180°', note: 'PWM' },
+    { model: 'BUZZER', description: 'Buzzer activo/pasivo', note: 'Alarma' },
   ],
   displays: [
-    { model: 'SSD1306',  description: 'OLED 128x64 monocromo',              protocol: 'I2C (0x3C)' },
-    { model: 'LCD1602',  description: 'LCD 16x2 caracteres con I2C',        protocol: 'I2C (0x27)' },
+    { model: 'SSD1306', description: 'OLED 128x64 monocromo', protocol: 'I2C (0x3C)' },
+    { model: 'LCD1602', description: 'LCD 16x2 caracteres con I2C', protocol: 'I2C (0x27)' },
   ],
 };
 
@@ -342,4 +371,11 @@ function getCatalog() {
   return CATALOG;
 }
 
-module.exports = { configure, apply, getCatalog };
+/**
+ * Return the system prompt for testing and inspection.
+ */
+function getSystemPrompt() {
+  return SYSTEM_PROMPT;
+}
+
+module.exports = { configure, apply, getCatalog, getSystemPrompt };

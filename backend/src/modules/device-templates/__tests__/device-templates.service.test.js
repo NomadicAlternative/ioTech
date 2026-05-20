@@ -146,9 +146,7 @@ describe('deviceTemplatesService.create()', () => {
       datastreams,
     });
 
-    expect(templatesModel.insert).toHaveBeenCalledWith(
-      expect.objectContaining({ datastreams })
-    );
+    expect(templatesModel.insert).toHaveBeenCalledWith(expect.objectContaining({ datastreams }));
     expect(result).toMatchObject({ id: 'tmpl-uuid-1' });
   });
 
@@ -194,7 +192,9 @@ describe('deviceTemplatesService.update()', () => {
   });
 
   it('updates a template with valid datastreams', async () => {
-    const datastreams = [makeDatastream({ key: 'humidity', name: 'Humidity', type: 'number', direction: 'input' })];
+    const datastreams = [
+      makeDatastream({ key: 'humidity', name: 'Humidity', type: 'number', direction: 'input' }),
+    ];
     const result = await deviceTemplatesService.update(TENANT_ID, 'tmpl-uuid-1', {
       name: 'Updated',
       datastreams,
@@ -218,5 +218,109 @@ describe('deviceTemplatesService.update()', () => {
     ).rejects.toThrow('datastreams.type.invalid');
 
     expect(templatesModel.update).not.toHaveBeenCalled();
+  });
+});
+
+// ─── transformTemplate driver field merging (A.4 - io-driver) ────────────────
+
+describe('deviceTemplatesService list() — transformTemplate driver fields', () => {
+  const TENANT = 'tenant-uuid-99';
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('derives driver_name from schema.drivers into datastreams (DHT22)', async () => {
+    templatesModel.findAll.mockResolvedValue([
+      {
+        id: 'tmpl-1',
+        tenant_id: TENANT,
+        name: 'DHT22 Template',
+        description: null,
+        schema: {
+          sensors: [
+            { key: 'temperature', name: 'Temperatura', type: 'number', unit: '°C' },
+            { key: 'humidity', name: 'Humedad', type: 'number', unit: '%' },
+          ],
+          drivers: [{ model: 'DHT22', gpio: 32 }],
+        },
+        datastreams: null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    ]);
+    templatesModel.count.mockResolvedValue(1);
+
+    const result = await deviceTemplatesService.list(TENANT);
+    expect(result.data[0].datastreams[0].driver_name).toBe('DHT22');
+    expect(result.data[0].datastreams[0].gpio).toBe(32);
+  });
+
+  it('derives driver fields including config from schema.drivers', async () => {
+    templatesModel.findAll.mockResolvedValue([
+      {
+        id: 'tmpl-2',
+        tenant_id: TENANT,
+        name: 'BME280 Template',
+        description: null,
+        schema: {
+          sensors: [{ key: 'temperature', name: 'Temp', type: 'number', unit: '°C' }],
+          drivers: [{ model: 'BME280', i2c_addr: '0x76', config: { oversampling: 'x1' } }],
+        },
+        datastreams: null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    ]);
+    templatesModel.count.mockResolvedValue(1);
+
+    const result = await deviceTemplatesService.list(TENANT);
+    expect(result.data[0].datastreams[0].driver_name).toBe('BME280');
+    expect(result.data[0].datastreams[0].i2c_addr).toBe('0x76');
+    expect(result.data[0].datastreams[0].config).toEqual({ oversampling: 'x1' });
+  });
+
+  it('does not crash when schema.drivers is empty', async () => {
+    templatesModel.findAll.mockResolvedValue([
+      {
+        id: 'tmpl-3',
+        tenant_id: TENANT,
+        name: 'No Drivers',
+        description: null,
+        schema: {
+          sensors: [{ key: 't', name: 'T', type: 'number' }],
+          drivers: [],
+        },
+        datastreams: null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    ]);
+    templatesModel.count.mockResolvedValue(1);
+
+    const result = await deviceTemplatesService.list(TENANT);
+    expect(result.data[0].datastreams).toBeDefined();
+  });
+
+  it('does not crash when schema has no drivers field at all', async () => {
+    templatesModel.findAll.mockResolvedValue([
+      {
+        id: 'tmpl-4',
+        tenant_id: TENANT,
+        name: 'Legacy',
+        description: null,
+        schema: {
+          sensors: [{ key: 't', name: 'T', type: 'number' }],
+        },
+        datastreams: null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    ]);
+    templatesModel.count.mockResolvedValue(1);
+
+    const result = await deviceTemplatesService.list(TENANT);
+    expect(result.data[0].datastreams).toBeDefined();
+    expect(result.data[0].datastreams[0].driver_name).toBeUndefined();
   });
 });
