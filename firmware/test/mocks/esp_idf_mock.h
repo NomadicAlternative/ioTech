@@ -22,6 +22,9 @@ typedef int esp_err_t;
 #define ESP_ERR_NVS_NOT_FOUND  0x1100
 #define ESP_ERR_NVS_NO_FREE_PAGES  0x1101
 #define ESP_ERR_NVS_NEW_VERSION_FOUND 0x1102
+#define ESP_ERR_NOT_FOUND    0x104
+#define ESP_ERR_TIMEOUT      0x107
+#define ESP_ERR_NO_MEM       0x101
 
 static inline const char *esp_err_to_name(esp_err_t code) {
     (void)code; return "MOCK_ERR";
@@ -212,6 +215,11 @@ static inline int cJSON_IsString(const cJSON *item) {
     return (item != NULL && item->valuestring != NULL);
 }
 static inline void cJSON_Delete(cJSON *item) { (void)item; }
+static inline cJSON *cJSON_CreateObject(void) { static cJSON obj = {0}; return &obj; }
+static inline cJSON *cJSON_AddNumberToObject(cJSON *obj, const char *key, double v) { (void)obj; (void)key; (void)v; return (cJSON*)1; }
+static inline cJSON *cJSON_AddStringToObject(cJSON *obj, const char *key, const char *v) { (void)obj; (void)key; (void)v; return (cJSON*)1; }
+static inline cJSON *cJSON_AddBoolToObject(cJSON *obj, const char *key, int v) { (void)obj; (void)key; (void)v; return (cJSON*)1; }
+static inline char *cJSON_PrintUnformatted(const cJSON *obj) { (void)obj; return (char*)"{}"; }
 
 /* -----------------------------------------------------------------------
  * OTA / esp_ota_ops stubs

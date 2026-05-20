@@ -11,10 +11,8 @@
 #include "ota_manager.h"
 #include "nvs_storage.h"
 #include "sm_events.h"
-#include "relay_controller.h"
+#include "io_driver.h"
 #include "cJSON.h"
-#include "driver/gpio.h"
-#include "esp_timer.h"
 
 static const char *TAG = "mqtt_manager";
 
@@ -34,92 +32,29 @@ static TaskHandle_t              s_heartbeat_task = NULL;
 static uint32_t s_reconnect_delay_ms = 2000;
 #define MQTT_RECONNECT_MAX_MS 120000
 
-/* ── DHT22 Sensor (3.3V compatible) ─────────────────────────────────────── */
-
-#define DHT_GPIO 32
-static float dht_temp = 0.0f;
-static float dht_hum = 0.0f;
-
-static void dht_read(void)
-{
-    static bool initialized = false;
-    if (!initialized) {
-        /* DHT22 module has built-in pull-up, don't add internal one */
-        initialized = true;
-    }
-
-    uint8_t data[5] = {0};
-    dht_temp = 0;
-    dht_hum = 0;
-
-    /* Start signal: HIGH→LOW 20ms→HIGH 30us→release (compatible DHT11+DHT22) */
-    gpio_set_direction(DHT_GPIO, GPIO_MODE_OUTPUT);
-    gpio_set_level(DHT_GPIO, 1);
-    esp_rom_delay_us(250);
-    gpio_set_level(DHT_GPIO, 0);
-    esp_rom_delay_us(20000);  /* 20ms LOW (DHT11 needs 18ms, DHT22 ok with longer) */
-    gpio_set_level(DHT_GPIO, 1);
-    esp_rom_delay_us(30);
-    gpio_set_direction(DHT_GPIO, GPIO_MODE_INPUT);
-
-    /* Wait for response */
-    int timeout = 0;
-    while (gpio_get_level(DHT_GPIO) == 1) { if (++timeout > 200) return; esp_rom_delay_us(1); }
-    timeout = 0;
-    while (gpio_get_level(DHT_GPIO) == 0) { if (++timeout > 200) return; esp_rom_delay_us(1); }
-    timeout = 0;
-    while (gpio_get_level(DHT_GPIO) == 1) { if (++timeout > 200) return; esp_rom_delay_us(1); }
-
-    /* Read 40 bits */
-    for (int i = 0; i < 40; i++) {
-        timeout = 0;
-        while (gpio_get_level(DHT_GPIO) == 0) { if (++timeout > 200) return; esp_rom_delay_us(1); }
-        esp_rom_delay_us(30);
-        if (gpio_get_level(DHT_GPIO) == 1) data[i / 8] |= (1 << (7 - (i % 8)));
-        timeout = 0;
-        while (gpio_get_level(DHT_GPIO) == 1) { if (++timeout > 200) return; esp_rom_delay_us(1); }
-    }
-
-    /* Checksum */
-    if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) return;
-
-    /* Checksum */
-    if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF)) return;
-
-    /* Auto-detect: DHT11 has bytes 1,3 = 0 (8-bit). DHT22 uses 16-bit/10. */
-    if (data[1] == 0 && data[3] == 0) {
-        /* DHT11: integer values */
-        dht_hum = (float)data[0];
-        dht_temp = (float)data[2];
-    } else {
-        /* DHT22: (high<<8 | low) / 10 */
-        dht_hum = (float)((data[0] << 8) | data[1]) / 10.0f;
-        float t = (float)((data[2] << 8) | data[3]) / 10.0f;
-        if (data[2] & 0x80) t = -t;
-        dht_temp = t;
-    }
-}
-
 /* -----------------------------------------------------------------------
- * Heartbeat task: publishes DHT11 telemetry + status every 30s
+ * Heartbeat task: publishes io_driver-collected telemetry every 30s
  * --------------------------------------------------------------------- */
+#define HEARTBEAT_INTERVAL_MS 30000
+
 static void heartbeat_task(void *arg)
 {
     for (;;) {
-        vTaskDelay(pdMS_TO_TICKS(30000));
+        vTaskDelay(pdMS_TO_TICKS(HEARTBEAT_INTERVAL_MS));
 
-        // Read DHT22 and publish telemetry
-        dht_read();
-        cJSON *root = cJSON_CreateObject();
-        if (dht_temp > 0 || dht_hum > 0) {
-            cJSON_AddNumberToObject(root, "temperature", dht_temp);
-            cJSON_AddNumberToObject(root, "humidity", dht_hum);
+        /* Collect telemetry from all active io_driver drivers */
+        cJSON *payload = io_driver_collect_all();
+        if (payload) {
+            char *json = cJSON_PrintUnformatted(payload);
+            if (json) {
+                mqtt_publish_telemetry(json);
+                cJSON_free(json);
+            }
+            cJSON_Delete(payload);
         } else {
-            cJSON_AddStringToObject(root, "dht", "error");
+            /* Best-effort: publish empty object if no drivers active */
+            mqtt_publish_telemetry("{}");
         }
-        char *json = cJSON_PrintUnformatted(root);
-        if (json) { mqtt_publish_telemetry(json); cJSON_free(json); }
-        cJSON_Delete(root);
 
         mqtt_publish_status("online");
     }
@@ -256,15 +191,11 @@ static void mqtt_event_handler(void *handler_args,
 
             cJSON *root = cJSON_Parse(data);
             if (root) {
-                cJSON *j_relay = cJSON_GetObjectItem(root, "relay");
-                cJSON *j_state = cJSON_GetObjectItem(root, "state");
-
-                if (cJSON_IsNumber(j_relay) && cJSON_IsString(j_state)) {
-                    uint8_t relay_num = (uint8_t)j_relay->valueint;
-                    bool on = (strcmp(j_state->valuestring, "on") == 0);
-                    relay_set(relay_num, on);
-                } else {
-                    ESP_LOGW(TAG, "Command JSON missing 'relay' or 'state' fields");
+                /* Dispatch to io_driver engine —
+                   the matching active driver parses its own format */
+                drv_err_t err = io_driver_dispatch_command("relay", root);
+                if (err != DRV_OK) {
+                    ESP_LOGW(TAG, "Command dispatch failed: %s", drv_err_str(err));
                 }
                 cJSON_Delete(root);
             } else {

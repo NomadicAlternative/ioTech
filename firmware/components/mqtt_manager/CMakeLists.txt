@@ -10,6 +10,7 @@ idf_component_register(
         relay_controller
         json
         ota_manager
+        io_driver
     EMBED_TXTFILES
         ../../certs/isrg_root_x1.pem
 )
