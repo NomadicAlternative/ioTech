@@ -15,6 +15,7 @@
 #include "ota_manager.h"
 #include "factory_reset.h"
 #include "serial_provisioning.h"
+#include "io_driver.h"
 
 static const char *TAG = "state_machine";
 
@@ -203,6 +204,14 @@ static void state_enter_normal(void)
         if (nvs_load_device_config(&cfg) == ESP_OK) {
             mqtt_manager_start(&cfg);
             mqtt_started = true;
+
+            /* Load drivers from NVS config after MQTT is up */
+            ESP_LOGI(TAG, "[NORMAL] Loading drivers from NVS");
+            drv_err_t drv_err = io_driver_load_all_from_nvs();
+            if (drv_err != DRV_OK) {
+                ESP_LOGW(TAG, "[NORMAL] io_driver_load_all_from_nvs returned %s",
+                         drv_err_str(drv_err));
+            }
         } else {
             ESP_LOGE(TAG, "[NORMAL] Cannot load device config for MQTT");
             sm_send_event(SM_EVT_ERROR);

@@ -1,57 +1,80 @@
+/**
+ * @file relay_controller.c
+ * @brief RELAY controller — SHIM for one release.
+ *
+ * io_driver engine handles relay init + commands via drv_relay.
+ * This shim maintains backward compatibility with main.c and
+ * any legacy code that calls relay_set() / relay_get().
+ *
+ * @deprecated  Use io_driver_dispatch_command("relay", ...) directly.
+ *              This shim will be removed in the release after io_driver ships.
+ */
 #include "relay_controller.h"
-#include "driver/gpio.h"
+#include "io_driver.h"
+#include "cJSON.h"
 #include "esp_log.h"
 
-static const char *TAG = "relay_controller";
-
-/* GPIO map — relay 1..7 → index 0..6 */
-static const gpio_num_t RELAY_GPIOS[RELAY_COUNT] = {
-    GPIO_NUM_23,  /* relay 1 */
-    GPIO_NUM_22,  /* relay 2 */
-    GPIO_NUM_21,  /* relay 3 */
-    GPIO_NUM_19,  /* relay 4 */
-    GPIO_NUM_18,  /* relay 5 */
-    GPIO_NUM_5,   /* relay 6 */
-    GPIO_NUM_17,  /* relay 7 */
-};
-
-/* Shadow state — true = ON */
-static bool s_state[RELAY_COUNT] = {false};
+static const char *TAG = "relay_shim";
 
 void relay_controller_init(void)
 {
-    for (int i = 0; i < RELAY_COUNT; i++) {
-        gpio_config_t cfg = {
-            .pin_bit_mask = (1ULL << RELAY_GPIOS[i]),
-            .mode         = GPIO_MODE_OUTPUT,
-            .pull_up_en   = GPIO_PULLUP_DISABLE,
-            .pull_down_en = GPIO_PULLDOWN_DISABLE,
-            .intr_type    = GPIO_INTR_DISABLE,
-        };
-        gpio_config(&cfg);
-        gpio_set_level(RELAY_GPIOS[i], 1);  /* active LOW → 1 = OFF */
-        s_state[i] = false;
+    /* io_driver engine handles relay init now.
+     * If RELAY driver is active, it's already initialized.
+     * Otherwise, do nothing — no relay GPIOs to configure. */
+    if (io_driver_active_count() == 0) {
+        ESP_LOGW(TAG, "io_driver not yet initialized — relay shim has no effect");
+    } else {
+        ESP_LOGI(TAG, "io_driver active (%u drivers) — relay init delegated",
+                 io_driver_active_count());
     }
-    ESP_LOGI(TAG, "Relay controller initialized — %d relays, all OFF", RELAY_COUNT);
 }
 
 esp_err_t relay_set(uint8_t relay_num, bool on)
 {
-    if (relay_num < 1 || relay_num > RELAY_COUNT) {
-        ESP_LOGE(TAG, "Invalid relay number: %d (valid: 1–%d)", relay_num, RELAY_COUNT);
-        return ESP_ERR_INVALID_ARG;
+    /* Build cJSON arg matching the RELAY driver's expected format */
+    cJSON *arg = cJSON_CreateObject();
+    if (!arg) return ESP_FAIL;
+
+    cJSON_AddNumberToObject(arg, "relay", relay_num);
+    cJSON_AddStringToObject(arg, "state", on ? "on" : "off");
+
+    drv_err_t err = io_driver_dispatch_command("relay", arg);
+    cJSON_Delete(arg);
+
+    if (err == DRV_ERR_NOT_FOUND) {
+        ESP_LOGW(TAG, "RELAY driver not loaded — relay_set(%u, %s) ignored",
+                 relay_num, on ? "on" : "off");
+    } else if (err != DRV_OK) {
+        ESP_LOGW(TAG, "relay_set(%u, %s) failed: %s",
+                 relay_num, on ? "on" : "off", drv_err_str(err));
     }
 
-    int idx = relay_num - 1;
-    gpio_set_level(RELAY_GPIOS[idx], on ? 0 : 1);  /* active LOW */
-    s_state[idx] = on;
-
-    ESP_LOGI(TAG, "Relay %d → %s (GPIO %d)", relay_num, on ? "ON" : "OFF", RELAY_GPIOS[idx]);
-    return ESP_OK;
+    return (err == DRV_OK) ? ESP_OK : ESP_FAIL;
 }
 
 bool relay_get(uint8_t relay_num)
 {
-    if (relay_num < 1 || relay_num > RELAY_COUNT) return false;
-    return s_state[relay_num - 1];
+    /* Read shadow state from the io_driver engine via collect */
+    /*
+     * Note: In the shim, we approximate relay state by checking
+     * the current telemetry from the RELAY driver. This is a
+     * best-effort shim — after the shim is removed, callers
+     * will use io_driver API directly instead.
+     */
+    cJSON *payload = io_driver_collect_all();
+    if (!payload) return false;
+
+    char key[32];
+    snprintf(key, sizeof(key), "relay%u", relay_num);
+    cJSON *item = cJSON_GetObjectItem(payload, key);
+
+    bool result = false;
+    if (cJSON_IsBool(item)) {
+        result = cJSON_IsTrue(item);
+    } else if (cJSON_IsNumber(item)) {
+        result = (item->valueint != 0);
+    }
+
+    cJSON_Delete(payload);
+    return result;
 }
