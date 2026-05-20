@@ -177,6 +177,40 @@ function transformTemplate(template) {
         default: cfg.default !== undefined ? cfg.default : null,
       });
     }
+
+    // Merge driver fields from schema.drivers into derived datastreams
+    // Matches drivers to datastreams by model → sensor type mapping
+    if (schema.drivers && Array.isArray(schema.drivers) && schema.drivers.length > 0) {
+      for (const drv of schema.drivers) {
+        // Map driver model to the datastream keys it typically produces
+        const driverModel = (drv.model || '').toUpperCase();
+        for (const ds of derived) {
+          // Skip datastreams that already have driver_name set
+          if (ds.driver_name) continue;
+
+          // Match drivers to datastreams by model name
+          if (
+            (driverModel.startsWith('DHT') && ['temperature', 'humidity'].includes(ds.key)) ||
+            (driverModel.startsWith('BME') &&
+              ['temperature', 'humidity', 'pressure'].includes(ds.key)) ||
+            (driverModel.startsWith('BMP') && ['temperature', 'pressure'].includes(ds.key)) ||
+            (driverModel.startsWith('DS18') && ds.key === 'temperature') ||
+            (driverModel === 'PIR' && ds.key === 'motion') ||
+            (driverModel === 'HC-SR04' && ds.key === 'distance') ||
+            (driverModel === 'BH1750' && ds.key === 'lux') ||
+            (driverModel === 'RELAY' && ds.key.startsWith('relay')) ||
+            (driverModel === 'WS2812B' && ds.key.startsWith('led')) ||
+            (driverModel === 'SERVO' && ds.key.startsWith('servo')) ||
+            (driverModel === 'SSD1306' && ds.key.startsWith('display'))
+          ) {
+            ds.driver_name = drv.model;
+            ds.gpio = drv.gpio !== undefined ? drv.gpio : null;
+            ds.i2c_addr = drv.i2c_addr !== undefined ? drv.i2c_addr : null;
+            ds.config = drv.config !== undefined ? drv.config : null;
+          }
+        }
+      }
+    }
   }
 
   return { ...rest, datastreams: derived };

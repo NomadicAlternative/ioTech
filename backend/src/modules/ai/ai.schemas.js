@@ -15,15 +15,15 @@ const ruleCondition = Joi.object({
 });
 
 const ruleAction = Joi.object({
-  type: Joi.string().required(),  // accept any type — validated at execution time
+  type: Joi.string().required(), // accept any type — validated at execution time
   relay: Joi.number().integer().min(1).max(8),
   state: Joi.string().valid('on', 'off'),
   action: Joi.string(),
   payload: Joi.object(),
-  angle: Joi.number().min(0).max(180),      // servo
-  rgb: Joi.object({ r: Joi.number(), g: Joi.number(), b: Joi.number() }),  // LED
-  text: Joi.string(),                        // display
-  tone: Joi.number(),                        // buzzer
+  angle: Joi.number().min(0).max(180), // servo
+  rgb: Joi.object({ r: Joi.number(), g: Joi.number(), b: Joi.number() }), // LED
+  text: Joi.string(), // display
+  tone: Joi.number(), // buzzer
 });
 
 const rule = Joi.object({
@@ -40,17 +40,26 @@ const datastream = Joi.object({
   type: Joi.string().valid('number', 'string', 'boolean').required(),
   unit: Joi.string().allow('', null),
   direction: Joi.string().valid('input', 'output').required(),
+  // ── NEW: driver linkage fields (io-driver) ─────────────────────
+  driver_name: Joi.string().max(16).optional().allow(null), // e.g. "DHT22", "RELAY"
+  gpio: Joi.number().integer().min(0).max(48).optional().allow(null),
+  i2c_addr: Joi.string().optional().allow(null), // e.g. "0x76"
+  config: Joi.object().optional().allow(null), // driver-specific config
 });
 
 const driver = Joi.object({
   model: Joi.string().required(),
-  gpio: Joi.number().integer(),
-  i2c_addr: Joi.string(),
-  channels: Joi.array().items(Joi.object({
-    num: Joi.number().integer().required(),
-    gpio: Joi.number().integer().required(),
-    name: Joi.string().required(),
-  })),
+  gpio: Joi.number().integer().allow(null),
+  i2c_addr: Joi.string().allow(null),
+  channels: Joi.array().items(
+    Joi.object({
+      num: Joi.number().integer().required(),
+      gpio: Joi.number().integer().required(),
+      name: Joi.string().required(),
+    })
+  ),
+  // ── NEW: driver-specific config (io-driver) ────────────────────
+  config: Joi.object().optional().allow(null),
 });
 
 const template = Joi.object({
@@ -74,7 +83,7 @@ const aiConfig = Joi.object({
 function validateAiConfig(config) {
   const { error, value } = aiConfig.validate(config, { abortEarly: false, stripUnknown: true });
   if (error) {
-    const details = error.details.map(d => `${d.path.join('.')}: ${d.message}`);
+    const details = error.details.map((d) => `${d.path.join('.')}: ${d.message}`);
     return { error: `AI config validation failed:\n- ${details.join('\n- ')}` };
   }
   return { value };
