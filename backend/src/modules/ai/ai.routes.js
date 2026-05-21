@@ -29,18 +29,18 @@ router.use(authGuard, tenantResolver);
  * POST /api/ai/configure
  * Generates device configuration from natural language description.
  *
- * Body: { prompt: "Tengo un ESP32 con DHT22, cuando 12°C activar relay 1..." }
- * Returns: { template, datastreams, pines, rules, diagrama }
+ * Body: { prompt: "Tengo un ESP32 con DHT22...", boardId?: "ESP32_DEVKIT"|"ESP32_S3"|"ESP32_C3"|"ESP32_CAM" }
+ * Returns: { template, datastreams, drivers, rules, diagrama }
  */
 router.post('/configure', async (req, res, next) => {
   try {
-    const { prompt } = req.body;
+    const { prompt, boardId } = req.body;
     if (!prompt || !prompt.trim()) {
       return res.status(400).json({
         error: { code: 'VALIDATION_ERROR', message: 'prompt is required', status: 400 },
       });
     }
-    const config = await aiService.configure(prompt);
+    const config = await aiService.configure(prompt, boardId);
     res.json({ data: config });
   } catch (err) {
     next(err);
@@ -59,7 +59,11 @@ router.post('/apply', async (req, res, next) => {
     const { config } = req.body;
     if (!config || !config.template) {
       return res.status(400).json({
-        error: { code: 'VALIDATION_ERROR', message: 'config with template is required', status: 400 },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'config with template is required',
+          status: 400,
+        },
       });
     }
     const result = await aiService.apply(req.tenantId, config);

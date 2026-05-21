@@ -4,12 +4,11 @@
  */
 #include "io_driver.h"
 #include "io_driver_types.h"
-#include "esp_err.h"
-#include "esp_log.h"
 
 #include <string.h>
 #include <strings.h>
 #include "cJSON.h"
+#include "esp_err.h"
 #include "esp_log.h"
 
 static const char *TAG = "io_driver";
