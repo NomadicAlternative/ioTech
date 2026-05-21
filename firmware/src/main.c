@@ -9,6 +9,21 @@
 #include "io_driver.h"
 #include "io_board.h"
 
+/* Manual driver registration — required when IO_DRIVER_MANUAL_REGISTRY is set.
+ * Include all linked driver vtable declarations. */
+#ifdef IO_DRIVER_MANUAL_REGISTRY
+extern const driver_t drv_dht22;
+extern const driver_t drv_relay;
+extern const driver_t drv_bme280;
+extern const driver_t drv_ds18b20;
+extern const driver_t drv_pir;
+extern const driver_t drv_hcsr04;
+extern const driver_t drv_ws2812b;
+extern const driver_t drv_servo;
+extern const driver_t drv_ssd1306;
+extern const driver_t drv_lcd1602;
+#endif
+
 static const char *TAG = "main";
 
 void app_main(void)
@@ -40,17 +55,21 @@ void app_main(void)
     /* Initialize board pin map (compile-time resolved via -DBOARD_*) */
     io_board_init();
 
-    /* Initialize io_driver engine — auto-discovers linked drivers
-     * or manual registration when IO_DRIVER_MANUAL_REGISTRY is set */
+    /* Initialize io_driver engine — auto-discovers or manually registers all linked drivers */
     io_driver_init();
 
 #ifdef IO_DRIVER_MANUAL_REGISTRY
-    /* Register compiled-in drivers manually (linker-set not available) */
-    extern const driver_t *g_drv_dht22;
-    extern const driver_t *g_drv_relay;
-    io_driver_register(g_drv_dht22);
-    io_driver_register(g_drv_relay);
-    /* Additional drivers registered here as they are added to the build */
+    /* Manually register all compiled-in drivers (linker-set not available) */
+    io_driver_register(&drv_dht22);
+    io_driver_register(&drv_relay);
+    io_driver_register(&drv_bme280);
+    io_driver_register(&drv_ds18b20);
+    io_driver_register(&drv_pir);
+    io_driver_register(&drv_hcsr04);
+    io_driver_register(&drv_ws2812b);
+    io_driver_register(&drv_servo);
+    io_driver_register(&drv_ssd1306);
+    io_driver_register(&drv_lcd1602);
 #endif
 
     /* Initialize relay GPIOs — shim delegates to io_driver */
