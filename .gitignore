@@ -45,4 +45,3 @@ yarn-debug.log*
 .atl/
 .pi/
 .pi-lens/
-firmware/sdkconfig.*

@@ -2,7 +2,7 @@
 
 ## Project
 
-ioTech is a B2B2C SaaS IoT platform for installers (electricians, integrators, technicians) who deploy smart devices (ESP32, ESP32-C3, ESP32-S3) for their clients.
+ioTech is a B2B2C SaaS IoT platform for installers (electricians, integrators, technicians) who deploy smart devices (ESP32, ESP8266, Raspberry Pi) for their clients.
 
 **Model**: Installer -> Client -> Devices
 **Revenue**: Subscription per device, per installer, future white-label
@@ -205,22 +205,10 @@ All errors return `{ error: { code, message, status, details? } }`.
 
 ## Driver Roadmap
 
-**ESP8266 descartado** (2026-05-19) — diferencia de precio insignificante vs ESP32-C3 (~$0.50), SDK legacy incompatible, sin BLE, 80KB RAM insuficiente para io_driver.
-
-**Fase 1 — io_driver (9 drivers implementados, builds OK, ⚠️ sin test hardware)**:
+**Fase 1 — Implementados (9 drivers)**:
 DHT22, RELAY, BME280, DS18B20, PIR, HC-SR04, WS2812B, SERVO, SSD1306
 
-### ⚠️ BLOCKER-6: Hardware validation pendiente
-
-**Recordatorio por sesión**: los 9 drivers compilan para las 4 targets pero NINGUNO fue probado con hardware real. Ver lista de compras en memoria Engram (`sdd/io-driver/hardware-validation`).
-
-**Shopping list**:
-- Sensores: DHT22 (~$2), BME280 GY-BME280 (~$3), DS18B20 TO-92 (~$1), PIR HC-SR501 (~$1), HC-SR04 (~$1)
-- Actuadores: Módulo relé 4CH (~$3), Servo SG90 (~$2), Tira WS2812B 1m (~$5), OLED SSD1306 0.96" (~$3)
-- Placas: ESP32-C3 XIAO (~$3), ESP32-S3 DevKit (~$5)
-- **Total estimado**: ~$30
-
-**Fase 2 — Con hardware físico**:
+**Fase 2 — Cuando haya hardware físico**:
 SHT30/31, CCS811, SGP30, PMS5003, BH1750, INA219, stepper 28BYJ-48, ST7735, ST7789, ILI9341, RFID RC522, Modbus RTU, RS485
 
 **Fase 3 — Crecimiento**:
