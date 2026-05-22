@@ -85,7 +85,7 @@ export function AppShell() {
       >
         {/* Brand */}
         <div className="px-6 py-5 border-b border-sidebar-border flex items-center justify-between">
-          <img src={logo} alt="BeepDash" className="h-8 w-auto" />
+          <img src={logo} alt="BeepDash" style={{ height: '210px' }} className="w-auto" />
           <button
             onClick={closeSidebar}
             className="lg:hidden p-1 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/70"

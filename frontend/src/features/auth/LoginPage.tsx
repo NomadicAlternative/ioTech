@@ -133,7 +133,7 @@ export function LoginPage() {
           >
             <Cpu className="w-5 h-5 text-[var(--brand-green)]" />
           </div>
-          <img src={logo} alt="BeepDash" className="h-8 w-auto" />
+          <img src={logo} alt="BeepDash" style={{ height: '210px' }} className="w-auto" />
         </div>
 
         {/* Center content — dynamic flow */}
@@ -274,7 +274,7 @@ export function LoginPage() {
           >
             <Cpu className="w-5 h-5 text-[var(--brand-green)]" />
           </div>
-          <img src={logo} alt="BeepDash" className="h-6 w-auto" />
+          <img src={logo} alt="BeepDash" style={{ height: '210px' }} className="w-auto max-w-full" />
         </div>
 
         <div className="relative z-10 w-full max-w-[380px] space-y-6">

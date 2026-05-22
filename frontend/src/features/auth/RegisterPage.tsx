@@ -67,7 +67,7 @@ export function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--prussian-blue)] via-[#1A2F52] to-[var(--prussian-blue)]">
       <div className="w-full max-w-md mx-4 rounded-2xl bg-[var(--card)] p-8 shadow-sm border border-[var(--border)]">
         <div className="text-center mb-6">
-          <img src={logo} alt="BeepDash" className="h-10 w-auto mx-auto mb-3" />
+          <img src={logo} alt="BeepDash" style={{ height: '210px' }} className="w-auto mx-auto mb-3" />
           <p className="text-[var(--muted-blue)] mt-2">Creá tu cuenta de instalador</p>
         </div>
 
