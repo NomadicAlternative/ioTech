@@ -243,36 +243,33 @@ export function LoginPage() {
         />
 
         {/* Mobile logo */}
-        <div className="relative z-10 flex lg:hidden justify-center mb-4">
-          <img src={logo} alt="BeepDash" className="h-28 w-auto" />
+        <div className="relative z-10 flex lg:hidden justify-center mb-2">
+          <img src={logo} alt="BeepDash" className="h-20 w-auto" />
         </div>
 
         {/* Mobile flow */}
-        <div className="relative z-10 flex lg:hidden items-center justify-center gap-2 mb-6">
+        <div className="relative z-10 flex lg:hidden items-center justify-center gap-1.5 mb-3">
           {['Device','MQTT','Stream','Dashboard'].map((label, i) => (
-            <div key={label} className="flex items-center gap-1">
+            <div key={label} className="flex items-center gap-0.5">
               <div className="flex flex-col items-center gap-0.5">
-                <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: '#65E7D820' }}>
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#65E7D8', boxShadow: '0 0 6px #65E7D8' }} />
+                <div className="w-5 h-5 rounded flex items-center justify-center" style={{ background: '#65E7D820' }}>
+                  <div className="w-1 h-1 rounded-full" style={{ background: '#65E7D8', boxShadow: '0 0 4px #65E7D8' }} />
                 </div>
-                <span className="text-[7px] font-medium text-white/40 uppercase tracking-wider">{label}</span>
+                <span className="text-[6px] font-medium text-white/30 uppercase tracking-wider">{label}</span>
               </div>
-              {i < 3 && <div className="w-3 h-px" style={{ background: '#65E7D840' }} />}
+              {i < 3 && <div className="w-2 h-px" style={{ background: '#65E7D840' }} />}
             </div>
           ))}
         </div>
 
-        <div className="relative z-10 w-full max-w-[380px] space-y-5 px-4">
-          <div className="space-y-1 text-center lg:text-left">
-            <h2 className="text-2xl lg:text-3xl font-bold text-white">
-              Welcome back
-            </h2>
-            <p className="text-sm text-white/60">{t('auth.subtitle')}</p>
+        <div className="relative z-10 w-full max-w-[340px] space-y-3 px-4">
+          <div className="text-center lg:text-left">
+            <h2 className="text-lg font-semibold text-white">Welcome back</h2>
+            <p className="text-xs text-white/50 mt-0.5">{t('auth.subtitle')}</p>
           </div>
 
-          {/* Form card — glassmorphism en mobile, borde simple en desktop */}
           <div
-            className="rounded-2xl p-6 space-y-4 lg:border lg:shadow-sm lg:bg-white"
+            className="rounded-xl p-4 space-y-3 lg:border lg:shadow-sm lg:bg-white"
             style={{
               background: 'rgba(255,255,255,0.07)',
               backdropFilter: 'blur(16px)',
@@ -280,57 +277,43 @@ export function LoginPage() {
               border: '1px solid rgba(255,255,255,0.15)',
             }}
           >
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-semibold lg:text-foreground text-white/90">
+            <div className="space-y-1">
+              <Label htmlFor="email" className="text-xs font-medium text-white/70">
                 {t('auth.emailLabel')}
               </Label>
               <Input
-                id="email"
-                type="email"
-                placeholder={t('auth.emailPlaceholder')}
-                autoComplete="email"
-                required
-                value={email}
+                id="email" type="email" placeholder={t('auth.emailPlaceholder')}
+                autoComplete="email" required value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-border border-white/20 focus-visible:ring-[#14213D]"
+                className="h-9 text-sm bg-white/10 text-white placeholder:text-white/30 border-white/20 focus-visible:ring-[var(--brand-green)]"
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm font-semibold lg:text-foreground text-white/90">
+            <div className="space-y-1">
+              <Label htmlFor="password" className="text-xs font-medium text-white/70">
                 {t('auth.passwordLabel')}
               </Label>
               <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                autoComplete="current-password"
-                required
-                value={password}
+                id="password" type="password" placeholder="••••••••"
+                autoComplete="current-password" required value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-border border-white/20 focus-visible:ring-[#14213D]"
+                className="h-9 text-sm bg-white/10 text-white placeholder:text-white/30 border-white/20 focus-visible:ring-[var(--brand-green)]"
               />
             </div>
 
               {error && (
-                <div
-                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm"
-                  style={{ background: '#fee2e2', color: '#b91c1c' }}
-                >
-                  <AlertCircle className="w-4 h-4 shrink-0" />
+                <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs"
+                  style={{ background: '#fee2e2', color: '#b91c1c' }}>
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                   {error}
                 </div>
               )}
 
               {!forgotMode ? (
                 <>
-                  <Button
-                    type="submit"
-                    onClick={handleSubmit}
-                    className="w-full h-11 font-semibold text-sm gap-2 group"
-                    disabled={loading}
-                    style={{ background: 'var(--brand-imperial)' }}
-                  >
+                  <Button type="submit" onClick={handleSubmit}
+                    className="w-full h-9 font-medium text-sm gap-1.5 group" disabled={loading}
+                    style={{ background: 'var(--brand-imperial)' }}>
                     {loading ? (
                       <span className="flex items-center gap-2">
                         <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
@@ -345,11 +328,9 @@ export function LoginPage() {
                   </Button>
 
                   <div className="text-center">
-                    <button
-                      type="button"
-                      className="text-sm lg:text-muted-foreground text-white/60 hover:underline transition-colors"
-                      onClick={() => { setForgotMode(true); setForgotError(null) }}
-                    >
+                    <button type="button"
+                      className="text-xs text-white/50 hover:underline transition-colors"
+                      onClick={() => { setForgotMode(true); setForgotError(null) }}>
                       ¿Olvidaste tu contraseña?
                     </button>
                   </div>
