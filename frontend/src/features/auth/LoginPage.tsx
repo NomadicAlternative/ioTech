@@ -113,6 +113,19 @@ export function LoginPage() {
           <circle cx="20%" cy="80%" r="10" fill="none" stroke="#14213D" strokeWidth="1" opacity="0.5" />
         </svg>
 
+        {/* Animated data flow bar — device → MQTT → dashboard */}
+        <div className="relative w-full h-1 mb-8 overflow-hidden rounded-full bg-white/5">
+          <div className="absolute inset-0 bg-gradient-to-r from-[var(--brand-green)]/40 via-[var(--orange)]/40 to-[var(--brand-green)]/40" />
+          {/* Traveling pulse */}
+          <div className="absolute top-0 h-full w-8 bg-gradient-to-r from-transparent via-[var(--brand-green)] to-transparent rounded-full"
+            style={{ animation: 'dataFlow 3s ease-in-out infinite' }} />
+          {/* Data nodes */}
+          {[0, 1, 2].map(i => (
+            <div key={i} className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-[var(--brand-green)] rounded-full shadow-lg shadow-[var(--brand-green)]/50"
+              style={{ left: `${25 + i * 25}%`, animation: `nodePulse 1.5s ease-in-out ${i * 0.5}s infinite` }} />
+          ))}
+        </div>
+
         {/* Glow top-right */}
         <div
           className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-20 blur-[100px] pointer-events-none"
@@ -125,26 +138,8 @@ export function LoginPage() {
         />
 
         {/* Logo */}
-        <div className="relative flex flex-col items-center z-10">
+        <div className="relative flex items-center justify-center z-10">
           <img src={logo} alt="BeepDash" style={{ height: '420px' }} className="w-auto" />
-          
-          {/* Animated spark/connection */}
-          <div className="relative w-0.5 h-16 my-2">
-            <div className="absolute inset-0 bg-gradient-to-b from-[var(--brand-green)] via-[var(--orange)] to-transparent rounded-full" />
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-[var(--brand-green)] rounded-full animate-ping opacity-40" />
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 bg-[var(--brand-green)] rounded-full animate-pulse shadow-lg shadow-[var(--brand-green)]/60" />
-            {/* Traveling dot */}
-            <div className="absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full shadow-lg shadow-white/80"
-              style={{ animation: 'sparkTravel 1.5s ease-in-out infinite' }} />
-            {/* Particles */}
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="absolute left-1/2 w-1 h-1 bg-[var(--brand-green)] rounded-full"
-                style={{
-                  animation: `particleFade ${1 + i * 0.3}s ease-out ${i * 0.4}s infinite`,
-                  opacity: 0,
-                }} />
-            ))}
-          </div>
         </div>
 
         {/* Center content */}

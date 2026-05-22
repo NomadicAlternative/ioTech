@@ -167,15 +167,14 @@
   pointer-events: none;
 }
 
-@keyframes sparkTravel {
-  0%   { top: 0%; opacity: 1; }
-  50%  { top: 100%; opacity: 0.8; }
-  100% { top: 100%; opacity: 0; }
+@keyframes dataFlow {
+  0%   { left: -10%; }
+  100% { left: 110%; }
 }
 
-@keyframes particleFade {
-  0%   { transform: translate(-1px, 0); opacity: 0.8; }
-  100% { transform: translate(20px, -40px); opacity: 0; }
+@keyframes nodePulse {
+  0%, 100% { opacity: 0.3; transform: translateY(-50%) scale(1); }
+  50%      { opacity: 1;   transform: translateY(-50%) scale(1.8); }
 }
 
 .relay-led-blink {
