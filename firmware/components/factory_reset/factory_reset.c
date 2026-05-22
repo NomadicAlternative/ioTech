@@ -65,5 +65,10 @@ static void factory_reset_task(void *arg)
 
 void factory_reset_monitor_start(void)
 {
+#if FACTORY_RESET_GPIO_PIN == FACTORY_RESET_GPIO_DISABLED
+    ESP_LOGI(TAG, "Factory reset disabled (GPIO=255)");
+    return;
+#else
     xTaskCreate(factory_reset_task, "factory_reset", 2048, NULL, 4, NULL);
+#endif
 }
