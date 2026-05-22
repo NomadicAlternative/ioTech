@@ -142,6 +142,14 @@ ioTech/
 5. **Completar i18n** — DE, PT, FR, IT para toda la app
 6. **Email en producción** — Resend SDK listo, falta verificar dominio o configurar SMTP (App Password de Gmail)
 
+## Últimos cambios (2026-05-22)
+
+### Revert io_driver — firmware vuelve a estado funcional
+- **Commit**: e7a66b9 — revert de 6ac7d8b (io_driver modular architecture)
+- **Motivo**: relay_controller shim vacío (GPIOs sin configurar), drivers registrados pero nunca activados, command dispatch siempre DRV_ERR_NOT_FOUND
+- **Resultado**: firmware compila OK (Flash 99.1%, RAM 11.4%), flash & provision wizard funcional
+- **Backend schema**: cambios de 3c78210 y cdb3486 son backward-compatible (campos optional), se dejaron
+
 ## Últimos cambios (2026-05-16)
 
 ### Super Admin Panel — COMPLETO
@@ -203,9 +211,15 @@ All errors return `{ error: { code, message, status, details? } }`.
 - ⚠️ engram MCP: session summary se guarda bajo el proyecto del working directory al iniciar opencode. Para que quede en "iotech", abrí opencode DESDE /Users/diegogarcia/Desktop/IoTech/ioTech/
 - No flashear firmware sin ESP32 conectado
 
-## Driver Roadmap
+## Driver Roadmap (PAUSADO — io_driver revertido 2026-05-22)
 
-**Fase 1 — Implementados (9 drivers)**:
+El refactor io_driver (6ac7d8b, May 20) rompió relay_controller y desconectó el ESP32.
+Revertido en e7a66b9. Firmware volvió a arquitectura pre-io_driver:
+- relay_controller con GPIO directo (7 relays, active LOW)
+- DHT22 inline en mqtt_manager
+- Build target único: esp32dev
+
+**Fase 1 — Planificado (no implementado en firmware aún)**:
 DHT22, RELAY, BME280, DS18B20, PIR, HC-SR04, WS2812B, SERVO, SSD1306
 
 **Fase 2 — Cuando haya hardware físico**:
