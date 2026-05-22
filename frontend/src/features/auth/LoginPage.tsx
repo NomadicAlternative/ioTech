@@ -113,16 +113,32 @@ export function LoginPage() {
           <circle cx="20%" cy="80%" r="10" fill="none" stroke="#14213D" strokeWidth="1" opacity="0.5" />
         </svg>
 
-        {/* Animated data flow bar — device → MQTT → dashboard */}
-        <div className="relative w-full h-1 mb-8 overflow-hidden rounded-full bg-white/5">
-          <div className="absolute inset-0 bg-gradient-to-r from-[var(--brand-green)]/40 via-[var(--orange)]/40 to-[var(--brand-green)]/40" />
-          {/* Traveling pulse */}
-          <div className="absolute top-0 h-full w-8 bg-gradient-to-r from-transparent via-[var(--brand-green)] to-transparent rounded-full"
-            style={{ animation: 'dataFlow 3s ease-in-out infinite' }} />
-          {/* Data nodes */}
-          {[0, 1, 2].map(i => (
-            <div key={i} className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-[var(--brand-green)] rounded-full shadow-lg shadow-[var(--brand-green)]/50"
-              style={{ left: `${25 + i * 25}%`, animation: `nodePulse 1.5s ease-in-out ${i * 0.5}s infinite` }} />
+        {/* Data flow pipeline — device → MQTT → dashboard */}
+        <div className="relative flex items-center justify-center gap-6 mt-6 mb-8 z-10">
+          {[
+            { label: 'Device',   color: 'var(--brand-green)' },
+            { label: 'MQTT',     color: 'var(--brand-cerulean)' },
+            { label: 'Stream',   color: 'var(--brand-green)' },
+            { label: 'Dashboard', color: 'var(--brand-green)' },
+          ].map(({ label, color }, i) => (
+            <div key={label} className="flex items-center gap-3">
+              <div className="flex flex-col items-center gap-1">
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:scale-110 duration-300"
+                  style={{ background: `${color}15`, border: `1px solid ${color}30` }}
+                >
+                  <div className="w-2 h-2 rounded-full shadow-lg" style={{ background: color, boxShadow: `0 0 8px ${color}` }} />
+                </div>
+                <span className="text-[9px] font-medium uppercase tracking-widest opacity-50">{label}</span>
+              </div>
+              {i < 3 && (
+                <div className="flex items-center relative" style={{ width: '32px' }}>
+                  <div className="w-full h-px rounded-full opacity-20" style={{ background: color }} />
+                  <div className="absolute left-0 w-1.5 h-1.5 rounded-full"
+                    style={{ background: color, animation: `flowPulse 2s ease-in-out ${i * 0.4}s infinite`, boxShadow: `0 0 6px ${color}` }} />
+                </div>
+              )}
+            </div>
           ))}
         </div>
 
