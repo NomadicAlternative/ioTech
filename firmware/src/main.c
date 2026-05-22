@@ -45,25 +45,13 @@ void app_main(void)
     io_driver_init();
 
 #ifdef IO_DRIVER_MANUAL_REGISTRY
-    /* Register compiled-in drivers manually (linker-set not available) */
+    /* Register compiled-in drivers manually.
+     * Only drivers with compiled hardware support are registered.
+     * Additional drivers are added to the build when needed (then delivered via OTA). */
     extern const driver_t *g_drv_dht22;
     extern const driver_t *g_drv_relay;
-    extern const driver_t *g_drv_bme280;
-    extern const driver_t *g_drv_ds18b20;
-    extern const driver_t *g_drv_pir;
-    extern const driver_t *g_drv_hcsr04;
-    extern const driver_t *g_drv_ws2812b;
-    extern const driver_t *g_drv_servo;
-    extern const driver_t *g_drv_ssd1306;
     io_driver_register(g_drv_dht22);
     io_driver_register(g_drv_relay);
-    io_driver_register(g_drv_bme280);
-    io_driver_register(g_drv_ds18b20);
-    io_driver_register(g_drv_pir);
-    io_driver_register(g_drv_hcsr04);
-    io_driver_register(g_drv_ws2812b);
-    io_driver_register(g_drv_servo);
-    io_driver_register(g_drv_ssd1306);
 #endif
 
     /* Initialize relay GPIOs — shim delegates to io_driver */

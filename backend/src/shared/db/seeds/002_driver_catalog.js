@@ -44,7 +44,7 @@ exports.seed = async function (knex) {
     },
     {
       model: 'BME280', name: 'BME280 Temperature, Humidity & Pressure', category: 'sensor',
-      firmware_status: 'untested',
+      firmware_status: 'planned',
       description: 'Precision environmental sensor. Temperature, humidity, and barometric pressure via I2C. Accuracy: ±1°C, ±3% RH, ±1 hPa.',
       datastreams: JSON.stringify([
         { key: 'temperature', name: 'Temperature', type: 'number', direction: 'input', unit: '°C' },
@@ -57,7 +57,7 @@ exports.seed = async function (knex) {
     },
     {
       model: 'DS18B20', name: 'DS18B20 1-Wire Temperature', category: 'sensor',
-      firmware_status: 'untested',
+      firmware_status: 'planned',
       description: 'Waterproof digital temperature probe. Range: -55~125°C. Accuracy: ±0.5°C. 1-Wire (Dallas) protocol. Multiple sensors on single pin.',
       datastreams: JSON.stringify([
         { key: 'temperature', name: 'Temperature', type: 'number', direction: 'input', unit: '°C' },
@@ -71,7 +71,7 @@ exports.seed = async function (knex) {
     // ──────────────────────────────────────────────────────────────────────────
     {
       model: 'PIR', name: 'PIR HC-SR501 Motion Sensor', category: 'sensor',
-      firmware_status: 'untested',
+      firmware_status: 'planned',
       description: 'Passive infrared motion detector. Range: 3-7m, 120° cone. Digital output (HIGH = motion). Adjustable delay and sensitivity.',
       datastreams: JSON.stringify([
         { key: 'motion', name: 'Motion Detected', type: 'boolean', direction: 'input' },
@@ -81,7 +81,7 @@ exports.seed = async function (knex) {
     },
     {
       model: 'HC-SR04', name: 'HC-SR04 Ultrasonic Distance', category: 'sensor',
-      firmware_status: 'untested',
+      firmware_status: 'planned',
       description: 'Ultrasonic distance measurement. Range: 2cm-4m. Accuracy: ±3mm. Uses trigger + echo GPIO pins.',
       datastreams: JSON.stringify([
         { key: 'distance', name: 'Distance', type: 'number', direction: 'input', unit: 'cm' },
@@ -202,7 +202,7 @@ exports.seed = async function (knex) {
     // ──────────────────────────────────────────────────────────────────────────
     {
       model: 'SERVO', name: 'Servo Motor SG90 / MG996R', category: 'actuator',
-      firmware_status: 'untested',
+      firmware_status: 'planned',
       description: 'PWM servo motor driver. Angle range: 0-180°. 50Hz PWM signal. SG90 (micro) or MG996R (standard) supported.',
       datastreams: JSON.stringify([
         { key: 'angle', name: 'Angle', type: 'number', direction: 'output', unit: '°', min: 0, max: 180 },
@@ -226,7 +226,7 @@ exports.seed = async function (knex) {
     // ──────────────────────────────────────────────────────────────────────────
     {
       model: 'WS2812B', name: 'WS2812B Addressable LED Strip', category: 'actuator',
-      firmware_status: 'untested',
+      firmware_status: 'planned',
       description: 'Individually addressable RGB LED strip. Up to 256 LEDs per data pin. 24-bit color (16.7M colors). 5V power. RMT-driven for precise timing.',
       datastreams: JSON.stringify([
         { key: 'led_count', name: 'LED Count', type: 'number', direction: 'output' },
@@ -294,7 +294,7 @@ exports.seed = async function (knex) {
     // ──────────────────────────────────────────────────────────────────────────
     {
       model: 'SSD1306', name: 'SSD1306 OLED Display 128x64', category: 'display',
-      firmware_status: 'untested',
+      firmware_status: 'planned',
       description: 'Monochrome OLED display. 128x64 pixels. I2C interface (default 0x3C). 4 lines of text or custom graphics. Low power, high contrast.',
       datastreams: JSON.stringify([
         { key: 'text', name: 'Display Text', type: 'string', direction: 'output' },
@@ -305,7 +305,7 @@ exports.seed = async function (knex) {
     },
     {
       model: 'LCD1602_I2C', name: 'LCD 1602A I2C (16×2 Character)', category: 'display',
-      firmware_status: 'untested',
+      firmware_status: 'planned',
       description: 'Character LCD display with I2C backpack (PCF8574). 16 columns × 2 rows. Blue backlight. Default I2C address 0x27. Common in Arduino/ESP32 projects.',
       datastreams: JSON.stringify([
         { key: 'text', name: 'Display Text', type: 'string', direction: 'output' },
