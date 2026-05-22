@@ -114,28 +114,27 @@ export function LoginPage() {
         </svg>
 
         {/* Data flow pipeline — device → MQTT → dashboard */}
-        <div className="relative flex items-center justify-center gap-6 mt-6 mb-8 z-10">
+        <div className="relative flex items-center justify-center gap-4 mt-6 mb-8 z-10">
           {[
-            { label: 'Device',   color: 'var(--brand-green)' },
-            { label: 'MQTT',     color: 'var(--brand-cerulean)' },
-            { label: 'Stream',   color: 'var(--brand-green)' },
-            { label: 'Dashboard', color: 'var(--brand-green)' },
+            { label: 'Device',   color: '#65E7D8' },
+            { label: 'MQTT',     color: '#65E7D8' },
+            { label: 'Stream',   color: '#FCA311' },
+            { label: 'Dashboard', color: '#65E7D8' },
           ].map(({ label, color }, i) => (
             <div key={label} className="flex items-center gap-3">
               <div className="flex flex-col items-center gap-1">
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:scale-110 duration-300"
-                  style={{ background: `${color}15`, border: `1px solid ${color}30` }}
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:scale-110 duration-300"
+                  style={{ background: `${color}20` }}
                 >
-                  <div className="w-2 h-2 rounded-full shadow-lg" style={{ background: color, boxShadow: `0 0 8px ${color}` }} />
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: color, boxShadow: `0 0 10px ${color}` }} />
                 </div>
-                <span className="text-[9px] font-medium uppercase tracking-widest opacity-50">{label}</span>
+                <span className="text-[9px] font-medium text-white/60 uppercase tracking-widest">{label}</span>
               </div>
               {i < 3 && (
-                <div className="flex items-center relative" style={{ width: '32px' }}>
-                  <div className="w-full h-px rounded-full opacity-20" style={{ background: color }} />
+                <div className="flex items-center relative" style={{ width: '28px' }}>
+                  <div className="w-full h-px rounded-full" style={{ background: `${color}40` }} />
                   <div className="absolute left-0 w-1.5 h-1.5 rounded-full"
-                    style={{ background: color, animation: `flowPulse 2s ease-in-out ${i * 0.4}s infinite`, boxShadow: `0 0 6px ${color}` }} />
+                    style={{ background: color, animation: `flowPulse 2s ease-in-out ${i * 0.4}s infinite`, boxShadow: `0 0 8px ${color}` }} />
                 </div>
               )}
             </div>
