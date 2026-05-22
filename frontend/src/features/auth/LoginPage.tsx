@@ -211,215 +211,153 @@ export function LoginPage() {
         </div>
       </div>
 
-      {/* ── Right panel — form ── */}
+      {/* ── Right panel: mobile ── */}
       <div
-        className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative overflow-hidden"
-        style={{ background: 'white' }}
+        className="lg:hidden flex-1 flex flex-col items-center justify-center px-6 py-10 relative"
+        style={{ background: 'linear-gradient(180deg, #14213D 0%, #1A2F52 100%)' }}
       >
-        {/* Mobile-only background — mismo tratamiento que el panel izquierdo */}
-        <div
-          className="lg:hidden absolute inset-0"
-          style={{
-          background: 'linear-gradient(135deg, #14213D 0%, #1A2F52 50%, #1F3A63 75%, #244878 100%)',
-          }}
-        />
-        <div
-          className="lg:hidden absolute inset-0"
-          style={{
-            backgroundImage: `
-              linear-gradient(#919EBC15 1px, transparent 1px),
-              linear-gradient(90deg, #919EBC15 1px, transparent 1px)
-            `,
-            backgroundSize: '48px 48px',
-          }}
-        />
-        <div
-          className="lg:hidden absolute top-0 right-0 w-72 h-72 rounded-full opacity-20 blur-[80px] pointer-events-none"
-          style={{ background: 'var(--brand-cerulean)' }}
-        />
-        <div
-          className="lg:hidden absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-15 blur-[70px] pointer-events-none"
-          style={{ background: 'var(--brand-green)' }}
-        />
-
-        {/* Mobile logo */}
-        <div className="relative z-10 flex lg:hidden justify-center mb-1">
-          <img src={logo} alt="BeepDash" className="h-16 w-auto" />
-        </div>
-
-        {/* Mobile flow */}
-        <div className="relative z-10 flex lg:hidden items-center justify-center gap-1 mb-2">
-          {['Device','MQTT','Stream','Dashboard'].map((label, i) => (
-            <div key={label} className="flex items-center gap-0.5">
-              <div className="flex flex-col items-center gap-0">
-                <div className="w-4 h-4 rounded flex items-center justify-center" style={{ background: '#65E7D820' }}>
-                  <div className="w-1 h-1 rounded-full" style={{ background: '#65E7D8', boxShadow: '0 0 3px #65E7D8' }} />
-                </div>
-                <span className="text-[5px] font-medium text-white/25 uppercase tracking-wider">{label}</span>
-              </div>
-              {i < 3 && <div className="w-1.5 h-px" style={{ background: '#65E7D840' }} />}
-            </div>
-          ))}
-        </div>
-
-        <div className="relative z-10 w-full max-w-[300px] space-y-2 px-4">
-          <div className="text-center lg:text-left">
-            <h2 className="text-lg font-semibold text-white">Welcome back</h2>
-            <p className="text-[10px] text-white/50 mt-0.5">{t('auth.subtitle')}</p>
+        <img src={logo} alt="BeepDash" className="h-24 w-auto mb-8" />
+        
+        <div className="w-full max-w-sm space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-white">Welcome back</h2>
+            <p className="text-sm text-white/50 mt-1">{t('auth.subtitle')}</p>
           </div>
 
-          <div
-            className="rounded-lg p-3 space-y-2"
-            style={{
-              background: 'rgba(255,255,255,0.06)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255,255,255,0.12)',
-            }}
-          >
-            <div className="space-y-0.5">
-              <Label htmlFor="email" className="text-[10px] font-medium text-white/60">
-                {t('auth.emailLabel')}
-              </Label>
-              <Input
-                id="email" type="email" placeholder={t('auth.emailPlaceholder')}
-                autoComplete="email" required value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-8 text-xs bg-white/10 text-white placeholder:text-white/25 border-white/15 focus-visible:ring-[var(--brand-green)]"
-              />
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="email-m" className="text-sm font-medium text-white/80">{t('auth.emailLabel')}</Label>
+              <Input id="email-m" type="email" placeholder={t('auth.emailPlaceholder')} autoComplete="email"
+                required value={email} onChange={(e) => setEmail(e.target.value)}
+                className="mt-1.5 h-11 text-sm bg-white/10 text-white placeholder:text-white/30 border-white/15 focus-visible:ring-[var(--brand-green)]" />
+            </div>
+            <div>
+              <Label htmlFor="password-m" className="text-sm font-medium text-white/80">{t('auth.passwordLabel')}</Label>
+              <Input id="password-m" type="password" placeholder="••••••••" autoComplete="current-password"
+                required value={password} onChange={(e) => setPassword(e.target.value)}
+                className="mt-1.5 h-11 text-sm bg-white/10 text-white placeholder:text-white/30 border-white/15 focus-visible:ring-[var(--brand-green)]" />
             </div>
 
-            <div className="space-y-0.5">
-              <Label htmlFor="password" className="text-[10px] font-medium text-white/60">
-                {t('auth.passwordLabel')}
-              </Label>
-              <Input
-                id="password" type="password" placeholder="••••••••"
-                autoComplete="current-password" required value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-8 text-xs bg-white/10 text-white placeholder:text-white/25 border-white/15 focus-visible:ring-[var(--brand-green)]"
-              />
+            {error && (
+              <div className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm"
+                style={{ background: '#fee2e2', color: '#b91c1c' }}>
+                <AlertCircle className="w-4 h-4 shrink-0" />{error}
+              </div>
+            )}
+
+            <Button type="submit" onClick={handleSubmit}
+              className="w-full h-11 font-semibold text-sm gap-2" disabled={loading}
+              style={{ background: 'var(--brand-imperial)' }}>
+              {loading ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />{t('auth.signingIn')}</>
+                : <>{t('auth.signIn')}<ArrowRight className="w-4 h-4" /></>}
+            </Button>
+
+            <div className="text-center">
+              <button type="button" className="text-sm text-white/40 hover:text-white/70 transition-colors"
+                onClick={() => { setForgotMode(true); setForgotError(null) }}>
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <p className="absolute bottom-6 text-[11px] text-white/25 text-center px-4">
+          © 2026 BeepDash Developed by Diego Garcia | Nomadic Alternative
+        </p>
+      </div>
+
+      {/* ── Right panel: desktop ── */}
+      <div
+        className="hidden lg:flex flex-1 flex-col items-center justify-center px-6 py-12 relative overflow-hidden"
+        style={{ background: 'white' }}
+      >
+        <div className="relative z-10 w-full max-w-[380px] space-y-6">
+          <div>
+            <h2 className="text-2xl font-bold" style={{ color: 'var(--brand-imperial)' }}>Welcome back</h2>
+            <p className="text-sm text-muted-foreground mt-1">{t('auth.subtitle')}</p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="email" className="text-sm font-semibold">{t('auth.emailLabel')}</Label>
+              <Input id="email" type="email" placeholder={t('auth.emailPlaceholder')} autoComplete="email"
+                required value={email} onChange={(e) => setEmail(e.target.value)}
+                className="mt-1.5 h-11 bg-gray-50/80 border-border focus-visible:ring-[var(--brand-imperial)]" />
+            </div>
+            <div>
+              <Label htmlFor="password" className="text-sm font-semibold">{t('auth.passwordLabel')}</Label>
+              <Input id="password" type="password" placeholder="••••••••" autoComplete="current-password"
+                required value={password} onChange={(e) => setPassword(e.target.value)}
+                className="mt-1.5 h-11 bg-gray-50/80 border-border focus-visible:ring-[var(--brand-imperial)]" />
             </div>
 
-              {error && (
-                <div className="flex items-center gap-1 rounded-md px-2 py-1.5 text-[10px]"
-                  style={{ background: '#fee2e2', color: '#b91c1c' }}>
-                  <AlertCircle className="w-3 h-3 shrink-0" />
-                  {error}
+            {error && (
+              <div className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm"
+                style={{ background: '#fee2e2', color: '#b91c1c' }}>
+                <AlertCircle className="w-4 h-4 shrink-0" />{error}
+              </div>
+            )}
+
+            {!forgotMode ? (
+              <>
+                <Button type="submit" onClick={handleSubmit}
+                  className="w-full h-11 font-semibold text-sm gap-2" disabled={loading}
+                  style={{ background: 'var(--brand-imperial)' }}>
+                  {loading ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />{t('auth.signingIn')}</>
+                    : <>{t('auth.signIn')}<ArrowRight className="w-4 h-4" /></>}
+                </Button>
+
+                <div className="text-center">
+                  <button type="button" className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => { setForgotMode(true); setForgotError(null) }}>
+                    ¿Olvidaste tu contraseña?
+                  </button>
                 </div>
-              )}
-
-              {!forgotMode ? (
-                <>
-                  <Button type="submit" onClick={handleSubmit}
-                    className="w-full h-8 font-medium text-xs gap-1 group" disabled={loading}
-                    style={{ background: 'var(--brand-imperial)' }}>
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                        {t('auth.signingIn')}
-                      </span>
-                    ) : (
-                      <>
-                        {t('auth.signIn')}
-                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-                      </>
-                    )}
-                  </Button>
-
-                  <div className="text-center">
-                    <button type="button"
-                      className="text-[10px] text-white/50 hover:underline transition-colors"
-                      onClick={() => { setForgotMode(true); setForgotError(null) }}>
-                      ¿Olvidaste tu contraseña?
+              </>
+            ) : (
+              <>
+                {forgotSent ? (
+                  <div className="text-center space-y-3">
+                    <div className="flex items-center justify-center gap-2 text-emerald-600">
+                      <Check className="w-5 h-5" /><span className="font-medium">Correo enviado</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Si el email está registrado, recibirás una nueva contraseña.</p>
+                    <button type="button" className="text-sm text-muted-foreground hover:underline"
+                      onClick={() => { setForgotMode(false); setForgotSent(false); setForgotEmail('') }}>
+                      <ArrowLeft className="w-3.5 h-3.5 inline mr-1" />Volver al inicio de sesión
                     </button>
                   </div>
-                </>
-              ) : (
-                <>
-                  {forgotSent ? (
-                    <div className="text-center space-y-3">
-                      <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400">
-                        <Check className="w-5 h-5" />
-                        <span className="font-medium">Correo enviado</span>
+                ) : (
+                  <>
+                    <div>
+                      <Label htmlFor="forgot-email" className="text-sm font-semibold">Email de recuperación</Label>
+                      <Input id="forgot-email" type="email" placeholder="tu@email.com" autoComplete="email" required
+                        value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)}
+                        className="mt-1.5 h-11 bg-gray-50/80 border-border" />
+                    </div>
+                    {forgotError && (
+                      <div className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm"
+                        style={{ background: '#fee2e2', color: '#b91c1c' }}>
+                        <AlertCircle className="w-4 h-4 shrink-0" />{forgotError}
                       </div>
-                      <p className="text-sm lg:text-muted-foreground text-white/60">
-                        Si el email está registrado, recibirás una nueva contraseña.
-                      </p>
-                      <button
-                        type="button"
-                        className="text-sm lg:text-muted-foreground text-white/60 hover:underline transition-colors"
-                        onClick={() => { setForgotMode(false); setForgotSent(false); setForgotEmail('') }}
-                      >
-                        <ArrowLeft className="w-3.5 h-3.5 inline mr-1" />
-                        Volver al inicio de sesión
+                    )}
+                    <Button type="submit" onClick={handleForgotPassword}
+                      className="w-full h-11 font-semibold text-sm gap-2" disabled={loading || !forgotEmail}
+                      style={{ background: 'var(--brand-imperial)' }}>
+                      {loading ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Enviando...</>
+                        : <><Mail className="w-4 h-4" />Enviar nueva contraseña</>}
+                    </Button>
+                    <div className="text-center">
+                      <button type="button" className="text-sm text-muted-foreground hover:underline"
+                        onClick={() => { setForgotMode(false); setForgotError(null) }}>
+                        <ArrowLeft className="w-3.5 h-3.5 inline mr-1" />Volver al inicio de sesión
                       </button>
                     </div>
-                  ) : (
-                    <>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="forgot-email" className="text-sm font-semibold lg:text-foreground text-white/90">
-                          Email de recuperación
-                        </Label>
-                        <Input
-                          id="forgot-email"
-                          type="email"
-                          placeholder="tu@email.com"
-                          autoComplete="email"
-                          required
-                          value={forgotEmail}
-                          onChange={(e) => setForgotEmail(e.target.value)}
-                          className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-border border-white/20 focus-visible:ring-[#14213D]"
-                        />
-                      </div>
-
-                      {forgotError && (
-                        <div
-                          className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm"
-                          style={{ background: '#fee2e2', color: '#b91c1c' }}
-                        >
-                          <AlertCircle className="w-4 h-4 shrink-0" />
-                          {forgotError}
-                        </div>
-                      )}
-
-                      <Button
-                        type="submit"
-                        onClick={handleForgotPassword}
-                        className="w-full h-11 font-semibold text-sm gap-2"
-                        disabled={loading || !forgotEmail}
-                        style={{ background: 'var(--brand-imperial)' }}
-                      >
-                        {loading ? (
-                          <span className="flex items-center gap-2">
-                            <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                            Enviando...
-                          </span>
-                        ) : (
-                          <>
-                            <Mail className="w-4 h-4" />
-                            Enviar nueva contraseña
-                          </>
-                        )}
-                      </Button>
-
-                      <div className="text-center">
-                        <button
-                          type="button"
-                          className="text-sm lg:text-muted-foreground text-white/60 hover:underline transition-colors"
-                          onClick={() => { setForgotMode(false); setForgotError(null) }}
-                        >
-                          <ArrowLeft className="w-3.5 h-3.5 inline mr-1" />
-                          Volver al inicio de sesión
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
     </div>
-  )
-}
