@@ -243,68 +243,68 @@ export function LoginPage() {
         />
 
         {/* Mobile logo */}
-        <div className="relative z-10 flex lg:hidden justify-center mb-2">
-          <img src={logo} alt="BeepDash" className="h-20 w-auto" />
+        <div className="relative z-10 flex lg:hidden justify-center mb-1">
+          <img src={logo} alt="BeepDash" className="h-16 w-auto" />
         </div>
 
         {/* Mobile flow */}
-        <div className="relative z-10 flex lg:hidden items-center justify-center gap-1.5 mb-3">
+        <div className="relative z-10 flex lg:hidden items-center justify-center gap-1 mb-2">
           {['Device','MQTT','Stream','Dashboard'].map((label, i) => (
             <div key={label} className="flex items-center gap-0.5">
-              <div className="flex flex-col items-center gap-0.5">
-                <div className="w-5 h-5 rounded flex items-center justify-center" style={{ background: '#65E7D820' }}>
-                  <div className="w-1 h-1 rounded-full" style={{ background: '#65E7D8', boxShadow: '0 0 4px #65E7D8' }} />
+              <div className="flex flex-col items-center gap-0">
+                <div className="w-4 h-4 rounded flex items-center justify-center" style={{ background: '#65E7D820' }}>
+                  <div className="w-1 h-1 rounded-full" style={{ background: '#65E7D8', boxShadow: '0 0 3px #65E7D8' }} />
                 </div>
-                <span className="text-[6px] font-medium text-white/30 uppercase tracking-wider">{label}</span>
+                <span className="text-[5px] font-medium text-white/25 uppercase tracking-wider">{label}</span>
               </div>
-              {i < 3 && <div className="w-2 h-px" style={{ background: '#65E7D840' }} />}
+              {i < 3 && <div className="w-1.5 h-px" style={{ background: '#65E7D840' }} />}
             </div>
           ))}
         </div>
 
-        <div className="relative z-10 w-full max-w-[340px] space-y-3 px-4">
+        <div className="relative z-10 w-full max-w-[300px] space-y-2 px-4">
           <div className="text-center lg:text-left">
             <h2 className="text-lg font-semibold text-white">Welcome back</h2>
-            <p className="text-xs text-white/50 mt-0.5">{t('auth.subtitle')}</p>
+            <p className="text-[10px] text-white/50 mt-0.5">{t('auth.subtitle')}</p>
           </div>
 
           <div
-            className="rounded-xl p-4 space-y-3 lg:border lg:shadow-sm lg:bg-white"
+            className="rounded-lg p-3 space-y-2"
             style={{
-              background: 'rgba(255,255,255,0.07)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255,255,255,0.15)',
+              background: 'rgba(255,255,255,0.06)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.12)',
             }}
           >
-            <div className="space-y-1">
-              <Label htmlFor="email" className="text-xs font-medium text-white/70">
+            <div className="space-y-0.5">
+              <Label htmlFor="email" className="text-[10px] font-medium text-white/60">
                 {t('auth.emailLabel')}
               </Label>
               <Input
                 id="email" type="email" placeholder={t('auth.emailPlaceholder')}
                 autoComplete="email" required value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-9 text-sm bg-white/10 text-white placeholder:text-white/30 border-white/20 focus-visible:ring-[var(--brand-green)]"
+                className="h-8 text-xs bg-white/10 text-white placeholder:text-white/25 border-white/15 focus-visible:ring-[var(--brand-green)]"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="password" className="text-xs font-medium text-white/70">
+            <div className="space-y-0.5">
+              <Label htmlFor="password" className="text-[10px] font-medium text-white/60">
                 {t('auth.passwordLabel')}
               </Label>
               <Input
                 id="password" type="password" placeholder="••••••••"
                 autoComplete="current-password" required value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-9 text-sm bg-white/10 text-white placeholder:text-white/30 border-white/20 focus-visible:ring-[var(--brand-green)]"
+                className="h-8 text-xs bg-white/10 text-white placeholder:text-white/25 border-white/15 focus-visible:ring-[var(--brand-green)]"
               />
             </div>
 
               {error && (
-                <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs"
+                <div className="flex items-center gap-1 rounded-md px-2 py-1.5 text-[10px]"
                   style={{ background: '#fee2e2', color: '#b91c1c' }}>
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <AlertCircle className="w-3 h-3 shrink-0" />
                   {error}
                 </div>
               )}
@@ -312,7 +312,7 @@ export function LoginPage() {
               {!forgotMode ? (
                 <>
                   <Button type="submit" onClick={handleSubmit}
-                    className="w-full h-9 font-medium text-sm gap-1.5 group" disabled={loading}
+                    className="w-full h-8 font-medium text-xs gap-1 group" disabled={loading}
                     style={{ background: 'var(--brand-imperial)' }}>
                     {loading ? (
                       <span className="flex items-center gap-2">
@@ -329,7 +329,7 @@ export function LoginPage() {
 
                   <div className="text-center">
                     <button type="button"
-                      className="text-xs text-white/50 hover:underline transition-colors"
+                      className="text-[10px] text-white/50 hover:underline transition-colors"
                       onClick={() => { setForgotMode(true); setForgotError(null) }}>
                       ¿Olvidaste tu contraseña?
                     </button>
