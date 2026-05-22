@@ -112,7 +112,7 @@ ioTech/
 
 ## Key Runtime Config
 
-- **Mac IP**: 192.168.18.58 | **ESP32 IP**: 192.168.18.65
+- **Mac IP**: 192.168.18.79 (DHCP dinámico) | **ESP32 IP**: 192.168.18.81 (DHCP dinámico)
 - **Device Access-001**: id=8bb9c9c7-19c9-4682-a9b7-8e217d388cd8, tenant_id=216bfcbf-e88f-4ea3-b46a-550db49af2ed
 - **DB**: postgresql://diegogarcia@localhost:5432/iotech_dev
 - **Backend**: `cd backend && node src/index.js` (port 3000)
@@ -149,6 +149,12 @@ ioTech/
 - **Motivo**: relay_controller shim vacío (GPIOs sin configurar), drivers registrados pero nunca activados, command dispatch siempre DRV_ERR_NOT_FOUND
 - **Resultado**: firmware compila OK (Flash 99.1%, RAM 11.4%), flash & provision wizard funcional
 - **Backend schema**: cambios de 3c78210 y cdb3486 son backward-compatible (campos optional), se dejaron
+
+### Fix MQTT — backend no recibía heartbeats
+- **Causa**: mosquitto escucha solo IPv4, pero Node.js resuelve `localhost` a IPv6 `::1` primero → `mqtt.connect()` fallaba silenciosamente
+- **Fix**: cambiar `MQTT_BROKER_URL=mqtt://localhost:1883` → `mqtt://127.0.0.1:1883` en .env
+- **Dependencia faltante**: `express-rate-limit` no instalado (de f1331d4), impedía reiniciar backend
+- **Resultado**: DHT22 device online, heartbeats recibidos, lastSeen actualizado
 
 ## Últimos cambios (2026-05-16)
 
