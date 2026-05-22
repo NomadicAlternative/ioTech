@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /** GPIO pin used for factory reset button (active LOW) */
-#define FACTORY_RESET_GPIO_PIN   0   /* GPIO0 — BOOT button on most ESP32 devkits */
+#define FACTORY_RESET_GPIO_PIN   14   /* GPIO14 — safe from DTR/RTS; GPIO0 is BOOT pin */
 
 /** Duration (ms) the button must be held to trigger factory reset */
 #define FACTORY_RESET_HOLD_MS    5000

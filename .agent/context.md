@@ -2,7 +2,7 @@
 
 ## Project
 
-ioTech is a B2B2C SaaS IoT platform for installers (electricians, integrators, technicians) who deploy smart devices (ESP32, ESP8266, Raspberry Pi) for their clients.
+ioTech is a B2B2C SaaS IoT platform for installers (electricians, integrators, technicians) who deploy smart devices (ESP32, ESP32-C3, ESP32-S3) for their clients.
 
 **Model**: Installer -> Client -> Devices
 **Revenue**: Subscription per device, per installer, future white-label
@@ -217,16 +217,20 @@ All errors return `{ error: { code, message, status, details? } }`.
 - ⚠️ engram MCP: session summary se guarda bajo el proyecto del working directory al iniciar opencode. Para que quede en "iotech", abrí opencode DESDE /Users/diegogarcia/Desktop/IoTech/ioTech/
 - No flashear firmware sin ESP32 conectado
 
-## Driver Roadmap (PAUSADO — io_driver revertido 2026-05-22)
+## Driver Roadmap (io_driver RESTAURADO con fixes — 2026-05-22)
 
-El refactor io_driver (6ac7d8b, May 20) rompió relay_controller y desconectó el ESP32.
-Revertido en e7a66b9. Firmware volvió a arquitectura pre-io_driver:
-- relay_controller con GPIO directo (7 relays, active LOW)
-- DHT22 inline en mqtt_manager
-- Build target único: esp32dev
+El refactor io_driver (6ac7d8b) fue revertido (e7a66b9) y luego restaurado con fixes:
+- io_driver_load_all_defaults(): activa DHT22, RELAY, LCD1602_I2C sin NVS
+- Stack heartbeat: 2048 → 8192 (previene overflow con múltiples sensores)
+- Factory reset: GPIO 0 → 14 (evita falso trigger por DTR/RTS)
+- Catálogo en BD con 32 drivers, API pública GET /api/drivers/catalog
 
-**Fase 1 — Planificado (no implementado en firmware aún)**:
-DHT22, RELAY, BME280, DS18B20, PIR, HC-SR04, WS2812B, SERVO, SSD1306
+**Fase 1 — Compilados (10 drivers)**:
+DHT22, RELAY, BME280, DS18B20, PIR, HC-SR04, WS2812B, SERVO, SSD1306, LCD1602_I2C
+
+**Defaults activos**: DHT22 (GPIO 32), RELAY (7CH), LCD1602_I2C (0x27)
+
+**Recordatorio por sesión**: los 9 drivers compilan para las 4 targets pero NINGUNO fue probado con hardware real. Ver lista de compras en memoria Engram (`sdd/io-driver/hardware-validation`).
 
 **Fase 2 — Cuando haya hardware físico**:
 SHT30/31, CCS811, SGP30, PMS5003, BH1750, INA219, stepper 28BYJ-48, ST7735, ST7789, ILI9341, RFID RC522, Modbus RTU, RS485
@@ -234,3 +238,4 @@ SHT30/31, CCS811, SGP30, PMS5003, BH1750, INA219, stepper 28BYJ-48, ST7735, ST77
 **Fase 3 — Crecimiento**:
 LoRa (SX1276/78/1262), ESP32-S3/C3/C6/H2, Zigbee/Thread, ePaper, cámara OV2640, MPU6050, VL53L0X, keypad, microSD, deep sleep, battery telemetry
 - Puerto serial se auto-detecta (ls /dev/cu.usbserial-*)
+- Catálogo completo: 32 drivers en BD → GET /api/drivers/catalog
