@@ -142,15 +142,7 @@ export function LoginPage() {
             <h1 className="text-4xl font-extrabold text-white leading-[1.15] tracking-tight">
               Deploy, monitor<br />
               and{' '}
-              <span
-                className="relative inline-block"
-                style={{ color: '#FCA311' }}
-              >
-                automate
-                <svg className="absolute -bottom-1 left-0 w-full" height="4" viewBox="0 0 140 4">
-                  <path d="M0 2 Q70 0 140 2" stroke="#FCA311" strokeWidth="2" fill="none" opacity="0.6" />
-                </svg>
-              </span>
+                <span className="bg-gradient-to-r from-[var(--brand-green)] to-[var(--orange)] bg-clip-text text-transparent">automate</span>
               <br />your IoT devices
             </h1>
             <p className="text-white/50 text-sm max-w-xs leading-relaxed">
