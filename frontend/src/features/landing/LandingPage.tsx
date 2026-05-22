@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Cpu, Wifi, LayoutDashboard, Zap, ArrowRight, CheckCircle2, ChevronDown, Cable, Thermometer, Bell, Globe, BarChart3 } from 'lucide-react'
+import logo from '@/assets/logoprincipal.JPG'
 
 const LANGS = [
   { code: 'en', label: 'EN', flag: '🇬🇧' },
@@ -49,7 +50,7 @@ export function LandingPage() {
     <div className="min-h-screen bg-[var(--prussian-blue)] text-white overflow-x-hidden">
       <nav className="fixed top-0 w-full z-50 bg-[var(--prussian-blue)]/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <span className="text-xl font-bold"><span className="text-white">io</span><span className="text-[var(--orange)]">Tech</span></span>
+          <img src={logo} alt="ioTech" style={{ height: '210px' }} className="w-auto" />
           <div className="hidden md:flex items-center gap-8 text-sm text-[var(--muted-blue)]">
             <button onClick={() => scrollTo('features')} className="hover:text-white transition-colors">{t('landing.nav.features')}</button>
             <button onClick={() => scrollTo('flow')} className="hover:text-white transition-colors">{t('landing.nav.how')}</button>
@@ -76,7 +77,7 @@ export function LandingPage() {
               </div>}
             </div>
             <a href="/login" className="text-sm text-[var(--muted-blue)] hover:text-white">{t('landing.nav.login')}</a>
-            <a href="/register" className="text-sm bg-[var(--orange)] text-black font-medium px-4 py-2 rounded-full hover:bg-amber-400 transition-all hover:scale-105">{t('landing.nav.start')}</a>
+            <a href="/register" className="text-xs bg-[var(--orange)] text-black font-medium px-3 py-1.5 rounded-full hover:bg-amber-400 transition-all hover:scale-105">{t('landing.nav.start')}</a>
           </div>
         </div>
       </nav>
@@ -88,8 +89,8 @@ export function LandingPage() {
         </div>
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-[400px] opacity-40 pointer-events-none z-10"/>
         <div className="max-w-5xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 text-xs font-medium text-[var(--orange)] bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full mb-8"><Zap className="h-3 w-3"/>{t('landing.hero.badge')}</div>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">{t('landing.hero.title1')} <span className="bg-gradient-to-r from-[var(--orange)] to-amber-300 bg-clip-text text-transparent">{t('landing.hero.title2')}</span></h1>
+          <div className="inline-flex items-center gap-2 text-xs font-medium text-[var(--brand-green)] bg-teal-500/10 border border-teal-500/20 px-3 py-1 rounded-full mb-8"><Zap className="h-3 w-3"/>{t('landing.hero.badge')}</div>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">{t('landing.hero.title1')} <span className="bg-gradient-to-r from-[var(--brand-green)] to-[var(--orange)] bg-clip-text text-transparent">{t('landing.hero.title2')}</span></h1>
           <p className="text-lg md:text-xl text-[var(--muted-blue)] mt-6 max-w-2xl mx-auto leading-relaxed">{t('landing.hero.subtitle')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
             <a href="/register" className="inline-flex items-center gap-2 bg-[var(--orange)] text-black font-semibold px-8 py-4 rounded-full text-lg hover:bg-amber-400 transition-all hover:scale-105 shadow-lg shadow-amber-500/20">{t('landing.hero.cta')} <ArrowRight className="h-5 w-5"/></a>
@@ -103,7 +104,7 @@ export function LandingPage() {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">{t('landing.flow.title')}</h2>
           <p className="text-[var(--muted-blue)] text-center max-w-xl mx-auto mb-16">{t('landing.flow.subtitle')}</p>
           <div className="grid md:grid-cols-3 gap-8 mb-16">
-            {flow.map(({icon:I,tkey:k})=>(<div key={k} className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 hover:bg-white/[0.04] hover:border-[var(--orange)]/20 transition-all duration-300"><div className="w-12 h-12 rounded-xl bg-[var(--orange)]/10 flex items-center justify-center mb-6"><I className="h-6 w-6 text-[var(--orange)]"/></div><h3 className="text-xl font-semibold mb-3">{t(`landing.${k}.title`)}</h3><p className="text-[var(--muted-blue)] leading-relaxed">{t(`landing.${k}.desc`)}</p></div>))}
+             {flow.map(({icon:I,tkey:k})=>(<div key={k} className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 hover:bg-white/[0.04] hover:border-[var(--brand-green)]/20 transition-all duration-300"><div className="w-12 h-12 rounded-xl bg-[var(--brand-green)]/10 flex items-center justify-center mb-6"><I className="h-6 w-6 text-[var(--brand-green)]"/></div><h3 className="text-xl font-semibold mb-3">{t(`landing.${k}.title`)}</h3><p className="text-[var(--muted-blue)] leading-relaxed">{t(`landing.${k}.desc`)}</p></div>))}
           </div>
           <div className="rounded-2xl border border-white/5 overflow-hidden shadow-2xl shadow-black/30">
             <img src="/dashboard-preview.png" alt="Dashboard preview" className="w-full" />
@@ -116,7 +117,7 @@ export function LandingPage() {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">{t('landing.features.title')}</h2>
           <p className="text-[var(--muted-blue)] text-center max-w-xl mx-auto mb-16">{t('landing.features.subtitle')}</p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {feats.map(({icon:I,tkey:k})=>(<div key={k} className="flex gap-4 rounded-xl border border-white/5 bg-white/[0.01] p-6 hover:border-[var(--orange)]/10 transition-all"><div className="w-10 h-10 rounded-lg bg-[var(--orange)]/10 flex items-center justify-center shrink-0 mt-0.5"><I className="h-5 w-5 text-[var(--orange)]"/></div><div><h3 className="font-semibold mb-1">{t(`landing.${k}.title`)}</h3><p className="text-sm text-[var(--muted-blue)] leading-relaxed">{t(`landing.${k}.desc`)}</p></div></div>))}
+             {feats.map(({icon:I,tkey:k})=>(<div key={k} className="flex gap-4 rounded-xl border border-white/5 bg-white/[0.01] p-6 hover:border-[var(--brand-green)]/20 transition-all"><div className="w-10 h-10 rounded-lg bg-[var(--brand-green)]/10 flex items-center justify-center shrink-0 mt-0.5"><I className="h-5 w-5 text-[var(--brand-green)]"/></div><div><h3 className="font-semibold mb-1">{t(`landing.${k}.title`)}</h3><p className="text-sm text-[var(--muted-blue)] leading-relaxed">{t(`landing.${k}.desc`)}</p></div></div>))}
           </div>
         </div>
       </section>
@@ -124,7 +125,7 @@ export function LandingPage() {
       <section className="py-24 px-6 bg-gradient-to-b from-[#0D1A30] to-transparent">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 text-xs font-medium text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full mb-8">✨ {t('landing.ai.badge')}</div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">{t('landing.ai.title1')} <span className="bg-gradient-to-r from-purple-400 to-[var(--orange)] bg-clip-text text-transparent">{t('landing.ai.title2')}</span></h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">{t('landing.ai.title1')} <span className="bg-gradient-to-r from-[var(--brand-green)] to-[var(--orange)] bg-clip-text text-transparent">{t('landing.ai.title2')}</span></h2>
           <div className="rounded-2xl border border-white/5 bg-black/20 p-6 md:p-8 max-w-2xl mx-auto">
             <div className="flex gap-3 text-left">
               <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0 mt-1"><span className="text-xs">🤖</span></div>
@@ -144,7 +145,7 @@ export function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('landing.pricing.title')}</h2>
           <p className="text-[var(--muted-blue)] max-w-lg mx-auto mb-12">{t('landing.pricing.subtitle')}</p>
-          <div className="max-w-md mx-auto rounded-2xl border border-[var(--orange)]/20 bg-white/[0.02] p-8">
+          <div className="max-w-md mx-auto rounded-2xl border border-[var(--brand-green)]/20 bg-white/[0.02] p-8">
             <div className="text-5xl font-bold mb-4">{t('landing.pricing.price')}<span className="text-lg text-[var(--muted-blue)] font-normal">{t('landing.pricing.period')}</span></div>
             <p className="text-[var(--muted-blue)] mb-8">{t('landing.pricing.note')}</p>
             <ul className="space-y-3 text-left mb-8">
@@ -157,7 +158,7 @@ export function LandingPage() {
 
       <footer className="py-12 px-6 border-t border-white/5">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <span className="text-xl font-bold"><span className="text-white">io</span><span className="text-[var(--orange)]">Tech</span></span>
+          <img src={logo} alt="ioTech" style={{ height: '150px' }} className="w-auto" />
           <p className="text-sm text-[var(--muted-blue)]">{t('landing.footer')}</p>
         </div>
       </footer>

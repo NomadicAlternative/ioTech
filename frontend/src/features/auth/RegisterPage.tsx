@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Wand2, Loader2, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import logo from '@/assets/logoprincipal.JPG'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import api from '@/lib/axios'
@@ -66,10 +67,7 @@ export function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--prussian-blue)] via-[#1A2F52] to-[var(--prussian-blue)]">
       <div className="w-full max-w-md mx-4 rounded-2xl bg-[var(--card)] p-8 shadow-sm border border-[var(--border)]">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold flex items-center justify-center gap-2 text-white">
-            <Wand2 className="h-6 w-6 text-[var(--accent)]" />
-            ioTech
-          </h1>
+          <img src={logo} alt="BeepDash" className="h-10 w-auto mx-auto mb-3" />
           <p className="text-[var(--muted-blue)] mt-2">Creá tu cuenta de instalador</p>
         </div>
 

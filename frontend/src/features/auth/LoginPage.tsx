@@ -5,6 +5,7 @@ import { useAuthStore } from './authStore'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import logo from '@/assets/logoprincipal.JPG'
 import { Cpu, AlertCircle, Activity, Shield, ArrowRight, Radio, LayoutDashboard, Gauge, ArrowLeft, Check, Mail } from 'lucide-react'
 import api from '@/lib/axios'
 
@@ -126,12 +127,13 @@ export function LoginPage() {
         {/* Logo */}
         <div className="relative flex items-center gap-3 z-10">
           <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30"
+            className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg"
+            style={{ boxShadow: '0 4px 12px rgba(101,231,216,0.3)' }}
             style={{ background: 'var(--brand-amber)' }}
           >
-            <Cpu className="w-5 h-5 text-amber-400" />
+            <Cpu className="w-5 h-5 text-[var(--brand-green)]" />
           </div>
-          <span className="text-white text-xl font-bold tracking-tight">ioTech</span>
+          <img src={logo} alt="BeepDash" className="h-8 w-auto" />
         </div>
 
         {/* Center content — dynamic flow */}
@@ -166,10 +168,10 @@ export function LoginPage() {
           {/* ── Flow diagram ── */}
           <div className="flex items-center gap-2 py-2">
             {[
-              { icon: Cpu,      label: 'Device',   color: 'var(--brand-amber)' },
+              { icon: Cpu,      label: 'Device',   color: 'var(--brand-green)' },
               { icon: Radio,    label: 'MQTT',     color: 'var(--brand-cerulean)' },
-              { icon: Activity, label: 'Telemetry', color: '#849324' },
-              { icon: LayoutDashboard, label: 'Dashboard', color: 'var(--brand-amber)' },
+              { icon: Activity, label: 'Telemetry', color: 'var(--brand-green)' },
+              { icon: LayoutDashboard, label: 'Dashboard', color: 'var(--brand-green)' },
             ].map(({ icon: Icon, label, color }, i) => (
               <div key={label} className="flex items-center gap-2">
                 <div className="flex flex-col items-center gap-1.5">
@@ -229,7 +231,7 @@ export function LoginPage() {
 
         {/* Footer */}
         <div className="relative z-10">
-          <p className="text-white/25 text-xs">© 2025 IoTech. All rights reserved.</p>
+          <p className="text-white/25 text-xs">© 2026 BeepDash Developed by Diego Garcia | Nomadic Alternative</p>
         </div>
       </div>
 
@@ -270,9 +272,9 @@ export function LoginPage() {
             className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30"
             style={{ background: 'var(--brand-amber)' }}
           >
-            <Cpu className="w-5 h-5 text-amber-400" />
+            <Cpu className="w-5 h-5 text-[var(--brand-green)]" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-white">IoTech</span>
+          <img src={logo} alt="BeepDash" className="h-6 w-auto" />
         </div>
 
         <div className="relative z-10 w-full max-w-[380px] space-y-6">

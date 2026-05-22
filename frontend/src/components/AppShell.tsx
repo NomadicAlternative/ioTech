@@ -3,6 +3,7 @@ import { Outlet, NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/features/auth/authStore'
 import i18n from '@/i18n/i18n'
+import logo from '@/assets/logoprincipal.JPG'
 import {
   LayoutDashboard, Cpu, FileCode2, Users, Settings, LogOut, Globe, ShieldCheck,
   Bot, Download, Cable, Building2, Menu, X, Wand2, BookOpen,
@@ -49,14 +50,14 @@ export function AppShell() {
             [
               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
               isActive
-                ? 'bg-sidebar-primary/30 text-sidebar-primary-foreground before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-amber-400'
+                ? 'bg-sidebar-primary/30 text-sidebar-primary-foreground before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-[#65E7D8]'
                 : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
             ].join(' ')
           }
         >
           {({ isActive }) => (
             <>
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'opacity-100 text-amber-400' : 'opacity-50'}`} />
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'opacity-100 text-[#65E7D8]' : 'opacity-50'}`} />
               {t(labelKey)}
             </>
           )}
@@ -84,7 +85,7 @@ export function AppShell() {
       >
         {/* Brand */}
         <div className="px-6 py-5 border-b border-sidebar-border flex items-center justify-between">
-          <span className="text-2xl font-bold tracking-tight" style={{ color: 'var(--brand-imperial, #01295F)' }}>ioTech</span>
+          <img src={logo} alt="BeepDash" className="h-8 w-auto" />
           <button
             onClick={closeSidebar}
             className="lg:hidden p-1 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/70"
