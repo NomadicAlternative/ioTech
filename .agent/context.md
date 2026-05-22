@@ -217,6 +217,17 @@ All errors return `{ error: { code, message, status, details? } }`.
 - ⚠️ engram MCP: session summary se guarda bajo el proyecto del working directory al iniciar opencode. Para que quede en "iotech", abrí opencode DESDE /Users/diegogarcia/Desktop/IoTech/ioTech/
 - No flashear firmware sin ESP32 conectado
 
+## 🩺 Quick Troubleshooting
+
+| Síntoma | Causa probable | Fix |
+|---------|---------------|-----|
+| Device offline después de flash | Flash borró NVS → provisioning no se hizo | Provisionar de nuevo vía serial |
+| `mqttConnected: false` | `MQTT_BROKER_URL=localhost` → Node resuelve a IPv6 | Usar `127.0.0.1` en vez de `localhost` |
+| DHT22 timeout | PAL layer overhead en timing de 1µs | Usar `gpio_set_direction()` + `esp_rom_delay_us()` directo |
+| Drivers no se activan | NVS vacío después de flash, sin defaults | `io_driver_load_all_defaults()` |
+| Factory reset falso | — no es problema real con `dsrdtr=False` | GPIO 0 está bien, no tocar |
+| Sensor no responde en GPIO X | Sensor está físicamente en otro pin | Probar en el pin correcto (DHT22 → 32) |
+
 ## Driver Roadmap (io_driver RESTAURADO con fixes — 2026-05-22)
 
 El refactor io_driver (6ac7d8b) fue revertido (e7a66b9) y luego restaurado con fixes:
