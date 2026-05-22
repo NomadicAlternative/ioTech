@@ -125,18 +125,11 @@ export function LoginPage() {
         />
 
         {/* Logo */}
-        <div className="relative flex items-center gap-3 z-10">
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg"
-            style={{ boxShadow: '0 4px 12px rgba(101,231,216,0.3)' }}
-            style={{ background: 'var(--brand-green)' }}
-          >
-            <Cpu className="w-5 h-5 text-[var(--brand-green)]" />
-          </div>
-          <img src={logo} alt="BeepDash" style={{ height: '210px' }} className="w-auto" />
+        <div className="relative flex items-center justify-center z-10">
+          <img src={logo} alt="BeepDash" style={{ height: '420px' }} className="w-auto" />
         </div>
 
-        {/* Center content — dynamic flow */}
+        {/* Center content */}
         <div className="relative z-10 space-y-8">
           <div className="space-y-4">
             <div
@@ -163,42 +156,6 @@ export function LoginPage() {
             <p className="text-white/50 text-sm max-w-xs leading-relaxed">
               From ESP32 to dashboard — one platform for the entire device lifecycle.
             </p>
-          </div>
-
-          {/* ── Flow diagram ── */}
-          <div className="flex items-center gap-2 py-2">
-            {[
-              { icon: Cpu,      label: 'Device',   color: 'var(--brand-green)' },
-              { icon: Radio,    label: 'MQTT',     color: 'var(--brand-cerulean)' },
-              { icon: Activity, label: 'Telemetry', color: 'var(--brand-green)' },
-              { icon: LayoutDashboard, label: 'Dashboard', color: 'var(--brand-green)' },
-            ].map(({ icon: Icon, label, color }, i) => (
-              <div key={label} className="flex items-center gap-2">
-                <div className="flex flex-col items-center gap-1.5">
-                  <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center transition-transform hover:scale-110 duration-300"
-                    style={{ background: `${color}20`, border: `1px solid ${color}40` }}
-                  >
-                    <Icon className="w-5 h-5" style={{ color }} />
-                  </div>
-                  <span className="text-[10px] font-semibold text-amber-300/80 uppercase tracking-wider">{label}</span>
-                </div>
-                {i < 3 && (
-                  <div className="flex items-center relative" style={{ width: '40px' }}>
-                    <div className="w-full h-0.5 rounded-full opacity-30" style={{ background: color }} />
-                    <div
-                      className="absolute w-2 h-2 rounded-full"
-                      style={{
-                        background: color,
-                        boxShadow: `0 0 8px ${color}, 0 0 16px ${color}`,
-                        animation: `flowPulse 2s ease-in-out ${i * 0.5}s infinite`,
-                        left: '0%',
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
 
           {/* Feature pills */}
@@ -267,14 +224,8 @@ export function LoginPage() {
         />
 
         {/* Mobile logo */}
-        <div className="relative z-10 flex lg:hidden items-center gap-2.5 mb-8">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30"
-            style={{ background: 'var(--brand-green)' }}
-          >
-            <Cpu className="w-5 h-5 text-[var(--brand-green)]" />
-          </div>
-          <img src={logo} alt="BeepDash" style={{ height: '210px' }} className="w-auto max-w-full" />
+        <div className="relative z-10 flex lg:hidden justify-center mb-8">
+          <img src={logo} alt="BeepDash" style={{ height: '420px' }} className="w-auto max-w-full" />
         </div>
 
         <div className="relative z-10 w-full max-w-[380px] space-y-6">
