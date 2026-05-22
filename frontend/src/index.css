@@ -167,6 +167,17 @@
   pointer-events: none;
 }
 
+@keyframes sparkTravel {
+  0%   { top: 0%; opacity: 1; }
+  50%  { top: 100%; opacity: 0.8; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@keyframes particleFade {
+  0%   { transform: translate(-1px, 0); opacity: 0.8; }
+  100% { transform: translate(20px, -40px); opacity: 0; }
+}
+
 .relay-led-blink {
   animation: led-blink 0.5s ease-in-out forwards;
 }

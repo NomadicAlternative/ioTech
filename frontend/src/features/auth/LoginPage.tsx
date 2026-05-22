@@ -125,8 +125,26 @@ export function LoginPage() {
         />
 
         {/* Logo */}
-        <div className="relative flex items-center justify-center z-10">
+        <div className="relative flex flex-col items-center z-10">
           <img src={logo} alt="BeepDash" style={{ height: '420px' }} className="w-auto" />
+          
+          {/* Animated spark/connection */}
+          <div className="relative w-0.5 h-16 my-2">
+            <div className="absolute inset-0 bg-gradient-to-b from-[var(--brand-green)] via-[var(--orange)] to-transparent rounded-full" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-[var(--brand-green)] rounded-full animate-ping opacity-40" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 bg-[var(--brand-green)] rounded-full animate-pulse shadow-lg shadow-[var(--brand-green)]/60" />
+            {/* Traveling dot */}
+            <div className="absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full shadow-lg shadow-white/80"
+              style={{ animation: 'sparkTravel 1.5s ease-in-out infinite' }} />
+            {/* Particles */}
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="absolute left-1/2 w-1 h-1 bg-[var(--brand-green)] rounded-full"
+                style={{
+                  animation: `particleFade ${1 + i * 0.3}s ease-out ${i * 0.4}s infinite`,
+                  opacity: 0,
+                }} />
+            ))}
+          </div>
         </div>
 
         {/* Center content */}
