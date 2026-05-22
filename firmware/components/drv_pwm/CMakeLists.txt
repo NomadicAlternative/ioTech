@@ -1,0 +1,1 @@
+idf_component_register(SRCS "drv_pwm.c" INCLUDE_DIRS "include" REQUIRES io_driver driver cjson ledc)

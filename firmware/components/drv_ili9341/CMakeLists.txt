@@ -1,0 +1,1 @@
+idf_component_register(SRCS "drv_ili9341.c" INCLUDE_DIRS "include" REQUIRES io_driver driver cjson)

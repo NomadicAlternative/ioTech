@@ -1,0 +1,1 @@
+idf_component_register(SRCS "drv_rs485.c" INCLUDE_DIRS "include" REQUIRES io_driver driver cjson driver/uart)
