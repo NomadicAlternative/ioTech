@@ -28,7 +28,8 @@
     "language": "Idioma",
     "firmware": "Firmware",
     "provision": "Provisionar",
-    "ai": "Asistente IA"
+    "ai": "Asistente IA",
+    "catalog": "Catálogo"
   },
   "auth": {
     "subtitle": "Ingresá a tu cuenta",
@@ -402,5 +403,24 @@
       "cta": "Crear cuenta gratis"
     },
     "footer": "© 2026 ioTech — Plataforma IoT para instaladores profesionales."
+  },
+  "catalog": {
+    "title": "Catálogo de Sensores y Drivers",
+    "subtitle": "Explorá los sensores, actuadores y displays disponibles para tus dispositivos ESP32.",
+    "search": "Buscar sensores...",
+    "all": "Todos",
+    "datastreams": "Datastreams",
+    "empty": "No se encontraron sensores con ese criterio.",
+    "ota_required": "Este sensor requiere una actualización de firmware (OTA, ~30 segundos). Próximamente disponible.",
+    "category": {
+      "sensor": "Sensores",
+      "actuator": "Actuadores",
+      "display": "Pantallas"
+    },
+    "status": {
+      "available": "Disponible",
+      "untested": "Requiere validación",
+      "planned": "Próximamente (OTA)"
+    }
   }
 }
