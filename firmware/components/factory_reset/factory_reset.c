@@ -33,7 +33,7 @@ static void factory_reset_task(void *arg)
     };
     gpio_config(&io_conf);
 
-    ESP_LOGI(TAG, "Factory reset monitor active on GPIO %d", FACTORY_RESET_GPIO_PIN);
+    ESP_LOGI(TAG, "Factory reset monitor active on GPIO %d (BOOT button)", FACTORY_RESET_GPIO_PIN);
 
     uint32_t hold_ms = 0;
     const uint32_t poll_interval_ms = 100;
@@ -65,10 +65,5 @@ static void factory_reset_task(void *arg)
 
 void factory_reset_monitor_start(void)
 {
-#if FACTORY_RESET_GPIO_PIN == FACTORY_RESET_GPIO_DISABLED
-    ESP_LOGI(TAG, "Factory reset disabled (GPIO=255)");
-    return;
-#else
     xTaskCreate(factory_reset_task, "factory_reset", 2048, NULL, 4, NULL);
-#endif
 }
