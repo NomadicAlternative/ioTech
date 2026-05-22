@@ -121,7 +121,7 @@ export function LoginPage() {
         {/* Glow bottom-left */}
         <div
           className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full opacity-15 blur-[80px] pointer-events-none"
-          style={{ background: 'var(--brand-amber)' }}
+          style={{ background: 'var(--brand-green)' }}
         />
 
         {/* Logo */}
@@ -129,7 +129,7 @@ export function LoginPage() {
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg"
             style={{ boxShadow: '0 4px 12px rgba(101,231,216,0.3)' }}
-            style={{ background: 'var(--brand-amber)' }}
+            style={{ background: 'var(--brand-green)' }}
           >
             <Cpu className="w-5 h-5 text-[var(--brand-green)]" />
           </div>
@@ -263,14 +263,14 @@ export function LoginPage() {
         />
         <div
           className="lg:hidden absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-15 blur-[70px] pointer-events-none"
-          style={{ background: 'var(--brand-amber)' }}
+          style={{ background: 'var(--brand-green)' }}
         />
 
         {/* Mobile logo */}
         <div className="relative z-10 flex lg:hidden items-center gap-2.5 mb-8">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30"
-            style={{ background: 'var(--brand-amber)' }}
+            style={{ background: 'var(--brand-green)' }}
           >
             <Cpu className="w-5 h-5 text-[var(--brand-green)]" />
           </div>
