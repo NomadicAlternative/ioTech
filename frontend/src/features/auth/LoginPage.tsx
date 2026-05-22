@@ -243,25 +243,36 @@ export function LoginPage() {
         />
 
         {/* Mobile logo */}
-        <div className="relative z-10 flex lg:hidden justify-center mb-8">
-          <img src={logo} alt="BeepDash" style={{ height: '420px' }} className="w-auto max-w-full" />
+        <div className="relative z-10 flex lg:hidden justify-center mb-4">
+          <img src={logo} alt="BeepDash" className="h-28 w-auto" />
         </div>
 
-        <div className="relative z-10 w-full max-w-[380px] space-y-6">
+        {/* Mobile flow */}
+        <div className="relative z-10 flex lg:hidden items-center justify-center gap-2 mb-6">
+          {['Device','MQTT','Stream','Dashboard'].map((label, i) => (
+            <div key={label} className="flex items-center gap-1">
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: '#65E7D820' }}>
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#65E7D8', boxShadow: '0 0 6px #65E7D8' }} />
+                </div>
+                <span className="text-[7px] font-medium text-white/40 uppercase tracking-wider">{label}</span>
+              </div>
+              {i < 3 && <div className="w-3 h-px" style={{ background: '#65E7D840' }} />}
+            </div>
+          ))}
+        </div>
 
-          {/* Heading — blanco en mobile, imperial en desktop */}
-          <div className="space-y-1.5">
-            <h2 className="text-3xl font-bold lg:text-foreground text-white"
-                style={{ color: undefined }}>
-              <span className="hidden lg:inline" style={{ color: 'var(--brand-imperial)' }}>Welcome back</span>
-              <span className="lg:hidden text-white">Welcome back</span>
+        <div className="relative z-10 w-full max-w-[380px] space-y-5 px-4">
+          <div className="space-y-1 text-center lg:text-left">
+            <h2 className="text-2xl lg:text-3xl font-bold text-white">
+              Welcome back
             </h2>
-            <p className="text-sm lg:text-muted-foreground text-white/60">{t('auth.subtitle')}</p>
+            <p className="text-sm text-white/60">{t('auth.subtitle')}</p>
           </div>
 
           {/* Form card — glassmorphism en mobile, borde simple en desktop */}
           <div
-            className="rounded-2xl p-8 space-y-5 lg:border lg:shadow-sm lg:bg-white"
+            className="rounded-2xl p-6 space-y-4 lg:border lg:shadow-sm lg:bg-white"
             style={{
               background: 'rgba(255,255,255,0.07)',
               backdropFilter: 'blur(16px)',
