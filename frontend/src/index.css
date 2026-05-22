@@ -167,16 +167,6 @@
   pointer-events: none;
 }
 
-@keyframes dataFlow {
-  0%   { left: -10%; }
-  100% { left: 110%; }
-}
-
-@keyframes nodePulse {
-  0%, 100% { opacity: 0.3; transform: translateY(-50%) scale(1); }
-  50%      { opacity: 1;   transform: translateY(-50%) scale(1.8); }
-}
-
 .relay-led-blink {
   animation: led-blink 0.5s ease-in-out forwards;
 }

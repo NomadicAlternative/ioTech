@@ -113,34 +113,6 @@ export function LoginPage() {
           <circle cx="20%" cy="80%" r="10" fill="none" stroke="#14213D" strokeWidth="1" opacity="0.5" />
         </svg>
 
-        {/* Data flow pipeline — device → MQTT → dashboard */}
-        <div className="relative flex items-center justify-center gap-4 mt-6 mb-8 z-10">
-          {[
-            { label: 'Device',   color: '#65E7D8' },
-            { label: 'MQTT',     color: '#65E7D8' },
-            { label: 'Stream',   color: '#FCA311' },
-            { label: 'Dashboard', color: '#65E7D8' },
-          ].map(({ label, color }, i) => (
-            <div key={label} className="flex items-center gap-3">
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:scale-110 duration-300"
-                  style={{ background: `${color}20` }}
-                >
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: color, boxShadow: `0 0 10px ${color}` }} />
-                </div>
-                <span className="text-[9px] font-medium text-white/60 uppercase tracking-widest">{label}</span>
-              </div>
-              {i < 3 && (
-                <div className="flex items-center relative" style={{ width: '28px' }}>
-                  <div className="w-full h-px rounded-full" style={{ background: `${color}40` }} />
-                  <div className="absolute left-0 w-1.5 h-1.5 rounded-full"
-                    style={{ background: color, animation: `flowPulse 2s ease-in-out ${i * 0.4}s infinite`, boxShadow: `0 0 8px ${color}` }} />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
         {/* Glow top-right */}
         <div
           className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-20 blur-[100px] pointer-events-none"
@@ -155,6 +127,33 @@ export function LoginPage() {
         {/* Logo */}
         <div className="relative flex items-center justify-center z-10">
           <img src={logo} alt="BeepDash" style={{ height: '420px' }} className="w-auto" />
+        </div>
+
+        {/* Data flow — device → MQTT → Stream → Dashboard */}
+        <div className="relative flex items-center justify-center gap-4 mt-2 mb-6 z-10">
+          {[
+            { label: 'Device',   color: '#65E7D8' },
+            { label: 'MQTT',     color: '#65E7D8' },
+            { label: 'Stream',   color: '#FCA311' },
+            { label: 'Dashboard', color: '#65E7D8' },
+          ].map(({ label, color }, i) => (
+            <div key={label} className="flex items-center gap-2">
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-110 duration-300"
+                  style={{ background: `${color}20` }}>
+                  <div className="w-2 h-2 rounded-full" style={{ background: color, boxShadow: `0 0 8px ${color}` }} />
+                </div>
+                <span className="text-[8px] font-medium text-white/50 uppercase tracking-widest">{label}</span>
+              </div>
+              {i < 3 && (
+                <div className="flex items-center relative" style={{ width: '24px' }}>
+                  <div className="w-full h-px rounded-full" style={{ background: `${color}40` }} />
+                  <div className="absolute left-0 w-1 h-1 rounded-full"
+                    style={{ background: color, animation: `flowPulse 2s ease-in-out ${i * 0.4}s infinite`, boxShadow: `0 0 6px ${color}` }} />
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
         {/* Center content */}
