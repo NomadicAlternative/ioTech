@@ -49,8 +49,8 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-[var(--prussian-blue)] text-white overflow-x-hidden">
       <nav className="fixed top-0 w-full z-50 bg-[var(--prussian-blue)]/80 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <img src={logo} alt="ioTech" style={{ height: '210px' }} className="w-auto" />
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-12 md:h-16 flex items-center justify-between">
+          <img src={logo} alt="ioTech" className="h-12 md:h-[210px] w-auto" />
           <div className="hidden md:flex items-center gap-8 text-sm text-[var(--muted-blue)]">
             <button onClick={() => scrollTo('features')} className="hover:text-white transition-colors">{t('landing.nav.features')}</button>
             <button onClick={() => scrollTo('flow')} className="hover:text-white transition-colors">{t('landing.nav.how')}</button>
@@ -76,8 +76,8 @@ export function LandingPage() {
                 ))}
               </div>}
             </div>
-            <a href="/login" className="text-sm text-[var(--muted-blue)] hover:text-white">{t('landing.nav.login')}</a>
-            <a href="/register" className="text-xs bg-[var(--orange)] text-black font-medium px-3 py-1.5 rounded-full hover:bg-amber-400 transition-all hover:scale-105">{t('landing.nav.start')}</a>
+            <a href="/login" className="text-[10px] md:text-sm text-[var(--muted-blue)] hover:text-white">{t('landing.nav.login')}</a>
+            <a href="/register" className="text-[10px] md:text-xs bg-[var(--orange)] text-black font-medium px-2 py-1 md:px-3 md:py-1.5 rounded-full hover:bg-amber-400 transition-all hover:scale-105">{t('landing.nav.start')}</a>
           </div>
         </div>
       </nav>
@@ -163,10 +163,10 @@ export function LandingPage() {
         </div>
       </section>
 
-      <footer className="py-12 px-6 border-t border-white/5">
+      <footer className="py-6 md:py-12 px-6 border-t border-white/5">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <img src={logo} alt="ioTech" style={{ height: '150px' }} className="w-auto" />
-          <p className="text-sm text-[var(--muted-blue)]">{t('landing.footer')}</p>
+          <img src={logo} alt="ioTech" className="h-20 md:h-[150px] w-auto" />
+          <p className="text-[10px] md:text-sm text-[var(--muted-blue)]">{t('landing.footer')}</p>
         </div>
       </footer>
     </div>
