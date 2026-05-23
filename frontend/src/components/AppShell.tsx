@@ -50,14 +50,14 @@ export function AppShell() {
             [
               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
               isActive
-                ? 'bg-sidebar-primary/30 text-sidebar-primary-foreground before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-[#65E7D8]'
+                ? 'bg-sidebar-primary/30 text-sidebar-primary-foreground before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-amber-400'
                 : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
             ].join(' ')
           }
         >
           {({ isActive }) => (
             <>
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'opacity-100 text-[#65E7D8]' : 'opacity-50'}`} />
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'opacity-100 text-amber-400' : 'opacity-50'}`} />
               {t(labelKey)}
             </>
           )}
