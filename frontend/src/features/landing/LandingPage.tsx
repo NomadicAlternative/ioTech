@@ -50,7 +50,7 @@ export function LandingPage() {
     <div className="min-h-screen bg-[var(--prussian-blue)] text-white overflow-x-hidden">
       <nav className="fixed top-0 w-full z-50 bg-[var(--prussian-blue)]/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-12 md:h-16 flex items-center justify-between">
-          <img src={logo} alt="ioTech" className="h-10 md:h-[210px] w-auto" />
+          <img src={logo} alt="ioTech" className="h-20 md:h-[210px] w-auto" />
           <div className="hidden md:flex items-center gap-8 text-sm text-[var(--muted-blue)]">
             <button onClick={() => scrollTo('features')} className="hover:text-white transition-colors">{t('landing.nav.features')}</button>
             <button onClick={() => scrollTo('flow')} className="hover:text-white transition-colors">{t('landing.nav.how')}</button>
@@ -58,11 +58,11 @@ export function LandingPage() {
           </div>
           <div className="flex items-center gap-1.5 md:gap-3">
             <div className="relative">
-              <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-0.5 text-[9px] md:text-sm text-[var(--muted-blue)] hover:text-white px-1.5 py-0.5 rounded hover:bg-white/5">
-                <Globe className="h-3 w-3 md:h-3.5 md:w-3.5"/>
+              <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-0.5 text-[8px] md:text-sm text-[var(--muted-blue)] hover:text-white px-1 py-0.5 rounded hover:bg-white/5">
+                <Globe className="h-2.5 w-2.5 md:h-3.5 md:w-3.5"/>
                 <span className="hidden md:inline">{LANGS.find(l => l.code === (i18n.language?.split('-')[0] || 'en'))?.flag}</span>
-                <span className="md:hidden text-[8px]">{LANGS.find(l => l.code === (i18n.language?.split('-')[0] || 'en'))?.label}</span>
-                <ChevronDown className="h-2.5 w-2.5 md:h-3 md:w-3"/>
+                <span className="md:hidden text-[7px]">{LANGS.find(l => l.code === (i18n.language?.split('-')[0] || 'en'))?.label}</span>
+                <ChevronDown className="h-2 w-2 md:h-3 md:w-3"/>
               </button>
               {langOpen && <div className="absolute top-full right-0 mt-1 bg-[#1A2F52] border border-white/10 rounded-xl p-1 shadow-xl z-50">
                 {LANGS.map(l => (
@@ -76,8 +76,8 @@ export function LandingPage() {
                 ))}
               </div>}
             </div>
-            <a href="/login" className="text-[9px] md:text-sm text-[var(--muted-blue)] hover:text-white transition-colors">{t('landing.nav.login')}</a>
-            <a href="/register" className="text-[9px] md:text-xs text-[var(--orange)] font-medium hover:text-amber-400 transition-colors">{t('landing.nav.start')}</a>
+            <a href="/login" className="text-[8px] md:text-sm text-[var(--muted-blue)] hover:text-white transition-colors">{t('landing.nav.login')}</a>
+            <a href="/register" className="text-[7px] md:text-xs text-[var(--orange)] font-medium hover:text-amber-400 transition-colors">{t('landing.nav.start')}</a>
           </div>
         </div>
       </nav>
