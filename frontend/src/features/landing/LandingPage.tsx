@@ -163,10 +163,10 @@ export function LandingPage() {
         </div>
       </section>
 
-      <footer className="py-6 md:py-12 px-6 border-t border-white/5">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <img src={logo} alt="ioTech" className="h-20 md:h-[150px] w-auto" />
-          <p className="text-[10px] md:text-sm text-[var(--muted-blue)]">{t('landing.footer')}</p>
+      <footer className="py-4 md:py-12 px-6 border-t border-white/5">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+          <img src={logo} alt="ioTech" className="h-16 md:h-[150px] w-auto" />
+          <p className="text-[7px] md:text-sm text-[var(--muted-blue)]">{t('landing.footer')}</p>
         </div>
       </footer>
     </div>
