@@ -49,14 +49,14 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-[var(--prussian-blue)] text-white overflow-x-hidden">
       <nav className="fixed top-0 w-full z-50 bg-[var(--prussian-blue)]/80 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 py-1 md:py-0 md:h-16 flex items-center justify-between">
-          <img src={logo} alt="ioTech" style={{height:92}} className="w-auto md:h-[210px]" />
+        <div className="max-w-7xl mx-auto pl-[5px] pr-[5px] md:px-6 py-1 md:py-0 md:h-16 flex items-center justify-between">
+          <img src={logo} alt="ioTech" className="h-[150px] md:h-[210px] w-auto" />
           <div className="hidden md:flex items-center gap-8 text-sm text-[var(--muted-blue)]">
             <button onClick={() => scrollTo('features')} className="hover:text-white transition-colors">{t('landing.nav.features')}</button>
             <button onClick={() => scrollTo('flow')} className="hover:text-white transition-colors">{t('landing.nav.how')}</button>
             <button onClick={() => scrollTo('pricing')} className="hover:text-white transition-colors">{t('landing.nav.pricing')}</button>
           </div>
-          <div className="flex items-center gap-1.5 text-[4px] md:text-sm md:gap-3">
+          <div className="flex items-center gap-1.5 text-[3px] md:text-sm md:gap-3">
             <div className="relative">
               <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-0.5 md:gap-1 text-[var(--muted-blue)] hover:text-white md:px-2 md:py-1 md:rounded-lg md:hover:bg-white/5">
                 <Globe className="h-2 w-2 md:h-3.5 md:w-3.5"/>
