@@ -48,9 +48,9 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[var(--prussian-blue)] text-white overflow-x-hidden">
-      <nav className="fixed top-0 w-full z-50 bg-[var(--prussian-blue)]/80 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-7xl mx-auto pl-[5px] pr-[5px] md:px-6 py-1 md:py-0 md:h-16 flex items-center justify-between">
-          <img src={logo} alt="ioTech" className="h-[150px] md:h-[210px] w-auto" />
+      <nav className="fixed top-0 w-full z-50 bg-[var(--prussian-blue)]/90 backdrop-blur-md border-b border-white/5">
+        <div className="max-w-7xl mx-auto pl-[5px] pr-[5px] md:px-6 h-10 md:h-16 flex items-center justify-between">
+          <img src={logo} alt="ioTech" className="h-[150px] md:h-[210px] w-auto -my-5" />
           <div className="hidden md:flex items-center gap-8 text-sm text-[var(--muted-blue)]">
             <button onClick={() => scrollTo('features')} className="hover:text-white transition-colors">{t('landing.nav.features')}</button>
             <button onClick={() => scrollTo('flow')} className="hover:text-white transition-colors">{t('landing.nav.how')}</button>
@@ -79,7 +79,7 @@ export function LandingPage() {
         </div>
       </nav>
 
-      <section className="relative pt-32 pb-4 md:pb-20 px-6 overflow-hidden">
+      <section className="relative pt-10 md:pt-32 pb-4 md:pb-20 px-6 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img src="/hero-bg.png" alt="" className="w-full h-full object-cover opacity-40" />
           <div className="absolute inset-0 bg-gradient-to-b from-[var(--prussian-blue)]/20 via-transparent to-[var(--prussian-blue)]" />
@@ -163,7 +163,7 @@ export function LandingPage() {
       <footer className="py-4 md:py-12 px-6 border-t border-white/5">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
           <img src={logo} alt="ioTech" className="h-16 md:h-[150px] w-auto" />
-          <p className="text-[4px] md:text-sm text-[var(--muted-blue)]">{t('landing.footer')}</p>
+          <p className="text-[3px] md:text-sm text-[var(--muted-blue)]">{t('landing.footer')}</p>
         </div>
       </footer>
     </div>
