@@ -82,14 +82,14 @@ export function LandingPage() {
         </div>
       </nav>
 
-      <section className="relative pt-32 pb-20 px-6 overflow-hidden">
+      <section className="relative pt-32 pb-10 md:pb-20 px-6 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img src="/hero-bg.png" alt="" className="w-full h-full object-cover opacity-40" />
           <div className="absolute inset-0 bg-gradient-to-b from-[var(--prussian-blue)]/20 via-transparent to-[var(--prussian-blue)]" />
         </div>
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-[400px] opacity-40 pointer-events-none z-10"/>
         <div className="max-w-5xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 text-xs font-medium text-[var(--brand-green)] bg-teal-500/10 border border-teal-500/20 px-3 py-1 rounded-full mb-8"><Zap className="h-3 w-3"/>{t('landing.hero.badge')}</div>
+          <div className="inline-flex items-center gap-2 text-xs font-medium text-[var(--brand-green)] bg-teal-500/10 border border-teal-500/20 px-3 py-1 rounded-full mb-4 md:mb-8"><Zap className="h-3 w-3"/>{t('landing.hero.badge')}</div>
           <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">{t('landing.hero.title1')} <span className="bg-gradient-to-r from-[var(--brand-green)] to-[var(--orange)] bg-clip-text text-transparent">{t('landing.hero.title2')}</span></h1>
           <p className="text-sm md:text-lg text-[var(--muted-blue)] mt-6 max-w-2xl mx-auto leading-relaxed">{t('landing.hero.subtitle')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
@@ -99,11 +99,11 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section id="flow" className="py-24 px-6 bg-gradient-to-b from-transparent to-[#0D1A30]">
+      <section id="flow" className="pt-4 md:pt-24 pb-16 md:pb-24 px-6 bg-gradient-to-b from-transparent to-[#0D1A30]">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-xl md:text-3xl font-bold text-center mb-4">{t('landing.flow.title')}</h2>
-          <p className="text-sm md:text-base text-[var(--muted-blue)] text-center max-w-xl mx-auto mb-16">{t('landing.flow.subtitle')}</p>
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
+          <p className="text-sm md:text-base text-[var(--muted-blue)] text-center max-w-xl mx-auto mb-8 md:mb-16">{t('landing.flow.subtitle')}</p>
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8 mb-8 md:mb-16">
              {flow.map(({icon:I,tkey:k})=>(<div key={k} className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 hover:bg-white/[0.04] hover:border-[var(--brand-green)]/20 transition-all duration-300"><div className="w-12 h-12 rounded-xl bg-[var(--brand-green)]/10 flex items-center justify-center mb-6"><I className="h-6 w-6 text-[var(--brand-green)]"/></div><h3 className="text-base md:text-xl font-semibold mb-3">{t(`landing.${k}.title`)}</h3><p className="text-sm md:text-base text-[var(--muted-blue)] leading-relaxed">{t(`landing.${k}.desc`)}</p></div>))}
           </div>
           <div className="rounded-2xl border border-white/5 overflow-hidden shadow-2xl shadow-black/30">
@@ -112,19 +112,19 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section id="features" className="py-24 px-6">
+      <section id="features" className="py-12 md:py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-xl md:text-3xl font-bold text-center mb-4">{t('landing.features.title')}</h2>
-          <p className="text-sm md:text-base text-[var(--muted-blue)] text-center max-w-xl mx-auto mb-16">{t('landing.features.subtitle')}</p>
+          <p className="text-sm md:text-base text-[var(--muted-blue)] text-center max-w-xl mx-auto mb-8 md:mb-16">{t('landing.features.subtitle')}</p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
              {feats.map(({icon:I,tkey:k})=>(<div key={k} className="flex gap-4 rounded-xl border border-white/5 bg-white/[0.01] p-6 hover:border-[var(--brand-green)]/20 transition-all"><div className="w-10 h-10 rounded-lg bg-[var(--brand-green)]/10 flex items-center justify-center shrink-0 mt-0.5"><I className="h-5 w-5 text-[var(--brand-green)]"/></div><div><h3 className="font-semibold mb-1">{t(`landing.${k}.title`)}</h3><p className="text-xs md:text-sm text-[var(--muted-blue)] leading-relaxed">{t(`landing.${k}.desc`)}</p></div></div>))}
           </div>
         </div>
       </section>
 
-      <section className="py-24 px-6 bg-gradient-to-b from-[#0D1A30] to-transparent">
+      <section className="py-12 md:py-24 px-6 bg-gradient-to-b from-[#0D1A30] to-transparent">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 text-xs font-medium text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full mb-8">✨ {t('landing.ai.badge')}</div>
+          <div className="inline-flex items-center gap-2 text-xs font-medium text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full mb-4 md:mb-8">✨ {t('landing.ai.badge')}</div>
           <h2 className="text-xl md:text-3xl font-bold mb-6">{t('landing.ai.title1')} <span className="bg-gradient-to-r from-[var(--brand-green)] to-[var(--orange)] bg-clip-text text-transparent">{t('landing.ai.title2')}</span></h2>
           <div className="rounded-2xl border border-white/5 bg-black/20 p-6 md:p-8 max-w-2xl mx-auto">
             <div className="flex gap-3 text-left">
@@ -141,10 +141,10 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section id="pricing" className="py-24 px-6">
+      <section id="pricing" className="py-12 md:py-24 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-xl md:text-3xl font-bold mb-4">{t('landing.pricing.title')}</h2>
-          <p className="text-sm md:text-base text-[var(--muted-blue)] max-w-lg mx-auto mb-12">{t('landing.pricing.subtitle')}</p>
+          <p className="text-sm md:text-base text-[var(--muted-blue)] max-w-lg mx-auto mb-6 md:mb-12">{t('landing.pricing.subtitle')}</p>
           <div className="max-w-md mx-auto rounded-2xl border border-[var(--brand-green)]/20 bg-white/[0.02] p-8">
             <div className="text-3xl md:text-5xl font-bold mb-4">{t('landing.pricing.price')}<span className="text-sm md:text-lg text-[var(--muted-blue)] font-normal">{t('landing.pricing.period')}</span></div>
             <p className="text-[var(--muted-blue)] mb-8">{t('landing.pricing.note')}</p>
