@@ -49,32 +49,26 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-[var(--prussian-blue)] text-white overflow-x-hidden">
       <nav className="fixed top-0 w-full z-50 bg-[var(--prussian-blue)]/90 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-7xl mx-auto pl-[5px] pr-[5px] md:px-6 h-14 md:h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
           <img src={logo} alt="ioTech" className="h-[150px] md:h-[210px] w-auto -my-5" />
           <div className="hidden md:flex items-center gap-8 text-sm text-[var(--muted-blue)]">
             <button onClick={() => scrollTo('features')} className="hover:text-white transition-colors">{t('landing.nav.features')}</button>
             <button onClick={() => scrollTo('flow')} className="hover:text-white transition-colors">{t('landing.nav.how')}</button>
             <button onClick={() => scrollTo('pricing')} className="hover:text-white transition-colors">{t('landing.nav.pricing')}</button>
           </div>
-          <div className="flex items-center gap-1.5 text-[3px] md:text-sm md:gap-3">
+          <div className="hidden md:flex items-center gap-3">
             <div className="relative">
-              <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-0.5 md:gap-1 text-[var(--muted-blue)] hover:text-white md:px-2 md:py-1 md:rounded-lg md:hover:bg-white/5">
-                <Globe className="h-2 w-2 md:h-3.5 md:w-3.5"/>
-                <span className="hidden md:inline">{LANGS.find(l => l.code === (i18n.language?.split('-')[0] || 'en'))?.flag}</span>
-                <span className="md:hidden">{LANGS.find(l => l.code === (i18n.language?.split('-')[0] || 'en'))?.label}</span>
-                <ChevronDown className="h-1.5 w-1.5 md:h-3 md:w-3"/>
+              <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1 text-sm text-[var(--muted-blue)] hover:text-white px-2 py-1 rounded-lg hover:bg-white/5">
+                <Globe className="h-3.5 w-3.5"/>{LANGS.find(l => l.code === (i18n.language?.split('-')[0] || 'en'))?.flag}{LANGS.find(l => l.code === (i18n.language?.split('-')[0] || 'en'))?.label || 'EN'}<ChevronDown className="h-3 w-3"/>
               </button>
               {langOpen && <div className="absolute top-full right-0 mt-1 bg-[#1A2F52] border border-white/10 rounded-xl p-1 shadow-xl z-50">
-                {LANGS.map(l => (
-                  <button key={l.code} onClick={() => { i18n.changeLanguage(l.code); setLangOpen(false) }}
-                    className={`flex items-center gap-2 w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                      (i18n.language?.split('-')[0] || 'en') === l.code ? 'bg-[var(--orange)]/20 text-[var(--orange)]' : 'text-[var(--muted-blue)] hover:text-white' }`}>
-                    <span>{l.flag}</span><span>{l.label}</span>
-                  </button>))}
+                {LANGS.map(l => (<button key={l.code} onClick={() => { i18n.changeLanguage(l.code); setLangOpen(false) }}
+                  className={`flex items-center gap-2 w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors ${(i18n.language?.split('-')[0] || 'en') === l.code ? 'bg-[var(--orange)]/20 text-[var(--orange)]' : 'text-[var(--muted-blue)] hover:text-white'}`}>
+                  <span>{l.flag}</span><span>{l.label}</span></button>))}
               </div>}
             </div>
-            <a href="/login" className="text-[var(--muted-blue)] hover:text-white transition-colors">{t('landing.nav.login')}</a>
-            <a href="/register" className="text-[var(--orange)] font-medium hover:text-amber-400 transition-colors md:bg-[var(--orange)] md:text-black md:px-4 md:py-2 md:rounded-full md:hover:scale-105">{t('landing.nav.start')}</a>
+            <a href="/login" className="text-sm text-[var(--muted-blue)] hover:text-white">{t('landing.nav.login')}</a>
+            <a href="/register" className="text-sm bg-[var(--orange)] text-black font-medium px-4 py-2 rounded-full hover:bg-amber-400 transition-all hover:scale-105">{t('landing.nav.start')}</a>
           </div>
         </div>
       </nav>
@@ -87,6 +81,22 @@ export function LandingPage() {
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-[400px] opacity-40 pointer-events-none z-10"/>
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 text-xs font-medium text-[var(--brand-green)] bg-teal-500/10 border border-teal-500/20 px-3 py-1 rounded-full mb-4 md:mb-8"><Zap className="h-3 w-3"/>{t('landing.hero.badge')}</div>
+
+          {/* Mobile action buttons */}
+          <div className="flex md:hidden items-center justify-center gap-2 mb-6">
+            <div className="relative">
+              <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-0.5 text-[10px] text-[var(--muted-blue)] border border-white/10 rounded-full px-3 py-1.5 hover:bg-white/5">
+                <Globe className="h-2.5 w-2.5"/>{LANGS.find(l => l.code === (i18n.language?.split('-')[0] || 'en'))?.label}<ChevronDown className="h-2 w-2"/>
+              </button>
+              {langOpen && <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-[#1A2F52] border border-white/10 rounded-xl p-1 shadow-xl z-50">
+                {LANGS.map(l => (<button key={l.code} onClick={() => { i18n.changeLanguage(l.code); setLangOpen(false) }}
+                  className={`flex items-center gap-2 w-full text-left px-3 py-1.5 rounded-lg text-sm ${(i18n.language?.split('-')[0] || 'en') === l.code ? 'bg-[var(--orange)]/20 text-[var(--orange)]' : 'text-[var(--muted-blue)] hover:text-white'}`}>
+                  <span>{l.flag}</span><span>{l.label}</span></button>))}
+              </div>}
+            </div>
+            <a href="/login" className="text-[11px] text-[var(--muted-blue)] hover:text-white border border-white/10 rounded-full px-4 py-1.5 transition-colors">{t('landing.nav.login')}</a>
+            <a href="/register" className="text-[11px] bg-[var(--orange)] text-black font-medium rounded-full px-4 py-1.5 hover:bg-amber-400 transition-colors">{t('landing.nav.start')}</a>
+          </div>
           <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">{t('landing.hero.title1')} <span className="bg-gradient-to-r from-[var(--brand-green)] to-[var(--orange)] bg-clip-text text-transparent">{t('landing.hero.title2')}</span></h1>
           <p className="text-sm md:text-lg text-[var(--muted-blue)] mt-6 max-w-2xl mx-auto leading-relaxed">{t('landing.hero.subtitle')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
