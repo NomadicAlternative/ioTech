@@ -93,8 +93,8 @@ export function LandingPage() {
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">{t('landing.hero.title1')} <span className="bg-gradient-to-r from-[var(--brand-green)] to-[var(--orange)] bg-clip-text text-transparent">{t('landing.hero.title2')}</span></h1>
           <p className="text-lg md:text-xl text-[var(--muted-blue)] mt-6 max-w-2xl mx-auto leading-relaxed">{t('landing.hero.subtitle')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
-            <a href="/register" className="inline-flex items-center gap-2 bg-[var(--orange)] text-black font-semibold px-8 py-4 rounded-full text-lg hover:bg-amber-400 transition-all hover:scale-105 shadow-lg shadow-amber-500/20">{t('landing.hero.cta')} <ArrowRight className="h-5 w-5"/></a>
-            <button onClick={()=>scrollTo('flow')} className="inline-flex items-center gap-2 border border-white/10 text-white font-medium px-8 py-4 rounded-full text-lg hover:bg-white/5 transition-all">{t('landing.hero.demo')} <ChevronDown className="h-5 w-5"/></button>
+            <a href="/register" className="inline-flex items-center gap-2 bg-[var(--orange)] text-black font-semibold px-4 py-2 md:px-8 md:py-4 rounded-full text-sm md:text-lg hover:bg-amber-400 transition-all hover:scale-105 shadow-lg shadow-amber-500/20">{t('landing.hero.cta')} <ArrowRight className="h-4 w-4 md:h-5 md:w-5"/></a>
+            <button onClick={()=>scrollTo('flow')} className="inline-flex items-center gap-2 border border-white/10 text-white font-medium px-4 py-2 md:px-8 md:py-4 rounded-full text-sm md:text-lg hover:bg-white/5 transition-all">{t('landing.hero.demo')} <ChevronDown className="h-4 w-4 md:h-5 md:w-5"/></button>
           </div>
         </div>
       </section>
@@ -151,7 +151,7 @@ export function LandingPage() {
             <ul className="space-y-3 text-left mb-8">
               {['Dispositivos ilimitados','Clientes ilimitados','Asistente IA','Dashboard profesional','OTA updates','Reglas automáticas','Soporte prioritario'].map(f=>(<li key={f} className="flex items-center gap-2 text-sm"><CheckCircle2 className="h-4 w-4 text-green-400 shrink-0"/><span className="text-[var(--muted-blue)]">{f}</span></li>))}
             </ul>
-            <a href="/register" className="block w-full text-center bg-[var(--orange)] text-black font-semibold px-8 py-4 rounded-full text-lg hover:bg-amber-400 transition-all hover:scale-105">{t('landing.pricing.cta')}</a>
+            <a href="/register" className="block w-full text-center bg-[var(--orange)] text-black font-semibold px-4 py-2 md:px-8 md:py-4 rounded-full text-sm md:text-lg hover:bg-amber-400 transition-all hover:scale-105">{t('landing.pricing.cta')}</a>
           </div>
         </div>
       </section>
