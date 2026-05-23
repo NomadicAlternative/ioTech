@@ -104,7 +104,10 @@ export function LandingPage() {
           <h2 className="text-xl md:text-3xl font-bold text-center mb-4">{t('landing.flow.title')}</h2>
           <p className="text-sm md:text-base text-[var(--muted-blue)] text-center max-w-xl mx-auto mb-6 md:mb-16">{t('landing.flow.subtitle')}</p>
           <div className="grid md:grid-cols-3 gap-6 md:gap-8 mb-6 md:mb-16">
-             {flow.map(({icon:I,tkey:k})=>(<div key={k} className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 hover:bg-white/[0.04] hover:border-[var(--brand-green)]/20 transition-all duration-300"><div className="w-12 h-12 rounded-xl bg-[var(--brand-green)]/10 flex items-center justify-center mb-6"><I className="h-6 w-6 text-[var(--brand-green)]"/></div><h3 className="text-base md:text-xl font-semibold mb-3">{t(`landing.${k}.title`)}</h3><p className="text-sm md:text-base text-[var(--muted-blue)] leading-relaxed">{t(`landing.${k}.desc`)}</p></div>))}
+             {flow.map(({icon:I,tkey:k},i)=>(<div key={k} className="group relative rounded-2xl border border-white/5 bg-white/[0.02] p-4 md:p-8 hover:bg-white/[0.04] hover:border-[var(--brand-green)]/30 transition-all duration-300 overflow-hidden">
+               <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[var(--brand-green)]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+               <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[var(--brand-green)]/30 group-hover:bg-[var(--brand-green)]/80 transition-colors duration-500" style={{ animation: `flowPulse 2s ease-in-out ${i * 0.6}s infinite` }} />
+               <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl bg-[var(--brand-green)]/10 flex items-center justify-center mb-3 md:mb-6"><I className="h-4 w-4 md:h-6 md:w-6 text-[var(--brand-green)]"/></div><h3 className="text-sm md:text-xl font-semibold mb-1.5 md:mb-3">{t(`landing.${k}.title`)}</h3><p className="text-xs md:text-base text-[var(--muted-blue)] leading-relaxed">{t(`landing.${k}.desc`)}</p></div>))}
           </div>
           <div className="rounded-2xl border border-white/5 overflow-hidden shadow-2xl shadow-black/30">
             <img src="/dashboard-preview.png" alt="Dashboard preview" className="w-full" />
@@ -117,7 +120,9 @@ export function LandingPage() {
           <h2 className="text-xl md:text-3xl font-bold text-center mb-4">{t('landing.features.title')}</h2>
           <p className="text-sm md:text-base text-[var(--muted-blue)] text-center max-w-xl mx-auto mb-6 md:mb-16">{t('landing.features.subtitle')}</p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-             {feats.map(({icon:I,tkey:k})=>(<div key={k} className="flex gap-4 rounded-xl border border-white/5 bg-white/[0.01] p-6 hover:border-[var(--brand-green)]/20 transition-all"><div className="w-10 h-10 rounded-lg bg-[var(--brand-green)]/10 flex items-center justify-center shrink-0 mt-0.5"><I className="h-5 w-5 text-[var(--brand-green)]"/></div><div><h3 className="font-semibold mb-1">{t(`landing.${k}.title`)}</h3><p className="text-xs md:text-sm text-[var(--muted-blue)] leading-relaxed">{t(`landing.${k}.desc`)}</p></div></div>))}
+             {feats.map(({icon:I,tkey:k},i)=>(<div key={k} className="group relative flex gap-3 md:gap-4 rounded-xl border border-white/5 bg-white/[0.01] p-3 md:p-6 hover:border-[var(--brand-green)]/20 transition-all overflow-hidden">
+               <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--brand-green)]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+               <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg bg-[var(--brand-green)]/10 flex items-center justify-center shrink-0 mt-0.5"><I className="h-3.5 w-3.5 md:h-5 md:w-5 text-[var(--brand-green)]"/></div><div><h3 className="text-sm md:text-base font-semibold mb-0.5 md:mb-1">{t(`landing.${k}.title`)}</h3><p className="text-[11px] md:text-sm text-[var(--muted-blue)] leading-relaxed">{t(`landing.${k}.desc`)}</p></div></div>))}
           </div>
         </div>
       </section>
@@ -126,7 +131,8 @@ export function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 text-xs font-medium text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full mb-4 md:mb-8">✨ {t('landing.ai.badge')}</div>
           <h2 className="text-xl md:text-3xl font-bold mb-6">{t('landing.ai.title1')} <span className="bg-gradient-to-r from-[var(--brand-green)] to-[var(--orange)] bg-clip-text text-transparent">{t('landing.ai.title2')}</span></h2>
-          <div className="rounded-2xl border border-white/5 bg-black/20 p-6 md:p-8 max-w-2xl mx-auto">
+          <div className="group relative rounded-2xl border border-[var(--brand-green)]/10 bg-black/20 p-4 md:p-8 max-w-2xl mx-auto overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--brand-green)]/40 to-transparent" />
             <div className="flex gap-3 text-left">
               <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0 mt-1"><span className="text-xs">🤖</span></div>
               <div className="space-y-3">
@@ -145,11 +151,12 @@ export function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-xl md:text-3xl font-bold mb-4">{t('landing.pricing.title')}</h2>
           <p className="text-sm md:text-base text-[var(--muted-blue)] max-w-lg mx-auto mb-6 md:mb-12">{t('landing.pricing.subtitle')}</p>
-          <div className="max-w-md mx-auto rounded-2xl border border-[var(--brand-green)]/20 bg-white/[0.02] p-8">
-            <div className="text-3xl md:text-5xl font-bold mb-4">{t('landing.pricing.price')}<span className="text-sm md:text-lg text-[var(--muted-blue)] font-normal">{t('landing.pricing.period')}</span></div>
-            <p className="text-[var(--muted-blue)] mb-8">{t('landing.pricing.note')}</p>
-            <ul className="space-y-3 text-left mb-8">
-              {['Dispositivos ilimitados','Clientes ilimitados','Asistente IA','Dashboard profesional','OTA updates','Reglas automáticas','Soporte prioritario'].map(f=>(<li key={f} className="flex items-center gap-2 text-xs md:text-sm"><CheckCircle2 className="h-4 w-4 text-green-400 shrink-0"/><span className="text-[var(--muted-blue)]">{f}</span></li>))}
+          <div className="group relative max-w-md mx-auto rounded-2xl border border-[var(--brand-green)]/10 bg-white/[0.02] p-6 md:p-8 overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--brand-green)]/40 to-transparent" />
+            <div className="text-2xl md:text-5xl font-bold mb-4">{t('landing.pricing.price')}<span className="text-xs md:text-lg text-[var(--muted-blue)] font-normal">{t('landing.pricing.period')}</span></div>
+            <p className="text-xs md:text-base text-[var(--muted-blue)] mb-6">{t('landing.pricing.note')}</p>
+            <ul className="space-y-2 md:space-y-3 text-left mb-6">
+              {['Dispositivos ilimitados','Clientes ilimitados','Asistente IA','Dashboard profesional','OTA updates','Reglas automáticas','Soporte prioritario'].map(f=>(<li key={f} className="flex items-center gap-2 text-[11px] md:text-sm"><CheckCircle2 className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-400 shrink-0"/><span className="text-[var(--muted-blue)]">{f}</span></li>))}
             </ul>
             <a href="/register" className="block w-full text-center bg-[var(--orange)] text-black font-semibold px-4 py-2 md:px-8 md:py-4 rounded-full text-sm md:text-lg hover:bg-amber-400 transition-all hover:scale-105">{t('landing.pricing.cta')}</a>
           </div>
