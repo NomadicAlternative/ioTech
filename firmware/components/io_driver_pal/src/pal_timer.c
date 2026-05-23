@@ -3,7 +3,7 @@
  * @brief PAL Timer — wraps esp_timer.
  */
 #include "pal_timer.h"
-#include "esp_timer.h"
+#include <esp_timer.h>
 #include "esp_log.h"
 
 static const char *TAG = "pal_timer";

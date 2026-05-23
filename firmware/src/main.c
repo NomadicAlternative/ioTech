@@ -9,6 +9,21 @@
 #include "io_driver.h"
 #include "io_board.h"
 
+/* Manual driver registration — required when IO_DRIVER_MANUAL_REGISTRY is set.
+ * Include all linked driver vtable declarations. */
+#ifdef IO_DRIVER_MANUAL_REGISTRY
+extern const driver_t drv_dht22;
+extern const driver_t drv_relay;
+extern const driver_t drv_bme280;
+extern const driver_t drv_ds18b20;
+extern const driver_t drv_pir;
+extern const driver_t drv_hcsr04;
+extern const driver_t drv_ws2812b;
+extern const driver_t drv_servo;
+extern const driver_t drv_ssd1306;
+extern const driver_t drv_lcd1602;
+#endif
+
 static const char *TAG = "main";
 
 void app_main(void)
@@ -40,8 +55,7 @@ void app_main(void)
     /* Initialize board pin map (compile-time resolved via -DBOARD_*) */
     io_board_init();
 
-    /* Initialize io_driver engine — auto-discovers linked drivers
-     * or manual registration when IO_DRIVER_MANUAL_REGISTRY is set */
+    /* Initialize io_driver engine — auto-discovers or manually registers all linked drivers */
     io_driver_init();
 
 #ifdef IO_DRIVER_MANUAL_REGISTRY

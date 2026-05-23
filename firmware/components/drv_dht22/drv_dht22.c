@@ -1,4 +1,3 @@
-#include <string.h>
 /**
  * @file drv_dht22.c
  * @brief DHT22/DHT11 single-wire temperature + humidity sensor driver.
@@ -15,6 +14,7 @@
 #include "rom/ets_sys.h"
 
 #include "esp_log.h"
+#include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
 
