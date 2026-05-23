@@ -62,6 +62,8 @@
     --brand-cerulean: var(--prussian-blue);
     --brand-amber: var(--orange);
     --brand-red: #B42318;
+    --brand-green: #65E7D8;
+    --brand-teal: #65E7D8;
 
     /* Semantic tokens */
     --navy: var(--prussian-blue);

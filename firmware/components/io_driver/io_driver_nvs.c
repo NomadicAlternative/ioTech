@@ -78,3 +78,61 @@ drv_err_t io_driver_load_all_from_nvs(void)
     ESP_LOGI(TAG, "Loaded %u drivers from NVS", io_driver_active_count());
     return DRV_OK;
 }
+
+/**
+ * Load default drivers when NVS has no config (first boot after flash).
+ *
+ * This prevents the "drivers registered but never activated" problem.
+ * Defaults are conservative — only drivers expected on every ioTech board:
+ *   DHT22  (GPIO 32)
+ *   RELAY  (7 channels: 23,22,21,19,18,5,17)
+ *   LCD1602_I2C  (I2C 0x27, SDA=21, SCL=22)
+ */
+drv_err_t io_driver_load_all_defaults(void)
+{
+    ESP_LOGI(TAG, "Loading default drivers (no NVS config found)...");
+
+    /* ── DHT22 on GPIO 32 ─────────────────────────────────────────── */
+    driver_config_t dht22_cfg = {
+        .gpio     = 32,
+        .gpio2    = DRV_GPIO_NONE,
+        .i2c_addr = 0,
+        .channels = 0,
+        .custom   = NULL,
+    };
+    drv_err_t dht_err = io_driver_load("DHT22", &dht22_cfg);
+    if (dht_err != DRV_OK) {
+        ESP_LOGW(TAG, "Default DHT22 load failed: %s", drv_err_str(dht_err));
+    }
+
+    /* ── RELAY 7 channels ─────────────────────────────────────────── */
+    driver_config_t relay_cfg = {
+        .gpio     = DRV_GPIO_NONE,  /* per-channel GPIOs in custom config */
+        .gpio2    = DRV_GPIO_NONE,
+        .i2c_addr = 0,
+        .channels = 7,
+        .custom   = NULL,
+    };
+    drv_err_t relay_err = io_driver_load("RELAY", &relay_cfg);
+    if (relay_err != DRV_OK) {
+        ESP_LOGW(TAG, "Default RELAY load failed: %s", drv_err_str(relay_err));
+    }
+
+    /* ── LCD1602_I2C I2C 0x27 ──────────────────────────────────────── */
+    driver_config_t lcd_cfg = {
+        .gpio     = DRV_GPIO_NONE,
+        .gpio2    = DRV_GPIO_NONE,
+        .i2c_addr = 0x27,
+        .i2c_sda  = 21,
+        .i2c_scl  = 22,
+        .channels = 0,
+        .custom   = NULL,
+    };
+    drv_err_t lcd_err = io_driver_load("LCD1602_I2C", &lcd_cfg);
+    if (lcd_err != DRV_OK) {
+        ESP_LOGW(TAG, "Default LCD1602_I2C load failed: %s", drv_err_str(lcd_err));
+    }
+
+    ESP_LOGI(TAG, "Default drivers loaded: %u active", io_driver_active_count());
+    return DRV_OK;
+}

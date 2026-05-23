@@ -24,6 +24,7 @@ const dashboardsRoutes = require('./modules/dashboards/dashboards.routes');
 const rulesRoutes = require('./modules/rules/rules.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
 const aiRoutes = require('./modules/ai/ai.routes');
+const driversRoutes = require('./modules/drivers/drivers.routes');
 const mqttAuthGuardRouter = require('./shared/middleware/mqttAuthGuard');
 
 /**
@@ -69,6 +70,9 @@ function createApp() {
   app.use('/api/dashboards', ...tenantScope, dashboardsRoutes);
   app.use('/api/rules', ...tenantScope, rulesRoutes);
   app.use('/api/ai', ...tenantScope, aiRoutes);
+
+  // Driver catalog — PUBLIC, no auth required (discovery endpoint)
+  app.use('/api/drivers', driversRoutes);
 
   // Admin routes — authGuard + superAdmin (trialExpiry NOT applied)
   app.use('/api/admin', authGuard, adminRoutes);

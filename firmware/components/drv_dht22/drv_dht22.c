@@ -10,8 +10,8 @@
  *   5. Auto-detect DHT11 (bytes 1,3 == 0) vs DHT22
  */
 #include "drv_dht22.h"
-#include "pal_gpio.h"
-#include "pal_delay.h"
+#include "driver/gpio.h"
+#include "rom/ets_sys.h"
 
 #include "esp_log.h"
 #include <string.h>
@@ -41,13 +41,15 @@ static drv_err_t dht22_init(const driver_config_t *cfg)
     s_gpio  = cfg->gpio;
     s_ready = true;
 
-    /* Configure as input (pull-up) for idle state */
-    esp_err_t err = pal_gpio_set_direction(s_gpio, PAL_GPIO_INPUT);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "pal_gpio_set_direction failed: %d", err);
-        s_ready = false;
-        return DRV_ERR_INTERNAL;
-    }
+    /* Keep pin as input with no pull (DHT module has built-in pull-up) */
+    gpio_config_t io_conf = {
+        .pin_bit_mask = (1ULL << s_gpio),
+        .mode         = GPIO_MODE_INPUT,
+        .pull_up_en   = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type    = GPIO_INTR_DISABLE,
+    };
+    gpio_config(&io_conf);
 
     ESP_LOGI(TAG, "DHT22 initialized on GPIO %u", s_gpio);
     return DRV_OK;
@@ -60,82 +62,34 @@ static drv_err_t dht22_read(driver_value_t *values, uint8_t *count)
 
     *count = 0;
 
-    /* ── 1. Start pulse ──────────────────────────────────────────── */
-    pal_gpio_set_direction(s_gpio, PAL_GPIO_OUTPUT);
-    pal_gpio_set_level(s_gpio, 0);
-    pal_delay_us(20000);                     /* Hold LOW 20 ms */
-    pal_gpio_set_level(s_gpio, 1);
-    pal_delay_us(30);                         /* Hold HIGH 30 µs */
-    pal_gpio_set_direction(s_gpio, PAL_GPIO_INPUT);
+    /* ── 1. Start pulse (matches old working DHT22 code exactly) ───── */
+    gpio_set_direction(s_gpio, GPIO_MODE_OUTPUT);
+    gpio_set_level(s_gpio, 1);
+    esp_rom_delay_us(250);                   /* 250µs HIGH preamble */
+    gpio_set_level(s_gpio, 0);
+    esp_rom_delay_us(1000);                  /* 1ms LOW */
+    gpio_set_level(s_gpio, 1);
+    esp_rom_delay_us(30);                    /* 30µs HIGH */
+    gpio_set_direction(s_gpio, GPIO_MODE_INPUT);
 
-    /* ── 2. Response wait (DHT pulls LOW ~80µs, then HIGH ~80µs) ── */
-    uint8_t level;
-    int timeout = 200; /* ~200 µs timeout */
-    do {
-        pal_gpio_get_level(s_gpio, &level);
-        pal_delay_us(1);
-        if (--timeout <= 0) {
-            ESP_LOGE(TAG, "Response timeout (no LOW from DHT)");
-            return DRV_ERR_TIMEOUT;
-        }
-    } while (level == 1);
+    /* ── 2. Response wait ──────────────────────────────────────────── */
+    int timeout = 0;
+    while (gpio_get_level(s_gpio) == 1) { if (++timeout > 200) { ESP_LOGE(TAG, "Response timeout (no LOW from DHT)"); return DRV_ERR_TIMEOUT; } esp_rom_delay_us(1); }
+    timeout = 0;
+    while (gpio_get_level(s_gpio) == 0) { if (++timeout > 200) { ESP_LOGE(TAG, "Response timeout (no HIGH from DHT)"); return DRV_ERR_TIMEOUT; } esp_rom_delay_us(1); }
+    timeout = 0;
+    while (gpio_get_level(s_gpio) == 1) { if (++timeout > 200) { ESP_LOGE(TAG, "Response timeout (DHT didn't release line)"); return DRV_ERR_TIMEOUT; } esp_rom_delay_us(1); }
 
-    timeout = 200;
-    do {
-        pal_gpio_get_level(s_gpio, &level);
-        pal_delay_us(1);
-        if (--timeout <= 0) {
-            ESP_LOGE(TAG, "Response timeout (no HIGH from DHT after ACK)");
-            return DRV_ERR_TIMEOUT;
-        }
-    } while (level == 0);
-
-    timeout = 200;
-    do {
-        pal_gpio_get_level(s_gpio, &level);
-        pal_delay_us(1);
-        if (--timeout <= 0) {
-            ESP_LOGE(TAG, "Response timeout (DHT didn't release line)");
-            return DRV_ERR_TIMEOUT;
-        }
-    } while (level == 1);
-
-    /* ── 3. Read 40 bits (5 bytes) inside critical section ───────── */
-    portENTER_CRITICAL(&s_spinlock);
-
+    /* ── 3. Read 40 bits ───────────────────────────────────────────── */
     uint8_t data[5] = {0};
-    for (int byte = 0; byte < 5; byte++) {
-        for (int bit = 7; bit >= 0; bit--) {
-            /* Wait for LOW (start of bit) */
-            timeout = 100;
-            do {
-                pal_gpio_get_level(s_gpio, &level);
-                if (--timeout <= 0) {
-                    portEXIT_CRITICAL(&s_spinlock);
-                    ESP_LOGE(TAG, "Bit timeout during byte %d bit %d", byte, bit);
-                    return DRV_ERR_TIMEOUT;
-                }
-            } while (level == 0);
-
-            /* Measure HIGH duration:
-               ~28 µs = 0, ~70 µs = 1 */
-            pal_delay_us(30);
-            pal_gpio_get_level(s_gpio, &level);
-
-            if (level == 1) {
-                data[byte] |= (1 << bit);
-            }
-
-            /* Wait for HIGH to end */
-            timeout = 100;
-            do {
-                pal_gpio_get_level(s_gpio, &level);
-                if (--timeout <= 0) break;
-            } while (level == 1);
-        }
+    for (int i = 0; i < 40; i++) {
+        timeout = 0;
+        while (gpio_get_level(s_gpio) == 0) { if (++timeout > 200) { ESP_LOGE(TAG, "Bit timeout low i=%d", i); return DRV_ERR_TIMEOUT; } esp_rom_delay_us(1); }
+        esp_rom_delay_us(30);
+        if (gpio_get_level(s_gpio) == 1) data[i / 8] |= (1 << (7 - (i % 8)));
+        timeout = 0;
+        while (gpio_get_level(s_gpio) == 1) { if (++timeout > 200) { ESP_LOGE(TAG, "Bit timeout high i=%d", i); return DRV_ERR_TIMEOUT; } esp_rom_delay_us(1); }
     }
-
-    portEXIT_CRITICAL(&s_spinlock);
 
     /* ── 4. Checksum ─────────────────────────────────────────────── */
     uint8_t checksum = data[0] + data[1] + data[2] + data[3];

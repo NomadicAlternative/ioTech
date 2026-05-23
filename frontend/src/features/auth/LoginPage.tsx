@@ -5,6 +5,7 @@ import { useAuthStore } from './authStore'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import logo from '@/assets/logoprincipal.JPG'
 import { Cpu, AlertCircle, Activity, Shield, ArrowRight, Radio, LayoutDashboard, Gauge, ArrowLeft, Check, Mail } from 'lucide-react'
 import api from '@/lib/axios'
 
@@ -120,21 +121,42 @@ export function LoginPage() {
         {/* Glow bottom-left */}
         <div
           className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full opacity-15 blur-[80px] pointer-events-none"
-          style={{ background: 'var(--brand-amber)' }}
+          style={{ background: 'var(--brand-green)' }}
         />
 
         {/* Logo */}
-        <div className="relative flex items-center gap-3 z-10">
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30"
-            style={{ background: 'var(--brand-amber)' }}
-          >
-            <Cpu className="w-5 h-5 text-amber-400" />
-          </div>
-          <span className="text-white text-xl font-bold tracking-tight">ioTech</span>
+        <div className="relative flex items-center justify-center z-10">
+          <img src={logo} alt="BeepDash" style={{ height: '420px' }} className="w-auto" />
         </div>
 
-        {/* Center content — dynamic flow */}
+        {/* Data flow — device → MQTT → Stream → Dashboard */}
+        <div className="relative flex items-center justify-center gap-4 mt-2 mb-6 z-10">
+          {[
+            { label: 'Device',   color: '#65E7D8' },
+            { label: 'MQTT',     color: '#65E7D8' },
+            { label: 'Stream',   color: '#FCA311' },
+            { label: 'Dashboard', color: '#65E7D8' },
+          ].map(({ label, color }, i) => (
+            <div key={label} className="flex items-center gap-2">
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-110 duration-300"
+                  style={{ background: `${color}20` }}>
+                  <div className="w-2 h-2 rounded-full" style={{ background: color, boxShadow: `0 0 8px ${color}` }} />
+                </div>
+                <span className="text-[8px] font-medium text-white/50 uppercase tracking-widest">{label}</span>
+              </div>
+              {i < 3 && (
+                <div className="flex items-center relative" style={{ width: '24px' }}>
+                  <div className="w-full h-px rounded-full" style={{ background: `${color}40` }} />
+                  <div className="absolute left-0 w-1 h-1 rounded-full"
+                    style={{ background: color, animation: `flowPulse 2s ease-in-out ${i * 0.4}s infinite`, boxShadow: `0 0 6px ${color}` }} />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Center content */}
         <div className="relative z-10 space-y-8">
           <div className="space-y-4">
             <div
@@ -147,56 +169,12 @@ export function LoginPage() {
             <h1 className="text-4xl font-extrabold text-white leading-[1.15] tracking-tight">
               Deploy, monitor<br />
               and{' '}
-              <span
-                className="relative inline-block"
-                style={{ color: '#FCA311' }}
-              >
-                automate
-                <svg className="absolute -bottom-1 left-0 w-full" height="4" viewBox="0 0 140 4">
-                  <path d="M0 2 Q70 0 140 2" stroke="#FCA311" strokeWidth="2" fill="none" opacity="0.6" />
-                </svg>
-              </span>
+                <span className="bg-gradient-to-r from-[var(--brand-green)] to-[var(--orange)] bg-clip-text text-transparent">automate</span>
               <br />your IoT devices
             </h1>
             <p className="text-white/50 text-sm max-w-xs leading-relaxed">
               From ESP32 to dashboard — one platform for the entire device lifecycle.
             </p>
-          </div>
-
-          {/* ── Flow diagram ── */}
-          <div className="flex items-center gap-2 py-2">
-            {[
-              { icon: Cpu,      label: 'Device',   color: 'var(--brand-amber)' },
-              { icon: Radio,    label: 'MQTT',     color: 'var(--brand-cerulean)' },
-              { icon: Activity, label: 'Telemetry', color: '#849324' },
-              { icon: LayoutDashboard, label: 'Dashboard', color: 'var(--brand-amber)' },
-            ].map(({ icon: Icon, label, color }, i) => (
-              <div key={label} className="flex items-center gap-2">
-                <div className="flex flex-col items-center gap-1.5">
-                  <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center transition-transform hover:scale-110 duration-300"
-                    style={{ background: `${color}20`, border: `1px solid ${color}40` }}
-                  >
-                    <Icon className="w-5 h-5" style={{ color }} />
-                  </div>
-                  <span className="text-[10px] font-semibold text-amber-300/80 uppercase tracking-wider">{label}</span>
-                </div>
-                {i < 3 && (
-                  <div className="flex items-center relative" style={{ width: '40px' }}>
-                    <div className="w-full h-0.5 rounded-full opacity-30" style={{ background: color }} />
-                    <div
-                      className="absolute w-2 h-2 rounded-full"
-                      style={{
-                        background: color,
-                        boxShadow: `0 0 8px ${color}, 0 0 16px ${color}`,
-                        animation: `flowPulse 2s ease-in-out ${i * 0.5}s infinite`,
-                        left: '0%',
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
 
           {/* Feature pills */}
@@ -229,230 +207,156 @@ export function LoginPage() {
 
         {/* Footer */}
         <div className="relative z-10">
-          <p className="text-white/25 text-xs">© 2025 IoTech. All rights reserved.</p>
+          <p className="text-white/25 text-xs">© 2026 BeepDash Developed by Diego Garcia | Nomadic Alternative</p>
         </div>
       </div>
 
-      {/* ── Right panel — form ── */}
+      {/* ── Right panel: mobile ── */}
       <div
-        className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative overflow-hidden"
-        style={{ background: 'white' }}
+        className="lg:hidden flex-1 flex flex-col items-center justify-center px-6 py-10 relative"
+        style={{ background: 'linear-gradient(180deg, #14213D 0%, #1A2F52 100%)' }}
       >
-        {/* Mobile-only background — mismo tratamiento que el panel izquierdo */}
-        <div
-          className="lg:hidden absolute inset-0"
-          style={{
-          background: 'linear-gradient(135deg, #14213D 0%, #1A2F52 50%, #1F3A63 75%, #244878 100%)',
-          }}
-        />
-        <div
-          className="lg:hidden absolute inset-0"
-          style={{
-            backgroundImage: `
-              linear-gradient(#919EBC15 1px, transparent 1px),
-              linear-gradient(90deg, #919EBC15 1px, transparent 1px)
-            `,
-            backgroundSize: '48px 48px',
-          }}
-        />
-        <div
-          className="lg:hidden absolute top-0 right-0 w-72 h-72 rounded-full opacity-20 blur-[80px] pointer-events-none"
-          style={{ background: 'var(--brand-cerulean)' }}
-        />
-        <div
-          className="lg:hidden absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-15 blur-[70px] pointer-events-none"
-          style={{ background: 'var(--brand-amber)' }}
-        />
-
-        {/* Mobile logo */}
-        <div className="relative z-10 flex lg:hidden items-center gap-2.5 mb-8">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30"
-            style={{ background: 'var(--brand-amber)' }}
-          >
-            <Cpu className="w-5 h-5 text-amber-400" />
+        <img src={logo} alt="BeepDash" className="h-24 w-auto mb-8" />
+        
+        <div className="w-full max-w-sm space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-white">Welcome back</h2>
+            <p className="text-sm text-white/50 mt-1">{t('auth.subtitle')}</p>
           </div>
-          <span className="text-xl font-bold tracking-tight text-white">IoTech</span>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="email-m" className="text-sm font-medium text-white/80">{t('auth.emailLabel')}</Label>
+              <Input id="email-m" type="email" placeholder={t('auth.emailPlaceholder')} autoComplete="email"
+                required value={email} onChange={(e) => setEmail(e.target.value)}
+                className="mt-1.5 h-11 text-sm bg-white/10 text-white placeholder:text-white/30 border-white/15 focus-visible:ring-[var(--brand-green)]" />
+            </div>
+            <div>
+              <Label htmlFor="password-m" className="text-sm font-medium text-white/80">{t('auth.passwordLabel')}</Label>
+              <Input id="password-m" type="password" placeholder="••••••••" autoComplete="current-password"
+                required value={password} onChange={(e) => setPassword(e.target.value)}
+                className="mt-1.5 h-11 text-sm bg-white/10 text-white placeholder:text-white/30 border-white/15 focus-visible:ring-[var(--brand-green)]" />
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm"
+                style={{ background: '#fee2e2', color: '#b91c1c' }}>
+                <AlertCircle className="w-4 h-4 shrink-0" />{error}
+              </div>
+            )}
+
+            <Button type="submit" onClick={handleSubmit}
+              className="w-full h-11 font-semibold text-sm gap-2" disabled={loading}
+              style={{ background: 'var(--brand-imperial)' }}>
+              {loading ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />{t('auth.signingIn')}</>
+                : <>{t('auth.signIn')}<ArrowRight className="w-4 h-4" /></>}
+            </Button>
+
+            <div className="text-center">
+              <button type="button" className="text-sm text-white/40 hover:text-white/70 transition-colors"
+                onClick={() => { setForgotMode(true); setForgotError(null) }}>
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="relative z-10 w-full max-w-[380px] space-y-6">
+        <p className="absolute bottom-6 text-[11px] text-white/25 text-center px-4">
+          © 2026 BeepDash Developed by Diego Garcia | Nomadic Alternative
+        </p>
+      </div>
 
-          {/* Heading — blanco en mobile, imperial en desktop */}
-          <div className="space-y-1.5">
-            <h2 className="text-3xl font-bold lg:text-foreground text-white"
-                style={{ color: undefined }}>
-              <span className="hidden lg:inline" style={{ color: 'var(--brand-imperial)' }}>Welcome back</span>
-              <span className="lg:hidden text-white">Welcome back</span>
-            </h2>
-            <p className="text-sm lg:text-muted-foreground text-white/60">{t('auth.subtitle')}</p>
+      {/* ── Right panel: desktop ── */}
+      <div
+        className="hidden lg:flex flex-1 flex-col items-center justify-center px-6 py-12 relative overflow-hidden"
+        style={{ background: 'white' }}
+      >
+        <div className="relative z-10 w-full max-w-[380px] space-y-6">
+          <div>
+            <h2 className="text-2xl font-bold" style={{ color: 'var(--brand-imperial)' }}>Welcome back</h2>
+            <p className="text-sm text-muted-foreground mt-1">{t('auth.subtitle')}</p>
           </div>
 
-          {/* Form card — glassmorphism en mobile, borde simple en desktop */}
-          <div
-            className="rounded-2xl p-8 space-y-5 lg:border lg:shadow-sm lg:bg-white"
-            style={{
-              background: 'rgba(255,255,255,0.07)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255,255,255,0.15)',
-            }}
-          >
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-semibold lg:text-foreground text-white/90">
-                {t('auth.emailLabel')}
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder={t('auth.emailPlaceholder')}
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-border border-white/20 focus-visible:ring-[#14213D]"
-              />
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="email" className="text-sm font-semibold">{t('auth.emailLabel')}</Label>
+              <Input id="email" type="email" placeholder={t('auth.emailPlaceholder')} autoComplete="email"
+                required value={email} onChange={(e) => setEmail(e.target.value)}
+                className="mt-1.5 h-11 bg-gray-50/80 border-border focus-visible:ring-[var(--brand-imperial)]" />
+            </div>
+            <div>
+              <Label htmlFor="password" className="text-sm font-semibold">{t('auth.passwordLabel')}</Label>
+              <Input id="password" type="password" placeholder="••••••••" autoComplete="current-password"
+                required value={password} onChange={(e) => setPassword(e.target.value)}
+                className="mt-1.5 h-11 bg-gray-50/80 border-border focus-visible:ring-[var(--brand-imperial)]" />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm font-semibold lg:text-foreground text-white/90">
-                {t('auth.passwordLabel')}
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-border border-white/20 focus-visible:ring-[#14213D]"
-              />
-            </div>
+            {error && (
+              <div className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm"
+                style={{ background: '#fee2e2', color: '#b91c1c' }}>
+                <AlertCircle className="w-4 h-4 shrink-0" />{error}
+              </div>
+            )}
 
-              {error && (
-                <div
-                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm"
-                  style={{ background: '#fee2e2', color: '#b91c1c' }}
-                >
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  {error}
+            {!forgotMode ? (
+              <>
+                <Button type="submit" onClick={handleSubmit}
+                  className="w-full h-11 font-semibold text-sm gap-2" disabled={loading}
+                  style={{ background: 'var(--brand-imperial)' }}>
+                  {loading ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />{t('auth.signingIn')}</>
+                    : <>{t('auth.signIn')}<ArrowRight className="w-4 h-4" /></>}
+                </Button>
+
+                <div className="text-center">
+                  <button type="button" className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => { setForgotMode(true); setForgotError(null) }}>
+                    ¿Olvidaste tu contraseña?
+                  </button>
                 </div>
-              )}
-
-              {!forgotMode ? (
-                <>
-                  <Button
-                    type="submit"
-                    onClick={handleSubmit}
-                    className="w-full h-11 font-semibold text-sm gap-2 group"
-                    disabled={loading}
-                    style={{ background: 'var(--brand-imperial)' }}
-                  >
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                        {t('auth.signingIn')}
-                      </span>
-                    ) : (
-                      <>
-                        {t('auth.signIn')}
-                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-                      </>
-                    )}
-                  </Button>
-
-                  <div className="text-center">
-                    <button
-                      type="button"
-                      className="text-sm lg:text-muted-foreground text-white/60 hover:underline transition-colors"
-                      onClick={() => { setForgotMode(true); setForgotError(null) }}
-                    >
-                      ¿Olvidaste tu contraseña?
+              </>
+            ) : (
+              <>
+                {forgotSent ? (
+                  <div className="text-center space-y-3">
+                    <div className="flex items-center justify-center gap-2 text-emerald-600">
+                      <Check className="w-5 h-5" /><span className="font-medium">Correo enviado</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Si el email está registrado, recibirás una nueva contraseña.</p>
+                    <button type="button" className="text-sm text-muted-foreground hover:underline"
+                      onClick={() => { setForgotMode(false); setForgotSent(false); setForgotEmail('') }}>
+                      <ArrowLeft className="w-3.5 h-3.5 inline mr-1" />Volver al inicio de sesión
                     </button>
                   </div>
-                </>
-              ) : (
-                <>
-                  {forgotSent ? (
-                    <div className="text-center space-y-3">
-                      <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400">
-                        <Check className="w-5 h-5" />
-                        <span className="font-medium">Correo enviado</span>
+                ) : (
+                  <>
+                    <div>
+                      <Label htmlFor="forgot-email" className="text-sm font-semibold">Email de recuperación</Label>
+                      <Input id="forgot-email" type="email" placeholder="tu@email.com" autoComplete="email" required
+                        value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)}
+                        className="mt-1.5 h-11 bg-gray-50/80 border-border" />
+                    </div>
+                    {forgotError && (
+                      <div className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm"
+                        style={{ background: '#fee2e2', color: '#b91c1c' }}>
+                        <AlertCircle className="w-4 h-4 shrink-0" />{forgotError}
                       </div>
-                      <p className="text-sm lg:text-muted-foreground text-white/60">
-                        Si el email está registrado, recibirás una nueva contraseña.
-                      </p>
-                      <button
-                        type="button"
-                        className="text-sm lg:text-muted-foreground text-white/60 hover:underline transition-colors"
-                        onClick={() => { setForgotMode(false); setForgotSent(false); setForgotEmail('') }}
-                      >
-                        <ArrowLeft className="w-3.5 h-3.5 inline mr-1" />
-                        Volver al inicio de sesión
+                    )}
+                    <Button type="submit" onClick={handleForgotPassword}
+                      className="w-full h-11 font-semibold text-sm gap-2" disabled={loading || !forgotEmail}
+                      style={{ background: 'var(--brand-imperial)' }}>
+                      {loading ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Enviando...</>
+                        : <><Mail className="w-4 h-4" />Enviar nueva contraseña</>}
+                    </Button>
+                    <div className="text-center">
+                      <button type="button" className="text-sm text-muted-foreground hover:underline"
+                        onClick={() => { setForgotMode(false); setForgotError(null) }}>
+                        <ArrowLeft className="w-3.5 h-3.5 inline mr-1" />Volver al inicio de sesión
                       </button>
                     </div>
-                  ) : (
-                    <>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="forgot-email" className="text-sm font-semibold lg:text-foreground text-white/90">
-                          Email de recuperación
-                        </Label>
-                        <Input
-                          id="forgot-email"
-                          type="email"
-                          placeholder="tu@email.com"
-                          autoComplete="email"
-                          required
-                          value={forgotEmail}
-                          onChange={(e) => setForgotEmail(e.target.value)}
-                          className="h-11 lg:bg-gray-50/80 bg-white/10 lg:text-foreground text-white lg:placeholder:text-muted-foreground placeholder:text-white/40 lg:border-border border-white/20 focus-visible:ring-[#14213D]"
-                        />
-                      </div>
-
-                      {forgotError && (
-                        <div
-                          className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm"
-                          style={{ background: '#fee2e2', color: '#b91c1c' }}
-                        >
-                          <AlertCircle className="w-4 h-4 shrink-0" />
-                          {forgotError}
-                        </div>
-                      )}
-
-                      <Button
-                        type="submit"
-                        onClick={handleForgotPassword}
-                        className="w-full h-11 font-semibold text-sm gap-2"
-                        disabled={loading || !forgotEmail}
-                        style={{ background: 'var(--brand-imperial)' }}
-                      >
-                        {loading ? (
-                          <span className="flex items-center gap-2">
-                            <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                            Enviando...
-                          </span>
-                        ) : (
-                          <>
-                            <Mail className="w-4 h-4" />
-                            Enviar nueva contraseña
-                          </>
-                        )}
-                      </Button>
-
-                      <div className="text-center">
-                        <button
-                          type="button"
-                          className="text-sm lg:text-muted-foreground text-white/60 hover:underline transition-colors"
-                          onClick={() => { setForgotMode(false); setForgotError(null) }}
-                        >
-                          <ArrowLeft className="w-3.5 h-3.5 inline mr-1" />
-                          Volver al inicio de sesión
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

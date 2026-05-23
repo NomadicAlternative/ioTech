@@ -112,7 +112,7 @@ ioTech/
 
 ## Key Runtime Config
 
-- **Mac IP**: 192.168.18.58 | **ESP32 IP**: 192.168.18.65
+- **Mac IP**: 192.168.18.79 (DHCP dinámico) | **ESP32 IP**: 192.168.18.81 (DHCP dinámico)
 - **Device Access-001**: id=8bb9c9c7-19c9-4682-a9b7-8e217d388cd8, tenant_id=216bfcbf-e88f-4ea3-b46a-550db49af2ed
 - **DB**: postgresql://diegogarcia@localhost:5432/iotech_dev
 - **Backend**: `cd backend && node src/index.js` (port 3000)
@@ -141,6 +141,20 @@ ioTech/
 4. **Firmware genérico** — io_driver architecture modular
 5. **Completar i18n** — DE, PT, FR, IT para toda la app
 6. **Email en producción** — Resend SDK listo, falta verificar dominio o configurar SMTP (App Password de Gmail)
+
+## Últimos cambios (2026-05-22)
+
+### Revert io_driver — firmware vuelve a estado funcional
+- **Commit**: e7a66b9 — revert de 6ac7d8b (io_driver modular architecture)
+- **Motivo**: relay_controller shim vacío (GPIOs sin configurar), drivers registrados pero nunca activados, command dispatch siempre DRV_ERR_NOT_FOUND
+- **Resultado**: firmware compila OK (Flash 99.1%, RAM 11.4%), flash & provision wizard funcional
+- **Backend schema**: cambios de 3c78210 y cdb3486 son backward-compatible (campos optional), se dejaron
+
+### Fix MQTT — backend no recibía heartbeats
+- **Causa**: mosquitto escucha solo IPv4, pero Node.js resuelve `localhost` a IPv6 `::1` primero → `mqtt.connect()` fallaba silenciosamente
+- **Fix**: cambiar `MQTT_BROKER_URL=mqtt://localhost:1883` → `mqtt://127.0.0.1:1883` en .env
+- **Dependencia faltante**: `express-rate-limit` no instalado (de f1331d4), impedía reiniciar backend
+- **Resultado**: DHT22 device online, heartbeats recibidos, lastSeen actualizado
 
 ## Últimos cambios (2026-05-16)
 
@@ -203,26 +217,36 @@ All errors return `{ error: { code, message, status, details? } }`.
 - ⚠️ engram MCP: session summary se guarda bajo el proyecto del working directory al iniciar opencode. Para que quede en "iotech", abrí opencode DESDE /Users/diegogarcia/Desktop/IoTech/ioTech/
 - No flashear firmware sin ESP32 conectado
 
-## Driver Roadmap
+## 🩺 Quick Troubleshooting
 
-**ESP8266 descartado** (2026-05-19) — diferencia de precio insignificante vs ESP32-C3 (~$0.50), SDK legacy incompatible, sin BLE, 80KB RAM insuficiente para io_driver.
+| Síntoma | Causa probable | Fix |
+|---------|---------------|-----|
+| Device offline después de flash | Flash borró NVS → provisioning no se hizo | Provisionar de nuevo vía serial |
+| `mqttConnected: false` | `MQTT_BROKER_URL=localhost` → Node resuelve a IPv6 | Usar `127.0.0.1` en vez de `localhost` |
+| DHT22 timeout | PAL layer overhead en timing de 1µs | Usar `gpio_set_direction()` + `esp_rom_delay_us()` directo |
+| Drivers no se activan | NVS vacío después de flash, sin defaults | `io_driver_load_all_defaults()` |
+| Factory reset falso | — no es problema real con `dsrdtr=False` | GPIO 0 está bien, no tocar |
+| Sensor no responde en GPIO X | Sensor está físicamente en otro pin | Probar en el pin correcto (DHT22 → 32) |
 
-**Fase 1 — io_driver (9 drivers implementados, builds OK, ⚠️ sin test hardware)**:
-DHT22, RELAY, BME280, DS18B20, PIR, HC-SR04, WS2812B, SERVO, SSD1306
+## Driver Roadmap (io_driver RESTAURADO con fixes — 2026-05-22)
 
-### ⚠️ BLOCKER-6: Hardware validation pendiente
+El refactor io_driver (6ac7d8b) fue revertido (e7a66b9) y luego restaurado con fixes:
+- io_driver_load_all_defaults(): activa DHT22, RELAY, LCD1602_I2C sin NVS
+- Stack heartbeat: 2048 → 8192 (previene overflow con múltiples sensores)
+- Factory reset: GPIO 0 → 14 (evita falso trigger por DTR/RTS)
+- Catálogo en BD con 32 drivers, API pública GET /api/drivers/catalog
+
+**Fase 1 — Compilados (10 drivers)**:
+DHT22, RELAY, BME280, DS18B20, PIR, HC-SR04, WS2812B, SERVO, SSD1306, LCD1602_I2C
+
+**Defaults activos**: DHT22 (GPIO 32), RELAY (7CH), LCD1602_I2C (0x27)
 
 **Recordatorio por sesión**: los 9 drivers compilan para las 4 targets pero NINGUNO fue probado con hardware real. Ver lista de compras en memoria Engram (`sdd/io-driver/hardware-validation`).
 
-**Shopping list**:
-- Sensores: DHT22 (~$2), BME280 GY-BME280 (~$3), DS18B20 TO-92 (~$1), PIR HC-SR501 (~$1), HC-SR04 (~$1)
-- Actuadores: Módulo relé 4CH (~$3), Servo SG90 (~$2), Tira WS2812B 1m (~$5), OLED SSD1306 0.96" (~$3)
-- Placas: ESP32-C3 XIAO (~$3), ESP32-S3 DevKit (~$5)
-- **Total estimado**: ~$30
-
-**Fase 2 — Con hardware físico**:
+**Fase 2 — Cuando haya hardware físico**:
 SHT30/31, CCS811, SGP30, PMS5003, BH1750, INA219, stepper 28BYJ-48, ST7735, ST7789, ILI9341, RFID RC522, Modbus RTU, RS485
 
 **Fase 3 — Crecimiento**:
 LoRa (SX1276/78/1262), ESP32-S3/C3/C6/H2, Zigbee/Thread, ePaper, cámara OV2640, MPU6050, VL53L0X, keypad, microSD, deep sleep, battery telemetry
 - Puerto serial se auto-detecta (ls /dev/cu.usbserial-*)
+- Catálogo completo: 32 drivers en BD → GET /api/drivers/catalog

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Cpu, Wifi, LayoutDashboard, Zap, ArrowRight, CheckCircle2, ChevronDown, Cable, Thermometer, Bell, Globe, BarChart3 } from 'lucide-react'
+import logo from '@/assets/logoprincipal.JPG'
 
 const LANGS = [
   { code: 'en', label: 'EN', flag: '🇬🇧' },
@@ -47,32 +48,23 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[var(--prussian-blue)] text-white overflow-x-hidden">
-      <nav className="fixed top-0 w-full z-50 bg-[var(--prussian-blue)]/80 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <span className="text-xl font-bold"><span className="text-white">io</span><span className="text-[var(--orange)]">Tech</span></span>
+      <nav className="fixed top-0 w-full z-50 bg-[var(--prussian-blue)]/90 backdrop-blur-md border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
+          <img src={logo} alt="ioTech" className="h-[150px] md:h-[210px] w-auto -my-5" />
           <div className="hidden md:flex items-center gap-8 text-sm text-[var(--muted-blue)]">
             <button onClick={() => scrollTo('features')} className="hover:text-white transition-colors">{t('landing.nav.features')}</button>
             <button onClick={() => scrollTo('flow')} className="hover:text-white transition-colors">{t('landing.nav.how')}</button>
             <button onClick={() => scrollTo('pricing')} className="hover:text-white transition-colors">{t('landing.nav.pricing')}</button>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3">
             <div className="relative">
               <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1 text-sm text-[var(--muted-blue)] hover:text-white px-2 py-1 rounded-lg hover:bg-white/5">
-                <Globe className="h-3.5 w-3.5"/>
-                {LANGS.find(l => l.code === (i18n.language?.split('-')[0] || 'en'))?.flag}
-                {LANGS.find(l => l.code === (i18n.language?.split('-')[0] || 'en'))?.label || 'EN'}
-                <ChevronDown className="h-3 w-3"/>
+                <Globe className="h-3.5 w-3.5"/>{LANGS.find(l => l.code === (i18n.language?.split('-')[0] || 'en'))?.flag}{LANGS.find(l => l.code === (i18n.language?.split('-')[0] || 'en'))?.label || 'EN'}<ChevronDown className="h-3 w-3"/>
               </button>
               {langOpen && <div className="absolute top-full right-0 mt-1 bg-[#1A2F52] border border-white/10 rounded-xl p-1 shadow-xl z-50">
-                {LANGS.map(l => (
-                  <button key={l.code} onClick={() => { i18n.changeLanguage(l.code); setLangOpen(false) }}
-                    className={`flex items-center gap-2 w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                      (i18n.language?.split('-')[0] || 'en') === l.code ? 'bg-[var(--orange)]/20 text-[var(--orange)]' : 'text-[var(--muted-blue)] hover:text-white'
-                    }`}>
-                    <span>{l.flag}</span>
-                    <span>{l.label}</span>
-                  </button>
-                ))}
+                {LANGS.map(l => (<button key={l.code} onClick={() => { i18n.changeLanguage(l.code); setLangOpen(false) }}
+                  className={`flex items-center gap-2 w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors ${(i18n.language?.split('-')[0] || 'en') === l.code ? 'bg-[var(--orange)]/20 text-[var(--orange)]' : 'text-[var(--muted-blue)] hover:text-white'}`}>
+                  <span>{l.flag}</span><span>{l.label}</span></button>))}
               </div>}
             </div>
             <a href="/login" className="text-sm text-[var(--muted-blue)] hover:text-white">{t('landing.nav.login')}</a>
@@ -81,29 +73,48 @@ export function LandingPage() {
         </div>
       </nav>
 
-      <section className="relative pt-32 pb-20 px-6 overflow-hidden">
+      <section className="relative pt-20 md:pt-32 pb-4 md:pb-20 px-6 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img src="/hero-bg.png" alt="" className="w-full h-full object-cover opacity-40" />
           <div className="absolute inset-0 bg-gradient-to-b from-[var(--prussian-blue)]/20 via-transparent to-[var(--prussian-blue)]" />
         </div>
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-[400px] opacity-40 pointer-events-none z-10"/>
         <div className="max-w-5xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 text-xs font-medium text-[var(--orange)] bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full mb-8"><Zap className="h-3 w-3"/>{t('landing.hero.badge')}</div>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">{t('landing.hero.title1')} <span className="bg-gradient-to-r from-[var(--orange)] to-amber-300 bg-clip-text text-transparent">{t('landing.hero.title2')}</span></h1>
-          <p className="text-lg md:text-xl text-[var(--muted-blue)] mt-6 max-w-2xl mx-auto leading-relaxed">{t('landing.hero.subtitle')}</p>
+          <div className="inline-flex items-center gap-2 text-xs font-medium text-[var(--brand-green)] bg-teal-500/10 border border-teal-500/20 px-3 py-1 rounded-full mb-4 md:mb-8"><Zap className="h-3 w-3"/>{t('landing.hero.badge')}</div>
+
+          {/* Mobile action buttons */}
+          <div className="flex md:hidden items-center justify-center gap-2 mb-6">
+            <div className="relative">
+              <button onClick={() => setLangOpen(!langOpen)} className="flex items-center justify-center gap-0.5 text-[7px] text-white border border-white/15 rounded-full px-2.5 py-1.5 hover:bg-white/10 whitespace-nowrap min-w-[60px]">
+                <Globe className="h-2.5 w-2.5"/>{LANGS.find(l => l.code === (i18n.language?.split('-')[0] || 'en'))?.label}<ChevronDown className="h-2 w-2"/>
+              </button>
+              {langOpen && <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-[#1A2F52] border border-white/10 rounded-xl p-1 shadow-xl z-50">
+                {LANGS.map(l => (<button key={l.code} onClick={() => { i18n.changeLanguage(l.code); setLangOpen(false) }}
+                  className={`flex items-center gap-2 w-full text-left px-3 py-1.5 rounded-lg text-sm ${(i18n.language?.split('-')[0] || 'en') === l.code ? 'bg-[var(--orange)]/20 text-[var(--orange)]' : 'text-[var(--muted-blue)] hover:text-white'}`}>
+                  <span>{l.flag}</span><span>{l.label}</span></button>))}
+              </div>}
+            </div>
+            <a href="/login" className="text-[7px] text-white border border-white/15 rounded-full px-2.5 py-1.5 hover:bg-white/10 transition-colors whitespace-nowrap min-w-[80px] text-center inline-flex items-center justify-center">{t('landing.nav.login')}</a>
+            <a href="/register" className="text-[7px] bg-[var(--orange)] text-black font-medium rounded-full px-2.5 py-1.5 hover:bg-amber-400 transition-colors whitespace-nowrap min-w-[80px] text-center inline-flex items-center justify-center">{t('landing.nav.start')}</a>
+          </div>
+          <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">{t('landing.hero.title1')} <span className="bg-gradient-to-r from-[var(--brand-green)] to-[var(--orange)] bg-clip-text text-transparent">{t('landing.hero.title2')}</span></h1>
+          <p className="text-sm md:text-lg text-[var(--muted-blue)] mt-6 max-w-2xl mx-auto leading-relaxed">{t('landing.hero.subtitle')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
-            <a href="/register" className="inline-flex items-center gap-2 bg-[var(--orange)] text-black font-semibold px-8 py-4 rounded-full text-lg hover:bg-amber-400 transition-all hover:scale-105 shadow-lg shadow-amber-500/20">{t('landing.hero.cta')} <ArrowRight className="h-5 w-5"/></a>
-            <button onClick={()=>scrollTo('flow')} className="inline-flex items-center gap-2 border border-white/10 text-white font-medium px-8 py-4 rounded-full text-lg hover:bg-white/5 transition-all">{t('landing.hero.demo')} <ChevronDown className="h-5 w-5"/></button>
+            <a href="/register" className="inline-flex items-center gap-2 bg-[var(--orange)] text-black font-semibold px-4 py-2 md:px-8 md:py-4 rounded-full text-sm md:text-lg hover:bg-amber-400 transition-all hover:scale-105 shadow-lg shadow-amber-500/20">{t('landing.hero.cta')} <ArrowRight className="h-4 w-4 md:h-5 md:w-5"/></a>
+            <button onClick={()=>scrollTo('flow')} className="inline-flex items-center gap-2 border border-white/10 text-white font-medium px-4 py-2 md:px-8 md:py-4 rounded-full text-sm md:text-lg hover:bg-white/5 transition-all">{t('landing.hero.demo')} <ChevronDown className="h-4 w-4 md:h-5 md:w-5"/></button>
           </div>
         </div>
       </section>
 
-      <section id="flow" className="py-24 px-6 bg-gradient-to-b from-transparent to-[#0D1A30]">
+      <section id="flow" className="pt-0 md:pt-24 pb-12 md:pb-24 px-6 bg-gradient-to-b from-transparent to-[#0D1A30]">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">{t('landing.flow.title')}</h2>
-          <p className="text-[var(--muted-blue)] text-center max-w-xl mx-auto mb-16">{t('landing.flow.subtitle')}</p>
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            {flow.map(({icon:I,tkey:k})=>(<div key={k} className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 hover:bg-white/[0.04] hover:border-[var(--orange)]/20 transition-all duration-300"><div className="w-12 h-12 rounded-xl bg-[var(--orange)]/10 flex items-center justify-center mb-6"><I className="h-6 w-6 text-[var(--orange)]"/></div><h3 className="text-xl font-semibold mb-3">{t(`landing.${k}.title`)}</h3><p className="text-[var(--muted-blue)] leading-relaxed">{t(`landing.${k}.desc`)}</p></div>))}
+          <h2 className="text-xl md:text-3xl font-bold text-center mb-4">{t('landing.flow.title')}</h2>
+          <p className="text-sm md:text-base text-[var(--muted-blue)] text-center max-w-xl mx-auto mb-6 md:mb-16">{t('landing.flow.subtitle')}</p>
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8 mb-6 md:mb-16">
+             {flow.map(({icon:I,tkey:k},i)=>(<div key={k} className="group relative rounded-2xl border border-white/5 bg-white/[0.02] p-4 md:p-8 hover:bg-white/[0.04] hover:border-[var(--brand-green)]/30 transition-all duration-300 overflow-hidden">
+               <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[var(--brand-green)]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+               <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[var(--brand-green)]/30 group-hover:bg-[var(--brand-green)]/80 transition-colors duration-500" style={{ animation: `flowPulse 2s ease-in-out ${i * 0.6}s infinite` }} />
+               <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl bg-[var(--brand-green)]/10 flex items-center justify-center mb-3 md:mb-6"><I className="h-4 w-4 md:h-6 md:w-6 text-[var(--brand-green)]"/></div><h3 className="text-sm md:text-xl font-semibold mb-1.5 md:mb-3">{t(`landing.${k}.title`)}</h3><p className="text-xs md:text-base text-[var(--muted-blue)] leading-relaxed">{t(`landing.${k}.desc`)}</p></div>))}
           </div>
           <div className="rounded-2xl border border-white/5 overflow-hidden shadow-2xl shadow-black/30">
             <img src="/dashboard-preview.png" alt="Dashboard preview" className="w-full" />
@@ -111,21 +122,24 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section id="features" className="py-24 px-6">
+      <section id="features" className="py-8 md:py-24 px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">{t('landing.features.title')}</h2>
-          <p className="text-[var(--muted-blue)] text-center max-w-xl mx-auto mb-16">{t('landing.features.subtitle')}</p>
+          <h2 className="text-xl md:text-3xl font-bold text-center mb-4">{t('landing.features.title')}</h2>
+          <p className="text-sm md:text-base text-[var(--muted-blue)] text-center max-w-xl mx-auto mb-6 md:mb-16">{t('landing.features.subtitle')}</p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {feats.map(({icon:I,tkey:k})=>(<div key={k} className="flex gap-4 rounded-xl border border-white/5 bg-white/[0.01] p-6 hover:border-[var(--orange)]/10 transition-all"><div className="w-10 h-10 rounded-lg bg-[var(--orange)]/10 flex items-center justify-center shrink-0 mt-0.5"><I className="h-5 w-5 text-[var(--orange)]"/></div><div><h3 className="font-semibold mb-1">{t(`landing.${k}.title`)}</h3><p className="text-sm text-[var(--muted-blue)] leading-relaxed">{t(`landing.${k}.desc`)}</p></div></div>))}
+             {feats.map(({icon:I,tkey:k},i)=>(<div key={k} className="group relative flex gap-3 md:gap-4 rounded-xl border border-white/5 bg-white/[0.01] p-3 md:p-6 hover:border-[var(--brand-green)]/20 transition-all overflow-hidden">
+               <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--brand-green)]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+               <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg bg-[var(--brand-green)]/10 flex items-center justify-center shrink-0 mt-0.5"><I className="h-3.5 w-3.5 md:h-5 md:w-5 text-[var(--brand-green)]"/></div><div><h3 className="text-sm md:text-base font-semibold mb-0.5 md:mb-1">{t(`landing.${k}.title`)}</h3><p className="text-[11px] md:text-sm text-[var(--muted-blue)] leading-relaxed">{t(`landing.${k}.desc`)}</p></div></div>))}
           </div>
         </div>
       </section>
 
-      <section className="py-24 px-6 bg-gradient-to-b from-[#0D1A30] to-transparent">
+      <section className="py-8 md:py-24 px-6 bg-gradient-to-b from-[#0D1A30] to-transparent">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 text-xs font-medium text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full mb-8">✨ {t('landing.ai.badge')}</div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">{t('landing.ai.title1')} <span className="bg-gradient-to-r from-purple-400 to-[var(--orange)] bg-clip-text text-transparent">{t('landing.ai.title2')}</span></h2>
-          <div className="rounded-2xl border border-white/5 bg-black/20 p-6 md:p-8 max-w-2xl mx-auto">
+          <div className="inline-flex items-center gap-2 text-xs font-medium text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full mb-4 md:mb-8">✨ {t('landing.ai.badge')}</div>
+          <h2 className="text-xl md:text-3xl font-bold mb-6">{t('landing.ai.title1')} <span className="bg-gradient-to-r from-[var(--brand-green)] to-[var(--orange)] bg-clip-text text-transparent">{t('landing.ai.title2')}</span></h2>
+          <div className="group relative rounded-2xl border border-[var(--brand-green)]/10 bg-black/20 p-4 md:p-8 max-w-2xl mx-auto overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--brand-green)]/40 to-transparent" />
             <div className="flex gap-3 text-left">
               <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0 mt-1"><span className="text-xs">🤖</span></div>
               <div className="space-y-3">
@@ -140,25 +154,26 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section id="pricing" className="py-24 px-6">
+      <section id="pricing" className="py-8 md:py-24 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('landing.pricing.title')}</h2>
-          <p className="text-[var(--muted-blue)] max-w-lg mx-auto mb-12">{t('landing.pricing.subtitle')}</p>
-          <div className="max-w-md mx-auto rounded-2xl border border-[var(--orange)]/20 bg-white/[0.02] p-8">
-            <div className="text-5xl font-bold mb-4">{t('landing.pricing.price')}<span className="text-lg text-[var(--muted-blue)] font-normal">{t('landing.pricing.period')}</span></div>
-            <p className="text-[var(--muted-blue)] mb-8">{t('landing.pricing.note')}</p>
-            <ul className="space-y-3 text-left mb-8">
-              {['Dispositivos ilimitados','Clientes ilimitados','Asistente IA','Dashboard profesional','OTA updates','Reglas automáticas','Soporte prioritario'].map(f=>(<li key={f} className="flex items-center gap-2 text-sm"><CheckCircle2 className="h-4 w-4 text-green-400 shrink-0"/><span className="text-[var(--muted-blue)]">{f}</span></li>))}
+          <h2 className="text-xl md:text-3xl font-bold mb-4">{t('landing.pricing.title')}</h2>
+          <p className="text-sm md:text-base text-[var(--muted-blue)] max-w-lg mx-auto mb-6 md:mb-12">{t('landing.pricing.subtitle')}</p>
+          <div className="group relative max-w-md mx-auto rounded-2xl border border-[var(--brand-green)]/10 bg-white/[0.02] p-6 md:p-8 overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--brand-green)]/40 to-transparent" />
+            <div className="text-2xl md:text-5xl font-bold mb-4">{t('landing.pricing.price')}<span className="text-xs md:text-lg text-[var(--muted-blue)] font-normal">{t('landing.pricing.period')}</span></div>
+            <p className="text-xs md:text-base text-[var(--muted-blue)] mb-6">{t('landing.pricing.note')}</p>
+            <ul className="space-y-2 md:space-y-3 text-left mb-6">
+              {['Dispositivos ilimitados','Clientes ilimitados','Asistente IA','Dashboard profesional','OTA updates','Reglas automáticas','Soporte prioritario'].map(f=>(<li key={f} className="flex items-center gap-2 text-[11px] md:text-sm"><CheckCircle2 className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-400 shrink-0"/><span className="text-[var(--muted-blue)]">{f}</span></li>))}
             </ul>
-            <a href="/register" className="block w-full text-center bg-[var(--orange)] text-black font-semibold px-8 py-4 rounded-full text-lg hover:bg-amber-400 transition-all hover:scale-105">{t('landing.pricing.cta')}</a>
+            <a href="/register" className="block w-full text-center bg-[var(--orange)] text-black font-semibold px-4 py-2 md:px-8 md:py-4 rounded-full text-sm md:text-lg hover:bg-amber-400 transition-all hover:scale-105">{t('landing.pricing.cta')}</a>
           </div>
         </div>
       </section>
 
-      <footer className="py-12 px-6 border-t border-white/5">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <span className="text-xl font-bold"><span className="text-white">io</span><span className="text-[var(--orange)]">Tech</span></span>
-          <p className="text-sm text-[var(--muted-blue)]">{t('landing.footer')}</p>
+      <footer className="py-4 md:py-12 px-6 border-t border-white/5">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+          <img src={logo} alt="ioTech" className="h-16 md:h-[150px] w-auto" />
+          <p className="text-[3px] md:text-sm text-[var(--muted-blue)]">{t('landing.footer')}</p>
         </div>
       </footer>
     </div>

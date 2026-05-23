@@ -1,65 +1,13 @@
-/** @file drv_ssd1306.c — SSD1306 128x64 OLED display driver (I2C). */
 #include "drv_ssd1306.h"
-#include "pal_i2c.h"
+#include "driver/i2c.h"
 #include "cJSON.h"
 #include "esp_log.h"
 #include <string.h>
-static const char *TAG = "drv_ssd1306";
-#define SSD1306_ADDR 0x3C
-#define SSD1306_WIDTH 128
-#define SSD1306_HEIGHT 64
-static uint8_t s_sda=0,s_scl=0;
-static uint8_t s_fb[SSD1306_WIDTH*(SSD1306_HEIGHT/8)];
-static bool s_ready=false;
-
-static void ssd1306_send_cmd(uint8_t cmd) {
-    const uint8_t buf[2]={0x00,cmd};
-    pal_i2c_master_write(SSD1306_ADDR,buf,2);
-}
-static drv_err_t ssd1306_init(const driver_config_t *cfg) {
-    if(!cfg||cfg->i2c_sda==0||cfg->i2c_scl==0) return DRV_ERR_ARG;
-    s_sda=cfg->i2c_sda; s_scl=cfg->i2c_scl;
-    pal_i2c_master_init(s_sda,s_scl,400000);
-    memset(s_fb,0,sizeof(s_fb));
-    /* Init sequence */
-    ssd1306_send_cmd(0xAE); /* display off */
-    ssd1306_send_cmd(0xD5); ssd1306_send_cmd(0x80); /* clock */
-    ssd1306_send_cmd(0xA8); ssd1306_send_cmd(63); /* mux */
-    ssd1306_send_cmd(0xD3); ssd1306_send_cmd(0x00); /* offset */
-    ssd1306_send_cmd(0x40); /* start line */
-    ssd1306_send_cmd(0x8D); ssd1306_send_cmd(0x14); /* charge pump */
-    ssd1306_send_cmd(0x20); ssd1306_send_cmd(0x00); /* memory mode */
-    ssd1306_send_cmd(0xA1); /* seg remap */
-    ssd1306_send_cmd(0xC8); /* COM scan dir */
-    ssd1306_send_cmd(0xDA); ssd1306_send_cmd(0x12); /* COM pins */
-    ssd1306_send_cmd(0x81); ssd1306_send_cmd(0xCF); /* contrast */
-    ssd1306_send_cmd(0xD9); ssd1306_send_cmd(0xF1); /* pre-charge */
-    ssd1306_send_cmd(0xDB); ssd1306_send_cmd(0x40); /* VCOMH */
-    ssd1306_send_cmd(0xA4); /* resume */
-    ssd1306_send_cmd(0xA6); /* normal display */
-    ssd1306_send_cmd(0xAF); /* display ON */
-    s_ready=true;
-    ESP_LOGI(TAG,"SSD1306 initialized SDA=%u SCL=%u",s_sda,s_scl);
-    return DRV_OK;
-}
-static drv_err_t ssd1306_read(driver_value_t *values, uint8_t *count) {
-    if(!s_ready||!values||!count) return DRV_ERR_STATE;
-    strncpy(values[0].key,"display_on",31);
-    values[0].type=DRV_VAL_BOOL; values[0].bool_value=s_ready;
-    *count=1;
-    return DRV_OK;
-}
-static drv_err_t ssd1306_command(const char *action, const void *arg) {
-    if(!s_ready||!action||!arg) return DRV_ERR_STATE;
-    const cJSON *root=(const cJSON*)arg;
-    if(strcmp(action,"ssd1306_clear")==0) { memset(s_fb,0,sizeof(s_fb)); return DRV_OK; }
-    if(strcmp(action,"ssd1306_text")==0) {
-        /* Text rendering placeholder */
-        return DRV_OK;
-    }
-    return DRV_ERR_NOT_SUPP;
-}
-static drv_err_t ssd1306_deinit(void) { ssd1306_send_cmd(0xAE); s_ready=false; return DRV_OK; }
-
-const driver_t drv_ssd1306 = { .name="SSD1306", .init=ssd1306_init, .read=ssd1306_read, .command=ssd1306_command, .deinit=ssd1306_deinit };
+static const char *TAG="drv_ssd1306"; static uint8_t s_addr=0x3C; static bool s_ready=false; static char s_text[4][22];
+static void ssd1306_cmd(uint8_t c){uint8_t d[2]={0x00,c};i2c_master_write_to_device(I2C_NUM_0,s_addr,d,2,pdMS_TO_TICKS(10));}
+static drv_err_t ssd1306_init(const driver_config_t *cfg){if(cfg&&cfg->i2c_addr)s_addr=cfg->i2c_addr;i2c_config_t c={.mode=I2C_MODE_MASTER,.sda_io_num=cfg?cfg->i2c_sda:21,.scl_io_num=cfg?cfg->i2c_scl:22,.sda_pullup_en=GPIO_PULLUP_ENABLE,.scl_pullup_en=GPIO_PULLUP_ENABLE,.master.clk_speed=400000};i2c_param_config(I2C_NUM_0,&c);i2c_driver_install(I2C_NUM_0,c.mode,0,0,0);uint8_t init[]={0xAE,0xD5,0x80,0xA8,0x3F,0xD3,0x00,0x40,0x8D,0x14,0x20,0x00,0xA1,0xC8,0xDA,0x12,0x81,0xCF,0xD9,0xF1,0xDB,0x40,0xA4,0xA6,0xAF};for(int i=0;i<25;i++)ssd1306_cmd(init[i]);memset(s_text,' ',sizeof(s_text));s_ready=true;ESP_LOGI(TAG,"SSD1306 I2C 0x%02X",s_addr);return DRV_OK;}
+static drv_err_t ssd1306_read(driver_value_t *v,uint8_t *n){if(!s_ready||!v||!n)return DRV_ERR_STATE;*n=1;strcpy(v[0].key,"text");v[0].type=DRV_VAL_STRING;strncpy(v[0].string_value,s_text[0],sizeof(v[0].string_value));return DRV_OK;}
+static drv_err_t ssd1306_command(const char *a,const void *b){const cJSON *j=(const cJSON*)b;const cJSON *txt=cJSON_GetObjectItem(j,"text");const cJSON *cl=cJSON_GetObjectItem(j,"clear");if(cl&&cJSON_IsTrue(cl)){ssd1306_cmd(0x01);memset(s_text,' ',sizeof(s_text));}if(txt&&cJSON_IsString(txt)){int ln=cJSON_GetObjectItem(j,"line")?cJSON_GetObjectItem(j,"line")->valueint:0;if(ln>=4)ln=3;strncpy(s_text[ln],txt->valuestring,21);ssd1306_cmd(0x21);ssd1306_cmd(ln*8);ssd1306_cmd(0x7F);for(const char *p=s_text[ln];*p;p++)i2c_master_write_to_device(I2C_NUM_0,s_addr,(uint8_t[]){0x40,*p},2,pdMS_TO_TICKS(1));}(void)a;return DRV_OK;}
+static drv_err_t ssd1306_deinit(void){ssd1306_cmd(0xAE);s_ready=false;return DRV_OK;}
+static driver_t drv_ssd1306={.name="SSD1306",.init=ssd1306_init,.read=ssd1306_read,.command=ssd1306_command,.deinit=ssd1306_deinit};
 IO_DRIVER_REGISTER(drv_ssd1306);

@@ -48,6 +48,15 @@ drv_err_t io_driver_load(const char *name, const driver_config_t *cfg);
  */
 drv_err_t io_driver_load_all_from_nvs(void);
 
+/**
+ * Load default drivers when NVS has no config (first boot after flash).
+ * Activates DHT22, RELAY, and other board-expected drivers.
+ * Must be called after io_driver_init() and board pinmap init.
+ *
+ * @return DRV_OK.
+ */
+drv_err_t io_driver_load_all_defaults(void);
+
 /* ── Runtime ───────────────────────────────────────────────────────── */
 
 /**

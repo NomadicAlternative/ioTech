@@ -3,9 +3,10 @@ import { Outlet, NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/features/auth/authStore'
 import i18n from '@/i18n/i18n'
+import logo from '@/assets/logoprincipal.JPG'
 import {
   LayoutDashboard, Cpu, FileCode2, Users, Settings, LogOut, Globe, ShieldCheck,
-  Bot, Download, Cable, Building2, Menu, X, Wand2,
+  Bot, Download, Cable, Building2, Menu, X, Wand2, BookOpen,
 } from 'lucide-react'
 
 const INSTALLER_NAV_ITEMS = [
@@ -16,6 +17,7 @@ const INSTALLER_NAV_ITEMS = [
   { to: '/app/firmware',   icon: Download,         labelKey: 'nav.firmware' },
   { to: '/app/ai',         icon: Wand2,            labelKey: 'nav.ai' },
   { to: '/app/provision',  icon: Cable,            labelKey: 'nav.provision' },
+  { to: '/app/catalog',    icon: BookOpen,         labelKey: 'nav.catalog' },
   { to: '/app/clients',    icon: Users,            labelKey: 'nav.clients' },
   { to: '/app/settings',   icon: Settings,         labelKey: 'nav.settings' },
 ]
@@ -83,7 +85,7 @@ export function AppShell() {
       >
         {/* Brand */}
         <div className="px-6 py-5 border-b border-sidebar-border flex items-center justify-between">
-          <span className="text-2xl font-bold tracking-tight" style={{ color: 'var(--brand-imperial, #01295F)' }}>ioTech</span>
+          <img src={logo} alt="BeepDash" style={{ height: '210px' }} className="w-auto" />
           <button
             onClick={closeSidebar}
             className="lg:hidden p-1 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/70"

@@ -1,1 +1,1 @@
-idf_component_register(SRCS "drv_pir.c" INCLUDE_DIRS "include" REQUIRES io_driver io_driver_pal)
+idf_component_register(SRCS "drv_pir.c" INCLUDE_DIRS "include" REQUIRES io_driver driver cjson)

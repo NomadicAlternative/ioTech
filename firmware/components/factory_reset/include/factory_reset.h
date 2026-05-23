@@ -2,10 +2,9 @@
  * @file factory_reset.h
  * @brief Factory reset monitor — GPIO button hold detection.
  *
- * Monitors a configurable GPIO pin (default: GPIO0 / BOOT button).
- * When held LOW continuously for FACTORY_RESET_HOLD_MS (5 seconds),
- * sends SM_EVT_FACTORY_RESET to the state machine. Short presses are
- * ignored.
+ * Monitors GPIO 0 (BOOT button on most ESP32 devkits).
+ * When held LOW continuously for 5 seconds, erases all NVS
+ * (WiFi, device config, drivers) and reboots to provisioning mode.
  */
 #pragma once
 
@@ -15,8 +14,8 @@
 extern "C" {
 #endif
 
-/** GPIO pin used for factory reset button (active LOW) */
-#define FACTORY_RESET_GPIO_PIN   0   /* GPIO0 — BOOT button on most ESP32 devkits */
+/** GPIO pin for factory reset (BOOT button, active LOW) */
+#define FACTORY_RESET_GPIO_PIN   0
 
 /** Duration (ms) the button must be held to trigger factory reset */
 #define FACTORY_RESET_HOLD_MS    5000

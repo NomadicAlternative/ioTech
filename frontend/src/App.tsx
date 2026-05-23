@@ -13,6 +13,7 @@ import { ClientListPage } from '@/features/clients/ClientListPage'
 import { RulesPage } from '@/features/rules/RulesPage'
 import { FirmwareListPage } from '@/features/firmware/FirmwareListPage'
 import { ProvisioningPage } from '@/features/provisioning/ProvisioningPage'
+import { CatalogPage } from '@/features/catalog/CatalogPage'
 import { TenantsPage } from '@/features/admin/TenantsPage'
 import { DashboardPage } from '@/features/admin/DashboardPage'
 import { InstallerDetailPage } from '@/features/admin/InstallerDetailPage'
@@ -64,6 +65,7 @@ export default function App() {
           <Route path="rules" element={<RulesPage />} />
           <Route path="firmware" element={<FirmwareListPage />} />
           <Route path="provision" element={<ErrorBoundary><ProvisioningPage /></ErrorBoundary>} />
+          <Route path="catalog" element={<ErrorBoundary><CatalogPage /></ErrorBoundary>} />
           <Route path="tenants" element={<ErrorBoundary><TenantsPage /></ErrorBoundary>} />
           <Route path="admin/dashboard" element={<ErrorBoundary><DashboardPage /></ErrorBoundary>} />
           <Route path="admin/tenants/:id" element={<ErrorBoundary><InstallerDetailPage /></ErrorBoundary>} />

@@ -108,7 +108,7 @@ static void mqtt_event_handler(void *handler_args,
 
         /* Start heartbeat */
         if (!s_heartbeat_task) {
-            xTaskCreate(heartbeat_task, "mqtt_heartbeat", 2048, NULL, 3, &s_heartbeat_task);
+            xTaskCreate(heartbeat_task, "mqtt_heartbeat", 8192, NULL, 3, &s_heartbeat_task);
         }
 
         sm_send_event(SM_EVT_MQTT_CONNECTED);

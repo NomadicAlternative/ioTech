@@ -1,1 +1,1 @@
-idf_component_register(SRCS "drv_ws2812b.c" INCLUDE_DIRS "include" REQUIRES io_driver io_driver_pal json driver)
+idf_component_register(SRCS "drv_ws2812b.c" INCLUDE_DIRS "include" REQUIRES io_driver driver cjson)
