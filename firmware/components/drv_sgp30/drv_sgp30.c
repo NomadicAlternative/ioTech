@@ -12,7 +12,7 @@ static drv_err_t sgp30_init(const driver_config_t *cfg){
     uint8_t f[3];sgp30_cmd(0x2003,f,3,0);ESP_LOGI(TAG,"SGP30 I2C 0x%02X",s_addr);return DRV_OK;
 }
 static drv_err_t sgp30_read(driver_value_t *v,uint8_t *n){
-    if(!s_ready||!v||!n)return DRV_ERR_STATE;*n=2;
+    if(!s_ready||!v||!n){return DRV_ERR_STATE;}*n=2;
     uint8_t d[6]={0};sgp30_cmd(0x2008,d,6,12);
     s_eco2=(d[0]<<8)|d[1];s_tvoc=(d[3]<<8)|d[4];
     strcpy(v[0].key,"eco2");v[0].type=DRV_VAL_NUMBER;v[0].number_value=s_eco2;

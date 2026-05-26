@@ -12,7 +12,7 @@ static drv_err_t sht30_init(const driver_config_t *cfg){
     ESP_LOGI(TAG,"SHT30 I2C 0x%02X",s_addr);return DRV_OK;
 }
 static drv_err_t sht30_read(driver_value_t *v,uint8_t *n){
-    if(!s_ready||!v||!n)return DRV_ERR_STATE;*n=2;
+    if(!s_ready||!v||!n){return DRV_ERR_STATE;}*n=2;
     sht30_cmd(0x2C06);vTaskDelay(pdMS_TO_TICKS(20));uint8_t d[6]={0};
     i2c_master_read_from_device(I2C_NUM_0,s_addr,d,6,pdMS_TO_TICKS(100));
     s_temp=-45+175*((d[0]<<8)|d[1])/65535.0f;s_hum=100*((d[3]<<8)|d[4])/65535.0f;
