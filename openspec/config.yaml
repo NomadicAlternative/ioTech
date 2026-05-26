@@ -1,0 +1,42 @@
+# ioTech OpenSpec Configuration
+# Generated: 2026-05-23
+
+project: iotech
+description: |
+  B2B2C IoT platform — ESP32 firmware with 32+ drivers (io_driver), 
+  Node.js backend, React/TypeScript frontend. AI-powered device 
+  configuration via DeepSeek.
+
+layers:
+  firmware:
+    path: firmware/
+    language: C (ESP-IDF)
+    build: cd firmware && pio run
+    test: cd firmware && pio test -e native
+    framework: PlatformIO + ESP-IDF
+
+  backend:
+    path: backend/
+    language: JavaScript (Node.js)
+    build: cd backend && npm run build
+    test: cd backend && npm test
+    framework: Express.js
+    runtime: Node.js >= 20
+
+  frontend:
+    path: frontend/
+    language: TypeScript (React)
+    build: cd frontend && npm run build
+    test: cd frontend && npm test
+    framework: React + Vite + Tailwind
+
+conventions:
+  commits: conventional commits (fix:, feat:, docs:, chore:, etc.)
+  tdd: strict TDD enforced (test runner present in all layers)
+  skill_registry: .atl/skill-registry.md
+  context_file: .agent/context.md
+
+artifacts:
+  store: both
+  openspec_path: openspec/changes/
+  memory: Engram (active)
