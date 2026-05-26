@@ -73,6 +73,7 @@ const aiConfig = Joi.object({
   datastreams: Joi.array().items(datastream).min(0).default([]),
   rules: Joi.array().items(rule).default([]),
   diagrama: Joi.string().allow(''),
+  code: Joi.string().optional().allow(''),
 });
 
 /**

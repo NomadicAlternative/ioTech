@@ -14,6 +14,14 @@
 #include "io_driver.h"
 #include "cJSON.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern void user_loop(void);
+#ifdef __cplusplus
+}
+#endif
+
 static const char *TAG = "mqtt_manager";
 
 /* CA cert for broker TLS */
@@ -41,6 +49,9 @@ static void heartbeat_task(void *arg)
 {
     for (;;) {
         vTaskDelay(pdMS_TO_TICKS(HEARTBEAT_INTERVAL_MS));
+
+        /* Run user application logic before collecting telemetry */
+        user_loop();
 
         /* Collect telemetry from all active io_driver drivers */
         cJSON *payload = io_driver_collect_all();

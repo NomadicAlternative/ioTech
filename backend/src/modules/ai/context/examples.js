@@ -78,6 +78,7 @@ const EXAMPLES = [
       ],
       diagrama:
         'ESP32 GPIO32 → DHT22 DAT\nESP32 3.3V → DHT22 VCC\nESP32 GND → DHT22 GND\n⚠️ Pull-up 10K entre VCC y DAT\nESP32 GPIO23 → Relay 1 IN1\nRelay 1 VCC → 5V\nRelay 1 GND → GND',
+      code: 'DHT22 dht(32);\nRelay ventilador(23, "Ventilador");\n\nvoid setup() {\n  dht.begin();\n  ventilador.begin();\n}\n\nvoid loop() {\n  float temp = dht.readTemperature();\n  float hum = dht.readHumidity();\n  if (temp >= 30.0) {\n    ventilador.on();\n  } else {\n    ventilador.off();\n  }\n  delay(2000);\n}',
     },
   },
 
@@ -181,6 +182,7 @@ const EXAMPLES = [
       ],
       diagrama:
         'ESP32 GPIO21 (SDA) → BME280 SDA\nESP32 GPIO22 (SCL) → BME280 SCL\nESP32 3.3V → BME280 VCC\nESP32 GND → BME280 GND\nESP32 GPIO23 → Relay 1 IN1 (Bomba)\nESP32 GPIO22 → Relay 2 IN2 (Luz UV)',
+      code: 'BME280 bme(0x76);\nRelay bomba(23, "Bomba de riego");\nRelay luzUV(22, "Luz UV");\n\nvoid setup() {\n  bme.begin();\n  bomba.begin();\n  luzUV.begin();\n}\n\nvoid loop() {\n  float hum = bme.readHumidity();\n  float pres = bme.readPressure();\n  if (hum < 30.0) { bomba.on(); } else { bomba.off(); }\n  if (pres >= 1013.0) { luzUV.on(); } else { luzUV.off(); }\n  delay(2000);\n}',
     },
   },
 
@@ -226,6 +228,7 @@ const EXAMPLES = [
       ],
       diagrama:
         'ESP32 GPIO27 → PIR OUT\nPIR VCC → 5V\nPIR GND → GND\nESP32 GPIO13 → Buzzer I/O\nBuzzer VCC → 3.3V\nBuzzer GND → GND',
+      code: 'PIR pir(27);\nBuzzer buzzer(13);\n\nvoid setup() {\n  pir.begin();\n  buzzer.begin();\n}\n\nvoid loop() {\n  if (pir.motionDetected()) {\n    buzzer.beep(1000, 500);\n  }\n  delay(500);\n}',
     },
   },
 

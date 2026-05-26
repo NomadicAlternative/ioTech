@@ -5,6 +5,7 @@
 #include "io_driver.h"
 #include "io_driver_types.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <strings.h>
 #include "cJSON.h"
@@ -15,11 +16,28 @@ static const char *TAG = "io_driver";
 
 /* ── Internal state ───────────────────────────────────────────────── */
 
+/** Active driver entry — binds a loaded driver instance to its disambiguated name */
+typedef struct {
+    const driver_t *driver;
+    char            name[32];  /**< Disambiguated: "RELAY_23", "DHT22" */
+} active_entry_t;
+
 static const driver_t *s_registry[IO_DRIVER_MAX_REGISTRY];
 static uint8_t           s_registry_count = 0;
 
-static const driver_t *s_active[IO_DRIVER_MAX_ACTIVE];
-static uint8_t         s_active_count = 0;
+static active_entry_t s_active[IO_DRIVER_MAX_ACTIVE];
+static uint8_t        s_active_count = 0;
+
+/* ── Active list helpers ──────────────────────────────────────────── */
+
+static int find_active_index(const char *name) {
+    for (uint8_t i = 0; i < s_active_count; i++) {
+        if (strcasecmp(s_active[i].name, name) == 0) {
+            return (int)i;
+        }
+    }
+    return -1;
+}
 
 /* ── Conversion helpers ───────────────────────────────────────────── */
 
@@ -101,7 +119,7 @@ drv_err_t io_driver_load(const char *name, const driver_config_t *cfg)
         return DRV_ERR_STATE;
     }
 
-    /* Case-insensitive lookup */
+    /* Case-insensitive registry lookup */
     for (uint8_t i = 0; i < s_registry_count; i++) {
         const driver_t *drv = s_registry[i];
         if (drv->name && strcasecmp(drv->name, name) == 0) {
@@ -109,11 +127,48 @@ drv_err_t io_driver_load(const char *name, const driver_config_t *cfg)
                 ESP_LOGE(TAG, "Driver '%s' has NULL init", drv->name);
                 return DRV_ERR_INTERNAL;
             }
+
+            /* Determine active entry name */
+            char active_name[32];
+            int existing = find_active_index(name);
+
+            if (existing >= 0) {
+                if (drv->flags & DRV_FLAG_MULTI_INSTANCE) {
+                    /* Multi-instance: create disambiguated entry keyed by GPIO */
+                    snprintf(active_name, sizeof(active_name), "%s_%d",
+                             drv->name, cfg->gpio);
+                    /* Check for duplicate GPIO */
+                    if (find_active_index(active_name) >= 0) {
+                        ESP_LOGW(TAG, "Driver '%s' GPIO%d already loaded",
+                                 drv->name, cfg->gpio);
+                        return DRV_OK;
+                    }
+                } else {
+                    /* Single-instance: already loaded, no-op */
+                    ESP_LOGI(TAG, "Driver '%s' already loaded (single-instance)",
+                             drv->name);
+                    return DRV_OK;
+                }
+            } else {
+                /* First load */
+                if (drv->flags & DRV_FLAG_MULTI_INSTANCE) {
+                    /* Multi-instance: always use GPIO-suffixed name */
+                    snprintf(active_name, sizeof(active_name), "%s_%d",
+                             drv->name, cfg->gpio);
+                } else {
+                    snprintf(active_name, sizeof(active_name), "%s", drv->name);
+                }
+            }
+
             drv_err_t err = drv->init(cfg);
             if (err == DRV_OK) {
-                s_active[s_active_count++] = drv;
+                s_active[s_active_count].driver = drv;
+                strncpy(s_active[s_active_count].name, active_name,
+                        sizeof(s_active[0].name) - 1);
+                s_active[s_active_count].name[sizeof(s_active[0].name) - 1] = '\0';
+                s_active_count++;
                 ESP_LOGI(TAG, "Loaded driver: %s (active count: %u)",
-                         drv->name, s_active_count);
+                         active_name, s_active_count);
             } else {
                 ESP_LOGW(TAG, "Driver '%s' init failed: %s",
                          drv->name, drv_err_str(err));
@@ -136,15 +191,15 @@ struct cJSON *io_driver_collect_all(void)
     }
 
     for (uint8_t i = 0; i < s_active_count; i++) {
-        if (s_active[i]->read == NULL) continue;
+        if (s_active[i].driver->read == NULL) continue;
 
         driver_value_t values[DRV_MAX_VALUES];
         uint8_t count = 0;
-        drv_err_t err = s_active[i]->read(values, &count);
+        drv_err_t err = s_active[i].driver->read(values, &count);
 
         if (err != DRV_OK) {
             ESP_LOGW(TAG, "Driver '%s' read failed: %s (skipping)",
-                     s_active[i]->name ? s_active[i]->name : "?", drv_err_str(err));
+                     s_active[i].name, drv_err_str(err));
             continue;
         }
 
@@ -168,19 +223,56 @@ struct cJSON *io_driver_collect_all(void)
     return root;
 }
 
+/**
+ * Read values from a single active driver by case-insensitive name.
+ * Populates values[DRV_MAX_VALUES] and *count (0..DRV_MAX_VALUES).
+ *
+ * @return DRV_OK, DRV_ERR_NOT_FOUND (not active), or driver->read() error.
+ */
+drv_err_t io_driver_read_by_name(const char *name, driver_value_t *values, uint8_t *count)
+{
+    if (name == NULL || values == NULL || count == NULL) {
+        return DRV_ERR_ARG;
+    }
+
+    *count = 0;
+
+    for (uint8_t i = 0; i < s_active_count; i++) {
+        if (strcasecmp(s_active[i].name, name) == 0) {
+            if (s_active[i].driver->read == NULL) {
+                return DRV_ERR_NOT_SUPP;
+            }
+            return s_active[i].driver->read(values, count);
+        }
+    }
+
+    return DRV_ERR_NOT_FOUND;
+}
+
 drv_err_t io_driver_dispatch_command(const char *action_name, const void *arg)
 {
     if (action_name == NULL) {
         return DRV_ERR_ARG;
     }
 
-    /* Case-insensitive match against active driver names */
+    /* Case-insensitive match against active entry names (supports disambiguated) */
     for (uint8_t i = 0; i < s_active_count; i++) {
-        if (s_active[i]->name && strcasecmp(s_active[i]->name, action_name) == 0) {
-            if (s_active[i]->command == NULL) {
+        if (strcasecmp(s_active[i].name, action_name) == 0) {
+            if (s_active[i].driver->command == NULL) {
                 return DRV_ERR_NOT_SUPP;
             }
-            return s_active[i]->command(action_name, arg);
+            return s_active[i].driver->command(action_name, arg);
+        }
+    }
+
+    /* Fallback: match against driver->name for backward compat */
+    for (uint8_t i = 0; i < s_active_count; i++) {
+        if (s_active[i].driver->name &&
+            strcasecmp(s_active[i].driver->name, action_name) == 0) {
+            if (s_active[i].driver->command == NULL) {
+                return DRV_ERR_NOT_SUPP;
+            }
+            return s_active[i].driver->command(action_name, arg);
         }
     }
 
@@ -194,11 +286,11 @@ void io_driver_deinit_all(void)
 {
     /* Reverse load order */
     for (int i = (int)s_active_count - 1; i >= 0; i--) {
-        if (s_active[i]->deinit) {
-            drv_err_t err = s_active[i]->deinit();
+        if (s_active[i].driver->deinit) {
+            drv_err_t err = s_active[i].driver->deinit();
             if (err != DRV_OK) {
                 ESP_LOGW(TAG, "Driver '%s' deinit returned %s",
-                         s_active[i]->name ? s_active[i]->name : "?", drv_err_str(err));
+                         s_active[i].name, drv_err_str(err));
             }
         }
     }

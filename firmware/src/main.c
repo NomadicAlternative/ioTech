@@ -11,6 +11,13 @@
 
 /* Manual driver registration — required when IO_DRIVER_MANUAL_REGISTRY is set.
  * Include all linked driver vtable declarations. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern void user_setup(void);
+#ifdef __cplusplus
+}
+#endif
 #ifdef IO_DRIVER_MANUAL_REGISTRY
 extern const driver_t drv_dht22;
 extern const driver_t drv_relay;
@@ -72,6 +79,9 @@ void app_main(void)
 
     /* Initialize relay GPIOs — shim delegates to io_driver */
     relay_controller_init();
+
+    /* Call user_setup from user_app.cpp — initializes user-specified drivers */
+    user_setup();
 
     /* Start the central state machine task — it drives everything from here */
     sm_start();

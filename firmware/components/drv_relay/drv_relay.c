@@ -37,6 +37,32 @@ static drv_err_t relay_init(const driver_config_t *cfg)
         return DRV_ERR_ARG;
     }
 
+    if (channels == 1) {
+        /* Per-instance mode (multi-instance via DRV_FLAG_MULTI_INSTANCE):
+           use cfg->gpio directly. One channel = relay 1 always. */
+        uint8_t gpio = cfg->gpio;
+        if (gpio == DRV_GPIO_NONE) {
+            ESP_LOGE(TAG, "GPIO not configured for single-channel relay");
+            return DRV_ERR_ARG;
+        }
+
+        s_gpios[0] = gpio;
+        s_num_channels = 1;
+
+        esp_err_t err = pal_gpio_set_direction(gpio, PAL_GPIO_OUTPUT);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "pal_gpio_set_direction failed for GPIO %u: %d", gpio, (int)err);
+            return DRV_ERR_INTERNAL;
+        }
+        pal_gpio_set_level(gpio, 1); /* HIGH = OFF (active-LOW) */
+        s_shadow[0] = false;
+
+        s_ready = true;
+        ESP_LOGI(TAG, "RELAY initialized: single channel GPIO %u", gpio);
+        return DRV_OK;
+    }
+
+    /* Multi-channel mode (legacy): read from board pinmap */
     const board_pinmap_t *pinmap = io_board_get_pinmap();
     if (pinmap == NULL) {
         ESP_LOGE(TAG, "Board pinmap not initialized");
@@ -157,6 +183,7 @@ static drv_err_t relay_deinit(void)
 
 const driver_t drv_relay = {
     .name    = "RELAY",
+    .flags   = DRV_FLAG_MULTI_INSTANCE,
     .init    = relay_init,
     .read    = relay_read,
     .command = relay_command,

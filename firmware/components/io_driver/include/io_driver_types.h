@@ -81,6 +81,12 @@ typedef struct {
     void    *custom;        /**< Driver-specific config blob (DHT model, BME280 oversampling) */
 } driver_config_t;
 
+/* ── Driver flags ─────────────────────────────────────────────────── */
+
+/** Allow multiple loads of the same driver name with different GPIO configs.
+ *  Used by RELAY, SERVO, BUZZER, WS2812B. Single-instance sensors leave at 0. */
+#define DRV_FLAG_MULTI_INSTANCE 0x01
+
 /* ── Driver vtable ─────────────────────────────────────────────────── */
 
 /** Forward declaration */
@@ -93,6 +99,11 @@ struct driver_interface {
      * MUST be <= 16 chars and uppercase by convention.
      */
     const char *name;
+
+    /**
+     * Driver capability flags (DRV_FLAG_*). Zero for single-instance sensors.
+     */
+    uint8_t flags;
 
     /**
      * Initialize driver with resolved configuration.

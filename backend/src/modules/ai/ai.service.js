@@ -75,6 +75,123 @@ async function callLLM(prompt, boardId) {
 }
 
 /**
+ * Build C++ code string from the parsed configuration.
+ * Used by both rule-based fallback and LLM (when LLM omits code).
+ */
+function buildCppCode({
+  drivers,
+  rules,
+  lang,
+  sensorModel,
+  sensorGpio,
+  channels,
+  isBME,
+  isPIR,
+  isHCSR04,
+  board,
+}) {
+  const cppLines = [];
+  const esp = lang === 'es';
+
+  // ── Includes ──
+  cppLines.push('#include <iotech.hpp>');
+  cppLines.push('');
+
+  // ── Driver declarations ──
+  for (const d of drivers) {
+    if (d.model === 'RELAY') {
+      for (const ch of d.channels || []) {
+        cppLines.push(
+          `Relay ${ch.name.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase()}(${ch.gpio}, "${ch.name}");`
+        );
+      }
+    } else if (d.model === 'BME280') {
+      cppLines.push(`BME280 bme(${d.i2c_addr || '0x76'});`);
+    } else if (d.model === 'PIR') {
+      cppLines.push(`PIR pir(${d.gpio});`);
+    } else if (d.model === 'HC-SR04') {
+      cppLines.push(`HC_SR04 hcsr04(${d.gpio}, ${d.gpio2});`);
+    } else if (d.model === 'BUZZER') {
+      cppLines.push(`Buzzer buzzer(${d.gpio});`);
+    } else if (d.model !== 'RELAY') {
+      const varName = d.model.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      cppLines.push(`${d.model} ${varName}(${d.gpio || d.i2c_addr || ''});`);
+    }
+  }
+  cppLines.push('');
+
+  // ── setup() ──
+  cppLines.push('void setup() {');
+  for (const d of drivers) {
+    if (d.model === 'RELAY') {
+      for (const ch of d.channels || []) {
+        cppLines.push(`    ${ch.name.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase()}.begin();`);
+      }
+    } else if (d.model === 'BME280') {
+      cppLines.push('    bme.begin();');
+    } else if (d.model === 'PIR') {
+      cppLines.push('    pir.begin();');
+    } else if (d.model === 'HC-SR04') {
+      cppLines.push('    hcsr04.begin();');
+    } else if (d.model === 'BUZZER') {
+      cppLines.push('    buzzer.begin();');
+    } else if (d.model !== 'RELAY') {
+      cppLines.push(`    ${d.model.toLowerCase().replace(/[^a-z0-9]/g, '_')}.begin();`);
+    }
+  }
+  cppLines.push('}');
+  cppLines.push('');
+
+  // ── loop() ──
+  cppLines.push('void loop() {');
+  // Read sensor
+  if (sensorModel === 'BME280') {
+    cppLines.push('    float temp = bme.readTemperature();');
+    cppLines.push('    float hum  = bme.readHumidity();');
+    cppLines.push('    float pres = bme.readPressure();');
+  } else if (sensorModel === 'PIR') {
+    cppLines.push('    bool motion = pir.motionDetected();');
+  } else if (sensorModel === 'HC-SR04') {
+    cppLines.push('    float dist = hcsr04.readDistance();');
+  } else if (sensorModel === 'DHT22') {
+    cppLines.push('    float temp = dht22.readTemperature();');
+    cppLines.push('    float hum  = dht22.readHumidity();');
+  }
+
+  // Rules as if-statements
+  for (const rule of rules) {
+    const cond = rule.condition;
+    const dsKey = cond.datastream;
+    let varExpr;
+    if (dsKey === 'temperature') varExpr = 'temp';
+    else if (dsKey === 'humidity') varExpr = 'hum';
+    else if (dsKey === 'pressure') varExpr = 'pres';
+    else if (dsKey === 'motion') varExpr = 'motion';
+    else if (dsKey === 'distance') varExpr = 'dist';
+    else continue;
+
+    cppLines.push(`    if (${varExpr} ${cond.operator} ${cond.value}) {`);
+    for (const action of rule.actions) {
+      if (action.type === 'relay' && action.relay) {
+        const relayCh = channels.find((c) => c.num === action.relay);
+        if (relayCh) {
+          const varName = relayCh.name.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
+          cppLines.push(`        ${varName}.${action.state === 'on' ? 'on' : 'off'}();`);
+        }
+      } else if (action.type === 'buzzer') {
+        cppLines.push(`        buzzer.beep(${action.tone || 1000}, 500);`);
+      }
+    }
+    cppLines.push('    }');
+  }
+
+  cppLines.push('    delay(2000);');
+  cppLines.push('}');
+
+  return cppLines.join('\n');
+}
+
+/**
  * Rule-based fallback: parse the installer's input for keywords
  * and generate a basic config without LLM.
  */
@@ -323,6 +440,18 @@ function ruleBasedConfig(input, boardId) {
     datastreams,
     rules,
     diagrama: lines.join('\\n'),
+    code: buildCppCode({
+      drivers,
+      rules,
+      lang,
+      sensorModel,
+      sensorGpio,
+      channels,
+      isBME,
+      isPIR,
+      isHCSR04,
+      board,
+    }),
     _fallback: true,
   };
 }
@@ -333,6 +462,30 @@ function ruleBasedConfig(input, boardId) {
 async function configure(prompt, boardId) {
   const llmResult = await callLLM(prompt, boardId);
   const raw = llmResult && llmResult.template ? llmResult : ruleBasedConfig(prompt, boardId);
+
+  // If the LLM didn't return code (or we fell back to rules), generate it from config
+  if (!raw.code && raw.drivers && raw.drivers.length > 0) {
+    const board =
+      (boardId && require('./context/board-context').getBoard(boardId)) || getDefaultBoard();
+    const lang = detectLanguage(prompt);
+    raw.code = buildCppCode({
+      drivers: raw.drivers,
+      rules: raw.rules || [],
+      lang,
+      sensorModel: raw.drivers[0].model,
+      sensorGpio: raw.drivers[0].gpio,
+      channels: raw.drivers.find((d) => d.model === 'RELAY')?.channels || [],
+      isBME: raw.drivers.some((d) => d.model === 'BME280'),
+      isPIR: raw.drivers.some((d) => d.model === 'PIR'),
+      isHCSR04: raw.drivers.some((d) => d.model === 'HC-SR04'),
+      board,
+    });
+  }
+
+  // Ensure code always starts with the include directive
+  if (raw.code && !raw.code.trimStart().startsWith('#include <iotech.hpp>')) {
+    raw.code = '#include <iotech.hpp>\n\n' + raw.code.trimStart();
+  }
 
   // Validate against contract schema — reject invalid AI output
   const validation = validateAiConfig(raw);
@@ -419,6 +572,349 @@ async function apply(tenantId, config) {
 }
 
 /**
+ * Parse C++ code back into JSON config — regex fallback.
+ * Extracts driver instantiations, GPIO pins, and rule logic.
+ */
+function regexParseCpp(code, _board) {
+  const drivers = [];
+  const datastreams = [];
+  const rules = [];
+  const lines = [];
+
+  // Match: DHT22 dht(32);
+  const driverRegex =
+    /(DHT22|BME280|Relay|PIR|HC_SR04|Buzzer|SSD1306|LCD1602|WS2812B|Servo|DS18B20)\s+(\w+)\(([^)]*)\)/g;
+  let match;
+  const pinUsage = {};
+  while ((match = driverRegex.exec(code)) !== null) {
+    const model = match[1];
+    const instanceName = match[2];
+    const args = match[3];
+
+    if (model === 'Relay') {
+      const pinMatch = args.match(/(\d+)/);
+      const nameMatch = args.match(/"([^"]+)"/);
+      if (pinMatch) {
+        const gpio = parseInt(pinMatch[1]);
+        const name = nameMatch ? nameMatch[1] : `Relay ${gpio}`;
+        const channelNum = drivers.filter((d) => d.model === 'RELAY').length + 1;
+        drivers.push({ model: 'RELAY', channels: [{ num: channelNum, gpio, name }] });
+        datastreams.push({
+          key: `relay${channelNum}`,
+          name,
+          type: 'string',
+          unit: null,
+          direction: 'output',
+          driver_name: 'RELAY',
+          gpio,
+          i2c_addr: null,
+          config: { channel: channelNum },
+        });
+        if (pinUsage[gpio]) pinUsage[gpio].push(model);
+        else pinUsage[gpio] = [model];
+      }
+    } else if (model === 'BME280') {
+      const addrMatch = args.match(/0x([0-9a-fA-F]+)/);
+      const addr = addrMatch ? `0x${addrMatch[1]}` : '0x76';
+      drivers.push({ model: 'BME280', i2c_addr: addr });
+      datastreams.push(
+        {
+          key: 'temperature',
+          name: 'Temperatura',
+          type: 'number',
+          unit: '°C',
+          direction: 'input',
+          driver_name: 'BME280',
+          gpio: null,
+          i2c_addr: addr,
+          config: {},
+        },
+        {
+          key: 'humidity',
+          name: 'Humedad',
+          type: 'number',
+          unit: '%',
+          direction: 'input',
+          driver_name: 'BME280',
+          gpio: null,
+          i2c_addr: addr,
+          config: {},
+        },
+        {
+          key: 'pressure',
+          name: 'Presión',
+          type: 'number',
+          unit: 'hPa',
+          direction: 'input',
+          driver_name: 'BME280',
+          gpio: null,
+          i2c_addr: addr,
+          config: {},
+        }
+      );
+    } else {
+      const pinMatch = args.match(/(\d+)/);
+      if (pinMatch) {
+        const gpio = parseInt(pinMatch[1]);
+        drivers.push({ model, gpio });
+        if (pinUsage[gpio]) pinUsage[gpio].push(model);
+        else pinUsage[gpio] = [model];
+        if (model === 'DHT22') {
+          datastreams.push(
+            {
+              key: 'temperature',
+              name: 'Temperatura',
+              type: 'number',
+              unit: '°C',
+              direction: 'input',
+              driver_name: 'DHT22',
+              gpio,
+              i2c_addr: null,
+              config: {},
+            },
+            {
+              key: 'humidity',
+              name: 'Humedad',
+              type: 'number',
+              unit: '%',
+              direction: 'input',
+              driver_name: 'DHT22',
+              gpio,
+              i2c_addr: null,
+              config: {},
+            }
+          );
+        } else if (model === 'PIR') {
+          datastreams.push({
+            key: 'motion',
+            name: 'Movimiento',
+            type: 'boolean',
+            unit: null,
+            direction: 'input',
+            driver_name: 'PIR',
+            gpio,
+            i2c_addr: null,
+            config: {},
+          });
+        } else if (model === 'HC_SR04') {
+          datastreams.push({
+            key: 'distance',
+            name: 'Distancia',
+            type: 'number',
+            unit: 'cm',
+            direction: 'input',
+            driver_name: 'HC-SR04',
+            gpio,
+            i2c_addr: null,
+            config: {},
+          });
+        } else if (model === 'DS18B20') {
+          datastreams.push({
+            key: 'temperature',
+            name: 'Temperatura',
+            type: 'number',
+            unit: '°C',
+            direction: 'input',
+            driver_name: 'DS18B20',
+            gpio,
+            i2c_addr: null,
+            config: {},
+          });
+        }
+      }
+    }
+  }
+
+  // Detect rule logic: if (instance.method() op val) { instance.on/off() }
+  const ruleRegex = /if\s*\(\s*(\w+)\.(\w+)\(\)\s*([<>=!]+)\s*([\d.]+)\s*\)\s*\{([^}]+)\}/g;
+  while ((match = ruleRegex.exec(code)) !== null) {
+    const instanceName = match[1];
+    const methodName = match[2];
+    const operator = match[3];
+    const value = parseFloat(match[4]);
+    const body = match[5];
+
+    // Find which datastream this instance corresponds to
+    let dsKey = null;
+    for (const ds of datastreams) {
+      if (
+        ds.key === methodName.toLowerCase().replace('read', '').replace('motiondetected', 'motion')
+      )
+        break;
+      dsKey = ds.key;
+    }
+    // Simple heuristic: method name → datastream key
+    const methodLower = methodName.toLowerCase();
+    if (methodLower.includes('temperature')) dsKey = 'temperature';
+    else if (methodLower.includes('humidity')) dsKey = 'humidity';
+    else if (methodLower.includes('pressure')) dsKey = 'pressure';
+    else if (methodLower.includes('motion')) dsKey = 'motion';
+    else if (methodLower.includes('distance')) dsKey = 'distance';
+    else dsKey = methodLower.replace('read', '').replace('get', '');
+
+    const actions = [];
+    const onOffRegex = /(\w+)\.(on|off)\(\)/g;
+    let actMatch;
+    while ((actMatch = onOffRegex.exec(body)) !== null) {
+      const relayInstance = actMatch[1];
+      const state = actMatch[2];
+      // Find relay number
+      const relayInfo = drivers.find((d) => d.model === 'RELAY' && d.channels);
+      if (relayInfo) {
+        for (const ch of relayInfo.channels) {
+          // Approximate: match by being in the same rule
+          actions.push({ type: 'relay', relay: ch.num, state });
+        }
+      }
+    }
+
+    if (dsKey && actions.length > 0 && !isNaN(value)) {
+      rules.push({
+        name: dsKey.charAt(0).toUpperCase() + dsKey.slice(1),
+        description: '',
+        condition: { datastream: dsKey, operator, value },
+        actions: actions.slice(0, 1), // Take first matched action
+        cooldown_seconds: 60,
+      });
+    }
+  }
+
+  const driverNames = [...new Set(drivers.map((d) => d.model))].join(' + ');
+
+  // Build connection diagram from parsed drivers
+  const diagramLines = [];
+  for (const d of drivers) {
+    if (d.model === 'BME280' || d.model === 'SSD1306' || d.model === 'LCD1602') {
+      diagramLines.push(`ESP32 GPIO21 (SDA) → ${d.model} SDA`);
+      diagramLines.push(`ESP32 GPIO22 (SCL) → ${d.model} SCL`);
+      diagramLines.push(`ESP32 3.3V → ${d.model} VCC`);
+      diagramLines.push(`ESP32 GND → ${d.model} GND`);
+    } else if (d.model === 'DHT22') {
+      diagramLines.push(`ESP32 GPIO${d.gpio} → DHT22 DAT`);
+      diagramLines.push(`ESP32 3.3V → DHT22 VCC`);
+      diagramLines.push(`ESP32 GND → DHT22 GND`);
+      diagramLines.push('⚠️ Pull-up 10K entre VCC y DAT');
+    } else if (d.model === 'PIR') {
+      diagramLines.push(`ESP32 GPIO${d.gpio} → PIR OUT`);
+      diagramLines.push(`PIR VCC → 5V`);
+      diagramLines.push(`PIR GND → GND`);
+    } else if (d.model === 'HC-SR04') {
+      diagramLines.push(`ESP32 GPIO${d.gpio} → HC-SR04 TRIG`);
+      diagramLines.push(`ESP32 GPIO${d.gpio2} → HC-SR04 ECHO`);
+      diagramLines.push(`HC-SR04 VCC → 5V`);
+      diagramLines.push(`HC-SR04 GND → GND`);
+    } else if (d.model === 'BUZZER') {
+      diagramLines.push(`ESP32 GPIO${d.gpio} → Buzzer I/O`);
+      diagramLines.push(`Buzzer VCC → 3.3V`);
+      diagramLines.push(`Buzzer GND → GND`);
+    } else if (d.model === 'SERVO' || d.model === 'Servo') {
+      diagramLines.push(`ESP32 GPIO${d.gpio} → Servo señal`);
+      diagramLines.push(`Servo rojo → 5V`);
+      diagramLines.push(`Servo marrón → GND`);
+    } else if (d.model === 'DS18B20') {
+      diagramLines.push(`ESP32 GPIO${d.gpio} → DS18B20 DAT`);
+      diagramLines.push(`ESP32 3.3V → DS18B20 VCC`);
+      diagramLines.push(`ESP32 GND → DS18B20 GND`);
+      diagramLines.push('⚠️ Pull-up 4.7K entre VCC y DAT');
+    } else if (d.model === 'WS2812B') {
+      diagramLines.push(`ESP32 GPIO${d.gpio} → WS2812B DAT`);
+      diagramLines.push(`WS2812B VCC → 5V (fuente externa)`);
+      diagramLines.push(`WS2812B GND → GND`);
+    }
+  }
+  // Relay connections
+  for (const d of drivers) {
+    if (d.model === 'RELAY' && d.channels) {
+      for (const ch of d.channels) {
+        diagramLines.push(`ESP32 GPIO${ch.gpio} → ${ch.name}`);
+      }
+    }
+  }
+
+  return {
+    template: { name: `Config from code (${driverNames})`, description: 'Parsed from C++' },
+    drivers,
+    datastreams,
+    rules,
+    diagrama: diagramLines.join('\\n'),
+    diagnostics: {
+      drivers: drivers.map((d) => d.model),
+      pinConflicts: Object.entries(pinUsage)
+        .filter(([, v]) => v.length > 1)
+        .map(([k, v]) => ({ gpio: parseInt(k), drivers: v })),
+      rulesDetected: rules.length,
+    },
+  };
+}
+
+/**
+ * Sync: parse C++ code back into JSON config.
+ * Tries LLM first, falls back to regex parser.
+ */
+async function syncFromCpp(code, boardId) {
+  const board =
+    (boardId && require('./context/board-context').getBoard(boardId)) || getDefaultBoard();
+
+  // Try LLM first
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  if (apiKey) {
+    const syncPrompt = [
+      'You are parsing iotech C++ code. Extract the JSON configuration.',
+      'Look for: driver instantiations (DHT22, Relay, BME280, etc.), GPIO pins,',
+      'if/else conditions with .on()/.off() actions, and wiring.',
+      'Return ONLY valid JSON matching the iotech config schema.',
+    ].join(' ');
+
+    try {
+      const res = await fetch(
+        `${process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com'}/v1/chat/completions`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+          body: JSON.stringify({
+            model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+            messages: [
+              { role: 'system', content: syncPrompt },
+              { role: 'user', content: `Parse this C++ code:\n\n${code}` },
+            ],
+            temperature: 0.1,
+            max_tokens: 2000,
+            response_format: { type: 'json_object' },
+          }),
+        }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        const content = data.choices?.[0]?.message?.content;
+        if (content) {
+          try {
+            const parsed = JSON.parse(content);
+            const validation = validateAiConfig(parsed);
+            if (!validation.error) {
+              return { ...validation.value, _source: 'ai' };
+            }
+          } catch (e) {
+            /* fall through to regex */
+          }
+        }
+      }
+    } catch (err) {
+      logger.warn(`[ai.service] LLM sync failed, falling back to regex: ${err.message}`);
+    }
+  }
+
+  // Regex fallback
+  const parsed = regexParseCpp(code, board);
+  const validation = validateAiConfig(parsed);
+  if (validation.error) {
+    logger.error(`[ai.service] Regex sync produced invalid config: ${validation.error}`);
+    throw new ValidationError(validation.error);
+  }
+  return { ...validation.value, _source: 'regex-fallback' };
+}
+
+/**
  * Capability catalog — all supported components.
  * Keep in sync with firmware drivers.
  */
@@ -476,4 +972,4 @@ function getSystemPrompt() {
   });
 }
 
-module.exports = { configure, apply, getCatalog, getSystemPrompt };
+module.exports = { configure, apply, getCatalog, getSystemPrompt, syncFromCpp, regexParseCpp };
