@@ -30,7 +30,9 @@ async function provision(claimToken, hardwareId) {
     if (device.hardware_id && device.hardware_id !== hardwareId) {
       throw new UnprocessableEntityError('hardware_id_mismatch');
     }
-    logger.info(`[provisioning.service] Device ${device.id} re-provisioning (already active) — returning existing token`);
+    logger.info(
+      `[provisioning.service] Device ${device.id} re-provisioning (already active) — returning existing token`
+    );
     return {
       device_token: device.device_token,
       mqtt_url: getMqttUrl(),
@@ -56,11 +58,13 @@ async function provision(claimToken, hardwareId) {
     hardware_id: hardwareId,
   });
 
-  logger.info(`[provisioning.service] Device ${device.id} provisioned for tenant ${device.tenant_id}`);
+  logger.info(
+    `[provisioning.service] Device ${device.id} provisioned for tenant ${device.tenant_id}`
+  );
 
   return {
     device_token: deviceToken,
-    mqtt_url: MQTT_URL,
+    mqtt_url: getMqttUrl(),
     tenant_id: device.tenant_id,
     device_id: device.id,
   };
