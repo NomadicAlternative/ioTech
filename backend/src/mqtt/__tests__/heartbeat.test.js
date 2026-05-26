@@ -6,7 +6,12 @@
  */
 
 jest.mock('../../modules/devices/devices.model');
-jest.mock('../../shared/logger', () => ({ info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }));
+jest.mock('../../shared/logger', () => ({
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+}));
 jest.mock('../../socket/socketServer');
 jest.mock('../../modules/rules/rules.model');
 jest.mock('../../modules/rules/rulesEngine');
@@ -112,8 +117,10 @@ describe('handleHeartbeat()', () => {
     jest.advanceTimersByTime(OFFLINE_TIMEOUT_MS / 2);
     await Promise.resolve();
 
-    // Should NOT have fired yet — timer reset to full 60s on second heartbeat
-    expect(emitDeviceStatus).not.toHaveBeenCalled();
+    // Should NOT have fired offline yet — timer reset to full 60s on second heartbeat.
+    // emitDeviceStatus('online') was called on both heartbeats, so we check specifically
+    // that the 'offline' notification did NOT fire.
+    expect(emitDeviceStatus).not.toHaveBeenCalledWith(TENANT_ID, DEVICE_ID, 'offline');
   });
 
   it('does NOT emit offline when socket service is unavailable', async () => {
@@ -184,6 +191,11 @@ describe('handleHeartbeat() — rules engine hook', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Clear any lingering timers between tests
+    _timers.forEach((t, key) => {
+      clearTimeout(t);
+      _timers.delete(key);
+    });
     // Do NOT use fake timers here — the rules engine hook uses real promises
     // that need the microtask queue to flush properly
 
@@ -209,7 +221,7 @@ describe('handleHeartbeat() — rules engine hook', () => {
     await handleHeartbeat(TENANT_ID, DEVICE_ID, { status: 'online' });
 
     // Flush fire-and-forget promise
-    await new Promise(resolve => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
 
     // Rules should be fetched for the correct tenant and trigger type
     expect(rulesModel.findAllByTriggerType).toHaveBeenCalledWith(TENANT_ID, 'status');
@@ -224,22 +236,19 @@ describe('handleHeartbeat() — rules engine hook', () => {
 
     // Action should be executed
     expect(rulesEngine.executeAction).toHaveBeenCalledWith(STATUS_RULES[0], TENANT_ID);
-    expect(devicesService.sendCommand).toHaveBeenCalledWith(
-      TENANT_ID, DEVICE_ID,
-      { action: 'notify', payload: { message: 'Device online' } }
-    );
+    expect(devicesService.sendCommand).toHaveBeenCalledWith(TENANT_ID, DEVICE_ID, {
+      action: 'notify',
+      payload: { message: 'Device online' },
+    });
 
     // last_fired_at should be updated
-    expect(rulesModel.updateLastFired).toHaveBeenCalledWith(
-      'rule-status-1',
-      expect.any(Date)
-    );
+    expect(rulesModel.updateLastFired).toHaveBeenCalledWith('rule-status-1', expect.any(Date));
   });
 
   it('does NOT evaluate rules when payload is null (malformed)', async () => {
     await handleHeartbeat(TENANT_ID, DEVICE_ID, null);
 
-    await new Promise(resolve => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
 
     expect(rulesModel.findAllByTriggerType).not.toHaveBeenCalled();
     expect(rulesEngine.evaluateStatusRules).not.toHaveBeenCalled();
@@ -251,7 +260,7 @@ describe('handleHeartbeat() — rules engine hook', () => {
 
     await handleHeartbeat(TENANT_ID, DEVICE_ID, { status: 'online' });
 
-    await new Promise(resolve => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
 
     expect(rulesModel.findAllByTriggerType).toHaveBeenCalledWith(TENANT_ID, 'status');
     expect(rulesEngine.evaluateStatusRules).not.toHaveBeenCalled();
@@ -264,7 +273,7 @@ describe('handleHeartbeat() — rules engine hook', () => {
 
     await handleHeartbeat(TENANT_ID, DEVICE_ID, { status: 'online' });
 
-    await new Promise(resolve => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
 
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Failed to fetch status rules'),

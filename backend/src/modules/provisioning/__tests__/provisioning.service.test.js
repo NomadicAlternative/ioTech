@@ -6,13 +6,18 @@
  */
 
 jest.mock('../../devices/devices.model');
-jest.mock('../../../shared/logger', () => ({ info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }));
+jest.mock('../../../shared/logger', () => ({
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+}));
 
 const devicesModel = require('../../devices/devices.model');
 
 // Import service after mocks
 const provisioningService = require('../provisioning.service');
-const { NotFoundError, ConflictError, UnprocessableEntityError } = require('../../../shared/errors');
+const { NotFoundError, UnprocessableEntityError } = require('../../../shared/errors');
 
 const TENANT_ID = 'tenant-uuid-1';
 const DEVICE_ID = 'device-uuid-1';
@@ -36,7 +41,10 @@ describe('provisioningService.provision()', () => {
 
   it('returns device_token, mqtt_url, tenant_id on happy path', async () => {
     devicesModel.findByClaimToken.mockResolvedValue(makeClaimedDevice());
-    devicesModel.update.mockImplementation(async (id, data) => ({ ...makeClaimedDevice(), ...data }));
+    devicesModel.update.mockImplementation(async (id, data) => ({
+      ...makeClaimedDevice(),
+      ...data,
+    }));
 
     const result = await provisioningService.provision(CLAIM_TOKEN, HARDWARE_ID);
 
@@ -50,7 +58,10 @@ describe('provisioningService.provision()', () => {
 
   it('sets device status to "active" and clears claim_token', async () => {
     devicesModel.findByClaimToken.mockResolvedValue(makeClaimedDevice());
-    devicesModel.update.mockImplementation(async (id, data) => ({ ...makeClaimedDevice(), ...data }));
+    devicesModel.update.mockImplementation(async (id, data) => ({
+      ...makeClaimedDevice(),
+      ...data,
+    }));
 
     await provisioningService.provision(CLAIM_TOKEN, HARDWARE_ID);
 
@@ -63,18 +74,30 @@ describe('provisioningService.provision()', () => {
   it('throws NotFoundError when claim_token is not found (or already nulled)', async () => {
     devicesModel.findByClaimToken.mockResolvedValue(null);
 
-    await expect(provisioningService.provision('bad-token', HARDWARE_ID)).rejects.toThrow(NotFoundError);
+    await expect(provisioningService.provision('bad-token', HARDWARE_ID)).rejects.toThrow(
+      NotFoundError
+    );
   });
 
   it('throws UnprocessableEntityError when hardware_id does not match', async () => {
     devicesModel.findByClaimToken.mockResolvedValue(makeClaimedDevice());
 
-    await expect(provisioningService.provision(CLAIM_TOKEN, 'WRONG-HW-ID')).rejects.toThrow(UnprocessableEntityError);
+    await expect(provisioningService.provision(CLAIM_TOKEN, 'WRONG-HW-ID')).rejects.toThrow(
+      UnprocessableEntityError
+    );
   });
 
-  it('throws ConflictError when device is not in claimed status (already active)', async () => {
-    devicesModel.findByClaimToken.mockResolvedValue(makeClaimedDevice({ status: 'active' }));
+  it('returns existing token when device is already active (idempotent re-provisioning)', async () => {
+    const existingDevice = makeClaimedDevice({
+      status: 'active',
+      device_token: 'existing-token-123',
+    });
+    devicesModel.findByClaimToken.mockResolvedValue(existingDevice);
 
-    await expect(provisioningService.provision(CLAIM_TOKEN, HARDWARE_ID)).rejects.toThrow(ConflictError);
+    const result = await provisioningService.provision(CLAIM_TOKEN, HARDWARE_ID);
+
+    expect(result.device_token).toBe('existing-token-123');
+    expect(result.tenant_id).toBe(TENANT_ID);
+    expect(result.device_id).toBe(DEVICE_ID);
   });
 });

@@ -42,6 +42,7 @@ jest.mock('../../../shared/db/knex', () => {
   const _mockUpdate = jest.fn();
   const _chainable = {
     where: jest.fn().mockReturnThis(),
+    whereIn: jest.fn().mockReturnThis(),
     first: _mockFirst,
     update: _mockUpdate,
   };
@@ -157,9 +158,9 @@ describe('telemetryService.ingest()', () => {
   });
 
   it('throws ValidationError when deviceId is missing', async () => {
-    await expect(
-      telemetryService.ingest(TENANT_ID, undefined, { temp: 20 })
-    ).rejects.toThrow(ValidationError);
+    await expect(telemetryService.ingest(TENANT_ID, undefined, { temp: 20 })).rejects.toThrow(
+      ValidationError
+    );
 
     expect(mockDb).not.toHaveBeenCalled();
     expect(telemetryModel.insert).not.toHaveBeenCalled();
@@ -340,7 +341,7 @@ describe('telemetryService.ingest() — rules engine hook', () => {
     const result = await telemetryService.ingest(TENANT_ID, DEVICE_ID, { temperature: 35 });
 
     // Flush fire-and-forget promise
-    await new Promise(resolve => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
 
     // Ingest should still succeed
     expect(result).not.toBeNull();
@@ -363,10 +364,7 @@ describe('telemetryService.ingest() — rules engine hook', () => {
     });
 
     // last_fired_at was updated
-    expect(rulesModel.updateLastFired).toHaveBeenCalledWith(
-      'rule-temp-1',
-      expect.any(Date)
-    );
+    expect(rulesModel.updateLastFired).toHaveBeenCalledWith('rule-temp-1', expect.any(Date));
   });
 
   it('does NOT evaluate rules when telemetry is silently dropped', async () => {
@@ -386,7 +384,7 @@ describe('telemetryService.ingest() — rules engine hook', () => {
     await telemetryService.ingest(TENANT_ID, DEVICE_ID, { temperature: 25 });
 
     // Flush fire-and-forget promise
-    await new Promise(resolve => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
 
     expect(rulesModel.findAllByTriggerType).toHaveBeenCalledWith(TENANT_ID, 'threshold');
     expect(rulesEngine.evaluateThresholdRules).not.toHaveBeenCalled();
@@ -399,7 +397,7 @@ describe('telemetryService.ingest() — rules engine hook', () => {
     const result = await telemetryService.ingest(TENANT_ID, DEVICE_ID, { temperature: 35 });
 
     // Flush fire-and-forget promise
-    await new Promise(resolve => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
 
     expect(result).not.toBeNull();
     expect(telemetryModel.insert).toHaveBeenCalled();
@@ -418,7 +416,7 @@ describe('telemetryService.ingest() — rules engine hook', () => {
     devicesService.sendCommand.mockRejectedValue(new Error('MQTT not available'));
 
     const result = await telemetryService.ingest(TENANT_ID, DEVICE_ID, { temperature: 40 });
-    await new Promise(resolve => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
 
     expect(result).not.toBeNull();
     expect(logger.error).toHaveBeenCalledWith(
@@ -454,17 +452,13 @@ describe('telemetryService.query()', () => {
   it('throws NotFoundError when device does not belong to the tenant', async () => {
     mockFirst.mockResolvedValue(null);
 
-    await expect(
-      telemetryService.query(TENANT_ID, DEVICE_ID)
-    ).rejects.toThrow(NotFoundError);
+    await expect(telemetryService.query(TENANT_ID, DEVICE_ID)).rejects.toThrow(NotFoundError);
 
     expect(telemetryModel.findByDevice).not.toHaveBeenCalled();
   });
 
   it('throws ValidationError when deviceId is missing', async () => {
-    await expect(
-      telemetryService.query(TENANT_ID, undefined)
-    ).rejects.toThrow(ValidationError);
+    await expect(telemetryService.query(TENANT_ID, undefined)).rejects.toThrow(ValidationError);
   });
 
   it('passes through opts (from/to/limit) to the model', async () => {

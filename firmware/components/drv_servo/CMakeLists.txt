@@ -1,1 +1,1 @@
-idf_component_register(SRCS "drv_servo.c" INCLUDE_DIRS "include" REQUIRES io_driver driver cjson ledc)
+idf_component_register(SRCS "drv_servo.c" INCLUDE_DIRS "include" REQUIRES io_board io_driver driver json esp_driver_ledc)

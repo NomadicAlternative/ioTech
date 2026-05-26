@@ -89,12 +89,22 @@ describe('GET /devices — paginated list response', () => {
 
     expect(devicesService.list).toHaveBeenCalledWith(
       'tenant-uuid-paginate',
-      expect.objectContaining({ page: 2, limit: 10, sortBy: 'name', sortDir: 'desc' })
+      expect.objectContaining({
+        pagination: expect.objectContaining({
+          page: 2,
+          limit: 10,
+          sortBy: 'name',
+          sortDir: 'desc',
+        }),
+      })
     );
   });
 
   it('returns meta.totalPages=1 when total equals limit exactly', async () => {
-    devicesService.list.mockResolvedValue({ data: Array.from({ length: 10 }, (_, i) => ({ id: `d-${i}` })), total: 10 });
+    devicesService.list.mockResolvedValue({
+      data: Array.from({ length: 10 }, (_, i) => ({ id: `d-${i}` })),
+      total: 10,
+    });
 
     const res = await request(app).get('/devices?limit=10');
 

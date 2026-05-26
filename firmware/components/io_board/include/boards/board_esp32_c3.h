@@ -27,3 +27,7 @@
 #define BOARD_HCSR04_ECHO    0xFF
 #define BOARD_ONEWIRE_GPIO   0xFF  /* Not available */
 #define BOARD_BUZZER_GPIO    0xFF  /* Not available */
+
+/* Board peripheral constants: C3 has 14-bit LEDC, only 2 UARTs */
+#define BOARD_LEDC_TIMER_BIT  LEDC_TIMER_14_BIT
+#define BOARD_UART_NUM        1
