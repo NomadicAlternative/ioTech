@@ -24,3 +24,7 @@
 #define BOARD_HCSR04_ECHO    12
 #define BOARD_ONEWIRE_GPIO   13
 #define BOARD_BUZZER_GPIO    14
+
+/* Board peripheral constants: S3 has 14-bit LEDC, 3 UARTs */
+#define BOARD_LEDC_TIMER_BIT  LEDC_TIMER_14_BIT
+#define BOARD_UART_NUM        2

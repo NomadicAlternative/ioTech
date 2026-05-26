@@ -15,7 +15,7 @@ static drv_err_t dht11_init(const driver_config_t *cfg) {
     gpio_config(&c); ESP_LOGI(TAG, "DHT11 on GPIO %u", s_gpio); return DRV_OK;
 }
 static drv_err_t dht11_read(driver_value_t *v, uint8_t *n) {
-    if (!s_ready||!v||!n) return DRV_ERR_STATE; *n=0;
+    if (!s_ready||!v||!n){return DRV_ERR_STATE;}*n=0;
     uint8_t d[5]={0};
     gpio_set_direction(s_gpio, GPIO_MODE_OUTPUT);
     gpio_set_level(s_gpio,1); esp_rom_delay_us(250);

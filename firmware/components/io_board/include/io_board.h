@@ -10,6 +10,23 @@
 extern "C" {
 #endif
 
+/* ── Board peripheral constants (chip-specific) ────────────────────── */
+#if defined(BOARD_ESP32_DEVKIT)
+    #define BOARD_LEDC_TIMER_BIT  LEDC_TIMER_16_BIT
+    #define BOARD_UART_NUM        2
+#elif defined(BOARD_ESP32_S3)
+    #define BOARD_LEDC_TIMER_BIT  LEDC_TIMER_14_BIT
+    #define BOARD_UART_NUM        2
+#elif defined(BOARD_ESP32_C3)
+    #define BOARD_LEDC_TIMER_BIT  LEDC_TIMER_14_BIT
+    #define BOARD_UART_NUM        1
+#elif defined(BOARD_ESP32_CAM)
+    #define BOARD_LEDC_TIMER_BIT  LEDC_TIMER_16_BIT
+    #define BOARD_UART_NUM        2
+#else
+    #error "No board variant selected. Set -DBOARD_ESP32_* in platformio.ini."
+#endif
+
 #define BOARD_RELAY_MAX 8
 
 typedef struct {

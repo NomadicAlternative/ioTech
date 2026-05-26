@@ -60,6 +60,18 @@ drv_err_t io_driver_load_all_defaults(void);
 /* ── Runtime ───────────────────────────────────────────────────────── */
 
 /**
+ * Read values from a single active driver by name (case-insensitive).
+ * Lightweight alternative to io_driver_collect_all() — returns raw value
+ * array instead of heavy cJSON. Used by C++ wrappers for per-driver reads.
+ *
+ * @param name    Active driver name (or disambiguated "RELAY_23").
+ * @param values  OUT: array of driver_value_t (caller provides DRV_MAX_VALUES slots).
+ * @param count   OUT: number of values populated (0..DRV_MAX_VALUES).
+ * @return DRV_OK, DRV_ERR_NOT_FOUND, DRV_ERR_NOT_SUPP, or driver->read() error.
+ */
+drv_err_t io_driver_read_by_name(const char *name, driver_value_t *values, uint8_t *count);
+
+/**
  * Collect telemetry from all active drivers.
  * Returns a cJSON object suitable for mqtt_publish_telemetry().
  * Caller is responsible for cJSON_Delete() on the returned object.

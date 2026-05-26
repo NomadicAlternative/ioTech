@@ -27,3 +27,7 @@
 #define BOARD_HCSR04_ECHO    0xFF  /* No pin available */
 #define BOARD_ONEWIRE_GPIO   0xFF  /* No pin available */
 #define BOARD_BUZZER_GPIO    0xFF  /* No pin available */
+
+/* Board peripheral constants */
+#define BOARD_LEDC_TIMER_BIT  LEDC_TIMER_16_BIT
+#define BOARD_UART_NUM        2

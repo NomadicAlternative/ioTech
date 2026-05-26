@@ -13,7 +13,7 @@ static drv_err_t bme280_init(const driver_config_t *cfg){
     s_ready=(i2c_read_reg(0xD0)==0x60);ESP_LOGI(TAG,"BME280 I2C 0x%02X ready=%d",s_addr,s_ready);return s_ready?DRV_OK:DRV_ERR_NOT_FOUND;
 }
 static drv_err_t bme280_read(driver_value_t *v,uint8_t *n){
-    if(!s_ready||!v||!n)return DRV_ERR_STATE;*n=3;
+    if(!s_ready||!v||!n){return DRV_ERR_STATE;}*n=3;
     int32_t t=((int32_t)i2c_read_reg(0xFA)<<12)|((int32_t)i2c_read_reg(0xFB)<<4)|(i2c_read_reg(0xFC)>>4);
     int32_t h=((int32_t)i2c_read_reg(0xFD)<<8)|i2c_read_reg(0xFE);
     int32_t p=((int32_t)i2c_read_reg(0xF7)<<12)|((int32_t)i2c_read_reg(0xF8)<<4)|(i2c_read_reg(0xF9)>>4);

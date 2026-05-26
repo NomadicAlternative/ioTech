@@ -55,7 +55,7 @@ function makeApp() {
 
 const TENANT_ID = 'tenant-uuid-1';
 const DEVICE_ID = 'device-uuid-1';
-const VALID_COMMAND = { action: 'reboot', payload: { delay: 5 } };
+const VALID_COMMAND = { relay: 1, state: 'on' };
 
 describe('POST /api/devices/:id/command', () => {
   let app;
@@ -75,43 +75,40 @@ describe('POST /api/devices/:id/command', () => {
       res.status(401).json({ error: 'Unauthorized' });
     });
 
-    const res = await request(app)
-      .post(`/api/devices/${DEVICE_ID}/command`)
-      .send(VALID_COMMAND);
+    const res = await request(app).post(`/api/devices/${DEVICE_ID}/command`).send(VALID_COMMAND);
 
     expect(res.status).toBe(401);
   });
 
   // ── Happy path ────────────────────────────────────────────────────────────
 
-  it('returns 200 with ok:true and topic when command is sent', async () => {
+  it('returns 200 with ok:true and topic when relay command is sent', async () => {
     devicesService.sendCommand.mockResolvedValue({
       ok: true,
-      topic: `devices/${DEVICE_ID}/command`,
+      topic: `org/${TENANT_ID}/device/${DEVICE_ID}/command`,
     });
 
     const res = await request(app)
       .post(`/api/devices/${DEVICE_ID}/command`)
       .set('Authorization', 'Bearer valid-token')
-      .send(VALID_COMMAND);
+      .send({ relay: 2, state: 'off' });
 
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
-    expect(res.body.topic).toBe(`devices/${DEVICE_ID}/command`);
-    expect(devicesService.sendCommand).toHaveBeenCalledWith(
-      TENANT_ID,
-      DEVICE_ID,
-      VALID_COMMAND
-    );
+    expect(res.body.topic).toBe(`org/${TENANT_ID}/device/${DEVICE_ID}/command`);
+    expect(devicesService.sendCommand).toHaveBeenCalledWith(TENANT_ID, DEVICE_ID, {
+      relay: 2,
+      state: 'off',
+    });
   });
 
   // ── Schema validation ─────────────────────────────────────────────────────
 
-  it('returns 400 when action is missing', async () => {
+  it('returns 400 when relay is missing', async () => {
     const res = await request(app)
       .post(`/api/devices/${DEVICE_ID}/command`)
       .set('Authorization', 'Bearer valid-token')
-      .send({ payload: { foo: 'bar' } }); // no action
+      .send({ state: 'on' }); // no relay
 
     expect(res.status).toBe(400);
     expect(devicesService.sendCommand).not.toHaveBeenCalled();
@@ -136,26 +133,28 @@ describe('POST /api/devices/:id/command', () => {
     const res = await request(app)
       .post(`/api/devices/${DEVICE_ID}/command`)
       .set('Authorization', 'Bearer valid-token')
-      .send(VALID_COMMAND);
+      .send({ relay: 1, state: 'on' });
 
     expect(res.status).toBe(404);
   });
 
   // ── MQTT publish verification ──────────────────────────────────────────────
 
-  it('calls sendCommand with correct tenantId, deviceId, and command body', async () => {
-    devicesService.sendCommand.mockResolvedValue({ ok: true, topic: `devices/${DEVICE_ID}/command` });
+  it('calls sendCommand with correct tenantId, deviceId, and relay command body', async () => {
+    devicesService.sendCommand.mockResolvedValue({
+      ok: true,
+      topic: `org/${TENANT_ID}/device/${DEVICE_ID}/command`,
+    });
 
     await request(app)
       .post(`/api/devices/${DEVICE_ID}/command`)
       .set('Authorization', 'Bearer valid-token')
-      .send({ action: 'ota', payload: { url: 'https://cdn.example.com/fw.bin' } });
+      .send({ relay: 3, state: 'off' });
 
-    expect(devicesService.sendCommand).toHaveBeenCalledWith(
-      TENANT_ID,
-      DEVICE_ID,
-      { action: 'ota', payload: { url: 'https://cdn.example.com/fw.bin' } }
-    );
+    expect(devicesService.sendCommand).toHaveBeenCalledWith(TENANT_ID, DEVICE_ID, {
+      relay: 3,
+      state: 'off',
+    });
   });
 });
 
@@ -175,8 +174,9 @@ describe('devicesService.sendCommand() — MQTT unit', () => {
     await request(app)
       .post(`/api/devices/${DEVICE_ID}/command`)
       .set('Authorization', 'Bearer any')
-      .send({ action: 'ping' });
+      .send({ relay: 1, state: 'on' });
 
+    expect(devicesService.sendCommand).toHaveBeenCalled();
     const [tenantArg] = devicesService.sendCommand.mock.calls[0];
     expect(tenantArg).toBe(TENANT_ID);
   });

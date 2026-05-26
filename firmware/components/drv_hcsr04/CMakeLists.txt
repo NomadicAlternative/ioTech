@@ -1,1 +1,1 @@
-idf_component_register(SRCS "drv_hcsr04.c" INCLUDE_DIRS "include" REQUIRES io_driver driver cjson)
+idf_component_register(SRCS "drv_hcsr04.c" INCLUDE_DIRS "include" REQUIRES io_driver driver json)

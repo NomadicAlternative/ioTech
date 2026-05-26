@@ -29,9 +29,8 @@ const { initSocket, getSocketService } = require('../socketServer');
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function makeIo() {
-  // Fluent chain: io.to(room1).to(room2).emit(event, payload)
+  // Current implementation uses single chain: io.to(room).emit(event, payload)
   const chain = {
-    to: jest.fn().mockReturnThis(),
     emit: jest.fn(),
   };
 
@@ -187,7 +186,10 @@ describe('subscribe:device handler', () => {
 
     await subscribeHandler({ deviceId: 'unknown-id' });
 
-    expect(socket.emit).toHaveBeenCalledWith('error', expect.objectContaining({ code: 'DEVICE_NOT_FOUND' }));
+    expect(socket.emit).toHaveBeenCalledWith(
+      'error',
+      expect.objectContaining({ code: 'DEVICE_NOT_FOUND' })
+    );
   });
 });
 
@@ -208,13 +210,17 @@ describe('emitTelemetry()', () => {
     socketService = getSocketService();
   });
 
-  it('emits telemetry:new to the correct tenant+device room', () => {
-    const payload = { id: 'row1', deviceId: 'd1', data: { temp: 22 }, receivedAt: '2026-01-01T00:00:00Z' };
+  it('emits telemetry:new to the correct tenant room', () => {
+    const payload = {
+      id: 'row1',
+      deviceId: 'd1',
+      data: { temp: 22 },
+      receivedAt: '2026-01-01T00:00:00Z',
+    };
 
     socketService.emitTelemetry('t1', 'd1', payload.data, payload.receivedAt, payload.id);
 
     expect(mockIo.to).toHaveBeenCalledWith('tenant:t1');
-    expect(mockIo._chain.to).toHaveBeenCalledWith('device:d1');
     expect(mockIo._chain.emit).toHaveBeenCalledWith('telemetry:new', {
       id: 'row1',
       deviceId: 'd1',

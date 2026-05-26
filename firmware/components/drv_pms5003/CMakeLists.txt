@@ -1,1 +1,1 @@
-idf_component_register(SRCS "drv_pms5003.c" INCLUDE_DIRS "include" REQUIRES io_driver driver cjson driver/uart)
+idf_component_register(SRCS "drv_pms5003.c" INCLUDE_DIRS "include" REQUIRES io_board io_driver driver json esp_driver_uart)

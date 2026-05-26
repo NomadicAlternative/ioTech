@@ -1,1 +1,1 @@
-idf_component_register(SRCS "drv_button.c" INCLUDE_DIRS "include" REQUIRES io_driver driver cjson)
+idf_component_register(SRCS "drv_button.c" INCLUDE_DIRS "include" REQUIRES io_driver driver json)

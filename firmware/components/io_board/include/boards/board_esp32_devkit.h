@@ -27,3 +27,7 @@
 #define BOARD_HCSR04_ECHO    34   /* GPIO 34–39 are input-only */
 #define BOARD_ONEWIRE_GPIO   4
 #define BOARD_BUZZER_GPIO    13
+
+/* Board peripheral constants */
+#define BOARD_LEDC_TIMER_BIT  LEDC_TIMER_16_BIT
+#define BOARD_UART_NUM        2

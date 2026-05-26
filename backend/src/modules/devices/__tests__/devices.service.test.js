@@ -44,6 +44,12 @@ jest.mock('../../../shared/db/knex', () => {
   return _db;
 });
 
+// ─── Mock: shared/network ────────────────────────────────────────────────────
+const mockGetLocalIp = jest.fn(() => 'localhost');
+jest.mock('../../../shared/network', () => ({
+  getLocalIp: mockGetLocalIp,
+}));
+
 // ─── Mock: logger ─────────────────────────────────────────────────────────────
 jest.mock('../../../shared/logger', () => ({
   info: jest.fn(),
@@ -114,18 +120,18 @@ describe('devicesService.authenticate()', () => {
   it('throws UnauthorizedError when no device matches the token (invalid token)', async () => {
     mockFirst.mockResolvedValue(null);
 
-    await expect(
-      devicesService.authenticate(DEVICE_ID, 'invalid-token-xyz')
-    ).rejects.toThrow(UnauthorizedError);
+    await expect(devicesService.authenticate(DEVICE_ID, 'invalid-token-xyz')).rejects.toThrow(
+      UnauthorizedError
+    );
   });
 
   it('throws UnauthorizedError when device exists but is not active (inactive device)', async () => {
     // The where clause includes status:'active', so inactive device → null result
     mockFirst.mockResolvedValue(null);
 
-    await expect(
-      devicesService.authenticate(DEVICE_ID, DEVICE_TOKEN)
-    ).rejects.toThrow(UnauthorizedError);
+    await expect(devicesService.authenticate(DEVICE_ID, DEVICE_TOKEN)).rejects.toThrow(
+      UnauthorizedError
+    );
   });
 
   it('throws UnauthorizedError when device_id does not exist', async () => {
@@ -224,14 +230,18 @@ describe('devicesService.create()', () => {
 // ─── list() ───────────────────────────────────────────────────────────────────
 
 describe('devicesService.list()', () => {
-  it('delegates to devicesModel.findAll and count with tenantId, returns { data, total }', async () => {
+  it('delegates to devicesModel.findAll and count with tenantId and pagination, returns { data, total }', async () => {
     devicesModel.findAll.mockResolvedValue([makeDevice()]);
     devicesModel.count.mockResolvedValue(1);
 
-    const result = await devicesService.list(TENANT_ID, { page: 1, limit: 20, sortBy: null, sortDir: 'asc' });
+    const result = await devicesService.list(TENANT_ID, { pagination: { page: 1, limit: 20 } });
 
-    expect(devicesModel.findAll).toHaveBeenCalledWith(TENANT_ID, expect.objectContaining({ page: 1, limit: 20 }));
-    expect(devicesModel.count).toHaveBeenCalledWith(TENANT_ID);
+    expect(devicesModel.findAll).toHaveBeenCalledWith(
+      TENANT_ID,
+      expect.objectContaining({ page: 1, limit: 20 }),
+      undefined
+    );
+    expect(devicesModel.count).toHaveBeenCalledWith(TENANT_ID, undefined);
     expect(result).toEqual({ data: [expect.objectContaining({ id: DEVICE_ID })], total: 1 });
   });
 });
@@ -292,24 +302,18 @@ describe('devicesService.getProvisioningCredentials()', () => {
   it('throws NotFoundError when device does not belong to tenant', async () => {
     devicesModel.findById.mockResolvedValue(null);
 
-    await expect(
-      devicesService.getProvisioningCredentials(TENANT_ID, DEVICE_ID)
-    ).rejects.toThrow(NotFoundError);
+    await expect(devicesService.getProvisioningCredentials(TENANT_ID, DEVICE_ID)).rejects.toThrow(
+      NotFoundError
+    );
   });
 
-  it('falls back to localhost URLs when env vars are not set', async () => {
+  it('returns URLs with local IP address from getLocalIp()', async () => {
     devicesModel.findById.mockResolvedValue(makeDevice());
-    const savedBackend = process.env.BACKEND_URL;
-    const savedMqtt = process.env.MQTT_BROKER_URL;
-    delete process.env.BACKEND_URL;
-    delete process.env.MQTT_BROKER_URL;
+    mockGetLocalIp.mockReturnValue('localhost');
 
     const result = await devicesService.getProvisioningCredentials(TENANT_ID, DEVICE_ID);
 
     expect(result.backend_url).toMatch(/localhost/);
     expect(result.mqtt_url).toMatch(/localhost/);
-
-    process.env.BACKEND_URL = savedBackend;
-    process.env.MQTT_BROKER_URL = savedMqtt;
   });
 });

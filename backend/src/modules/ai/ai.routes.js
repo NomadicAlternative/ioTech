@@ -73,4 +73,36 @@ router.post('/apply', async (req, res, next) => {
   }
 });
 
+/**
+ * POST /api/ai/sync
+ * Parse C++ code back into JSON configuration.
+ *
+ * Body: { code: "DHT22 dht(32);\n...", boardId?: "ESP32_DEVKIT" }
+ * Returns: { config, _source }
+ */
+router.post('/sync', async (req, res, next) => {
+  try {
+    const { code, boardId } = req.body;
+    if (!code || !code.trim()) {
+      return res.status(400).json({
+        error: { code: 'VALIDATION_ERROR', message: 'code is required', status: 400 },
+      });
+    }
+
+    // Basic structural check: balanced braces
+    const openBraces = (code.match(/\{/g) || []).length;
+    const closeBraces = (code.match(/\}/g) || []).length;
+    if (openBraces !== closeBraces) {
+      return res.status(422).json({
+        error: { code: 'PARSE_ERROR', message: 'Unbalanced braces in C++ code', status: 422 },
+      });
+    }
+
+    const result = await aiService.syncFromCpp(code.trim(), boardId);
+    res.json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

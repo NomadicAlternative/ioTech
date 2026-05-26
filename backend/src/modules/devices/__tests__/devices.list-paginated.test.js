@@ -39,16 +39,18 @@ describe('devicesService.list() with pagination', () => {
     jest.clearAllMocks();
   });
 
-  it('calls findAll and count in parallel and returns { data, total }', async () => {
-    const devices = [{ id: 'd1' }, { id: 'd2' }];
-    devicesModel.findAll.mockResolvedValue(devices);
+  it('calls findAll and count in parallel and returns { data, total } with camelized devices', async () => {
+    const rawDevices = [{ id: 'd1' }, { id: 'd2' }];
+    devicesModel.findAll.mockResolvedValue(rawDevices);
     devicesModel.count.mockResolvedValue(45);
 
-    const result = await devicesService.list(TENANT_ID, PAGINATION);
+    const result = await devicesService.list(TENANT_ID, { pagination: PAGINATION });
 
-    expect(devicesModel.findAll).toHaveBeenCalledWith(TENANT_ID, PAGINATION);
-    expect(devicesModel.count).toHaveBeenCalledWith(TENANT_ID);
-    expect(result).toEqual({ data: devices, total: 45 });
+    expect(devicesModel.findAll).toHaveBeenCalledWith(TENANT_ID, PAGINATION, undefined);
+    expect(devicesModel.count).toHaveBeenCalledWith(TENANT_ID, undefined);
+    expect(result.total).toBe(45);
+    expect(result.data).toHaveLength(2);
+    expect(result.data[0]).toMatchObject({ id: 'd1' });
   });
 
   it('passes pagination object to findAll', async () => {
@@ -56,16 +58,16 @@ describe('devicesService.list() with pagination', () => {
     devicesModel.findAll.mockResolvedValue([]);
     devicesModel.count.mockResolvedValue(0);
 
-    await devicesService.list(TENANT_ID, pagination);
+    await devicesService.list(TENANT_ID, { pagination });
 
-    expect(devicesModel.findAll).toHaveBeenCalledWith(TENANT_ID, pagination);
+    expect(devicesModel.findAll).toHaveBeenCalledWith(TENANT_ID, pagination, undefined);
   });
 
   it('returns total of 0 when no devices exist', async () => {
     devicesModel.findAll.mockResolvedValue([]);
     devicesModel.count.mockResolvedValue(0);
 
-    const result = await devicesService.list(TENANT_ID, PAGINATION);
+    const result = await devicesService.list(TENANT_ID, { pagination: PAGINATION });
 
     expect(result).toEqual({ data: [], total: 0 });
   });

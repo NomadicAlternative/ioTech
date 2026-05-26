@@ -146,7 +146,9 @@ describe('deviceTemplatesService.create()', () => {
       datastreams,
     });
 
-    expect(templatesModel.insert).toHaveBeenCalledWith(expect.objectContaining({ datastreams }));
+    expect(templatesModel.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ datastreams: JSON.stringify(datastreams) })
+    );
     expect(result).toMatchObject({ id: 'tmpl-uuid-1' });
   });
 
@@ -154,7 +156,7 @@ describe('deviceTemplatesService.create()', () => {
     await deviceTemplatesService.create(TENANT_ID, { name: 'Basic Template' });
 
     expect(templatesModel.insert).toHaveBeenCalledWith(
-      expect.objectContaining({ datastreams: [] })
+      expect.objectContaining({ datastreams: '[]' })
     );
   });
 
@@ -202,7 +204,7 @@ describe('deviceTemplatesService.update()', () => {
 
     expect(templatesModel.update).toHaveBeenCalledWith(
       'tmpl-uuid-1',
-      expect.objectContaining({ datastreams })
+      expect.objectContaining({ datastreams: JSON.stringify(datastreams) })
     );
     expect(result).toMatchObject({ name: 'Updated' });
   });
