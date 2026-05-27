@@ -2,6 +2,8 @@
   "buildCommand": "npx vite build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "framework": "vite"
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/((?!api|_next|_vercel|.*\\..*).*)", "destination": "/index.html" }
+  ]
 }
-
