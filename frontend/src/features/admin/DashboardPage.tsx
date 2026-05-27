@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Users, Cpu, Activity, Building2 } from 'lucide-react'
 import { fetchDashboard, type DashboardKpi } from './adminApi'
+import { SystemHealthPanel } from './SystemHealthPanel'
 
 interface KpiCard {
   labelKey: string
@@ -94,6 +95,7 @@ export function DashboardPage() {
       )}
 
       {!loading && !error && kpis && (
+        <>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {cards.map((card) => (
             <div
@@ -114,6 +116,8 @@ export function DashboardPage() {
             </div>
           ))}
         </div>
+        <SystemHealthPanel />
+        </>
       )}
     </div>
   )

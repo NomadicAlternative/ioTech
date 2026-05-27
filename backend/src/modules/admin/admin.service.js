@@ -237,4 +237,115 @@ async function deleteTenant(id) {
   return { deleted: true, summary };
 }
 
-module.exports = { listTenants, createTenant, resetPassword, getDashboard, getTenantDetail, deleteTenant };
+/**
+ * Get system health metrics for the super-admin dashboard.
+ * Queries PostgreSQL for DB size, active connections, and Node.js process metrics.
+ *
+ * Thresholds are configurable via env vars:
+ *   DB_SIZE_WARNING_MB  (default: 300) — > yields "warning"
+ *   DB_SIZE_CRITICAL_MB (default: 425) — > yields "critical"
+ *   DB_SIZE_LIMIT_MB    (default: 500) — reference ceiling
+ *   CONNECTION_WARNING  (default: 14)  — > yields "warning"
+ *   CONNECTION_CRITICAL (default: 18)  — > yields "critical"
+ *   MEMORY_WARNING_MB   (default: 350) — > yields "warning"
+ *   MEMORY_CRITICAL_MB  (default: 460) — > yields "critical"
+ */
+async function getSystemHealth() {
+  const thresholds = {
+    dbSizeWarning: Number(process.env.DB_SIZE_WARNING_MB) || 300,
+    dbSizeCritical: Number(process.env.DB_SIZE_CRITICAL_MB) || 425,
+    dbSizeLimit: Number(process.env.DB_SIZE_LIMIT_MB) || 500,
+    connectionWarning: Number(process.env.CONNECTION_WARNING) || 14,
+    connectionCritical: Number(process.env.CONNECTION_CRITICAL) || 18,
+    memoryWarning: Number(process.env.MEMORY_WARNING_MB) || 350,
+    memoryCritical: Number(process.env.MEMORY_CRITICAL_MB) || 460,
+  };
+
+  // Database metrics
+  const { rows: dbSizeRows } = await db.raw('SELECT pg_database_size(current_database()) AS bytes');
+  const dbSizeBytes = parseInt(dbSizeRows[0].bytes, 10);
+  const dbSizeMB = Math.round(dbSizeBytes / (1024 * 1024));
+
+  const { rows: connRows } = await db.raw('SELECT count(*)::int AS active FROM pg_stat_activity WHERE state = \'active\'');
+  const activeConnections = connRows[0].active;
+
+  // Table-level stats
+  const { rows: tableRows } = await db.raw(`
+    SELECT relname AS table_name,
+           pg_size_pretty(pg_total_relation_size(relid)) AS size,
+           n_live_tup::int AS rows
+    FROM pg_stat_user_tables
+    ORDER BY pg_total_relation_size(relid) DESC
+    LIMIT 5
+  `);
+
+  // Backend process metrics
+  const memUsage = process.memoryUsage();
+  const heapUsedMB = Math.round(memUsage.heapUsed / (1024 * 1024));
+  const uptimeSeconds = Math.floor(process.uptime());
+
+  // Determine alert levels
+  const dbPercent = Math.round((dbSizeMB / thresholds.dbSizeLimit) * 100);
+  const dbLevel = dbSizeMB >= thresholds.dbSizeCritical ? 'critical'
+    : dbSizeMB >= thresholds.dbSizeWarning ? 'warning' : 'healthy';
+
+  const connPercent = Math.round((activeConnections / (Number(process.env.DB_POOL_MAX) || 20)) * 100);
+  const connLevel = activeConnections >= thresholds.connectionCritical ? 'critical'
+    : activeConnections >= thresholds.connectionWarning ? 'warning' : 'healthy';
+
+  const memPercent = Math.round((heapUsedMB / thresholds.memoryCritical) * 100);
+  const memLevel = heapUsedMB >= thresholds.memoryCritical ? 'critical'
+    : heapUsedMB >= thresholds.memoryWarning ? 'warning' : 'healthy';
+
+  // Overall status: worst of the three
+  const levels = { critical: 3, warning: 2, healthy: 1 };
+  const overallLevel = [dbLevel, connLevel, memLevel]
+    .reduce((worst, l) => levels[l] > levels[worst] ? l : worst, 'healthy');
+
+  const alerts = [];
+  if (dbLevel === 'critical') alerts.push({ metric: 'database', level: 'critical', message: `DB at ${dbSizeMB}MB (${dbPercent}%) — upgrade Neon now` });
+  else if (dbLevel === 'warning') alerts.push({ metric: 'database', level: 'warning', message: `DB at ${dbSizeMB}MB (${dbPercent}%) — plan upgrade soon` });
+  if (connLevel === 'critical') alerts.push({ metric: 'connections', level: 'critical', message: `${activeConnections} active connections — near pool limit` });
+  if (memLevel === 'critical') alerts.push({ metric: 'backend', level: 'critical', message: `Backend memory at ${heapUsedMB}MB — possible leak` });
+
+  return {
+    status: overallLevel,
+    sampled_at: new Date().toISOString(),
+    database: {
+      size_mb: dbSizeMB,
+      size_limit_mb: thresholds.dbSizeLimit,
+      percent: dbPercent,
+      level: dbLevel,
+      active_connections: activeConnections,
+      connection_limit: Number(process.env.DB_POOL_MAX) || 20,
+      connection_percent: connPercent,
+      connection_level: connLevel,
+      largest_tables: tableRows,
+    },
+    backend: {
+      heap_mb: heapUsedMB,
+      heap_percent: memPercent,
+      heap_level: memLevel,
+      uptime_seconds: uptimeSeconds,
+      uptime_human: formatUptime(uptimeSeconds),
+      node_version: process.version,
+      env: process.env.NODE_ENV || 'development',
+    },
+    alerts,
+  };
+}
+
+function formatUptime(seconds) {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  const parts = [];
+  if (d) parts.push(`${d}d`);
+  if (h) parts.push(`${h}h`);
+  if (m) parts.push(`${m}m`);
+  parts.push(`${s}s`);
+  return parts.join(' ');
+}
+
+module.exports = { listTenants, createTenant, resetPassword, getDashboard, getTenantDetail, deleteTenant, getSystemHealth };

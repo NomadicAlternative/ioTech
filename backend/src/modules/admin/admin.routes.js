@@ -24,7 +24,7 @@ router.use(authGuard, superAdmin);
  *       200:
  *         description: List of all tenants
  */
-router.get('/tenants', async (req, res, next) => {
+router.get('/tenants', async (_req, res, next) => {
   try {
     const tenants = await adminService.listTenants();
     res.json({ data: tenants });
@@ -122,7 +122,7 @@ router.post('/tenants/:id/reset-password', async (req, res, next) => {
  */
 router.get('/dashboard', async (req, res, next) => {
   try {
-    const { error, value } = adminSchemas.dashboardQuery.validate(req.query);
+    const { error } = adminSchemas.dashboardQuery.validate(req.query);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
@@ -192,6 +192,28 @@ router.delete('/tenants/:id', async (req, res, next) => {
   try {
     const result = await adminService.deleteTenant(req.params.id);
     res.json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @openapi
+ * /api/admin/system-health:
+ *   get:
+ *     summary: Get system health metrics (super-admin only)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: System health metrics with alert levels
+ */
+router.get('/system-health', async (_req, res, next) => {
+  try {
+    const data = await adminService.getSystemHealth();
+    res.json({ data });
   } catch (err) {
     next(err);
   }

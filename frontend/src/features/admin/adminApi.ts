@@ -74,3 +74,52 @@ export async function deleteTenant(id: string): Promise<{ deleted: boolean; summ
   const res = await api.delete<{ data: { deleted: boolean; summary: Record<string, number> } }>(`/api/admin/tenants/${id}`)
   return res.data.data
 }
+
+// ─── System Health ──────────────────────────────────────────────────────────
+
+export interface TableStat {
+  table_name: string
+  size: string
+  rows: number
+}
+
+export interface DatabaseHealth {
+  size_mb: number
+  size_limit_mb: number
+  percent: number
+  level: 'healthy' | 'warning' | 'critical'
+  active_connections: number
+  connection_limit: number
+  connection_percent: number
+  connection_level: 'healthy' | 'warning' | 'critical'
+  largest_tables: TableStat[]
+}
+
+export interface BackendHealth {
+  heap_mb: number
+  heap_percent: number
+  heap_level: 'healthy' | 'warning' | 'critical'
+  uptime_seconds: number
+  uptime_human: string
+  node_version: string
+  env: string
+}
+
+export interface HealthAlert {
+  metric: string
+  level: 'warning' | 'critical'
+  message: string
+}
+
+export interface SystemHealth {
+  status: 'healthy' | 'warning' | 'critical'
+  sampled_at: string
+  database: DatabaseHealth
+  backend: BackendHealth
+  alerts: HealthAlert[]
+}
+
+export async function fetchSystemHealth(): Promise<SystemHealth> {
+  const res = await api.get<{ data: SystemHealth }>('/api/admin/system-health')
+  return res.data.data
+}
