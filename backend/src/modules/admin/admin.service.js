@@ -31,7 +31,9 @@ async function listTenants() {
 
   // Build lookup maps
   const adminByTenant = {};
-  adminUsers.forEach((u) => { adminByTenant[u.tenant_id] = u.email; });
+  adminUsers.forEach((u) => {
+    adminByTenant[u.tenant_id] = u.email;
+  });
 
   const clientsByTenant = {};
   clients.forEach((c) => {
@@ -96,7 +98,7 @@ async function createTenant({ name, email, password }) {
 
   return {
     tenant: { id: tenantId, name, email },
-    credentials: { email, password },  // Only returned on creation — show to super-admin
+    credentials: { email, password }, // Only returned on creation — show to super-admin
   };
 }
 
@@ -116,7 +118,9 @@ async function resetPassword(tenantId, newPassword) {
   }
 
   const passwordHash = await bcrypt.hash(newPassword, 10);
-  await db('users').where({ id: user.id }).update({ password_hash: passwordHash, updated_at: new Date() });
+  await db('users')
+    .where({ id: user.id })
+    .update({ password_hash: passwordHash, updated_at: new Date() });
 
   logger.info(`[admin.service] Reset password for tenant "${tenant.name}" user ${user.email}`);
 
@@ -204,7 +208,9 @@ async function deleteTenant(id) {
     summary.firmware = await trx('firmware_versions').where({ tenant_id: id }).del();
 
     // 4. Dashboards + dashboard_clients
-    const dashboardIds = (await trx('dashboards').where({ installer_id: id }).select('id')).map((d) => d.id);
+    const dashboardIds = (await trx('dashboards').where({ installer_id: id }).select('id')).map(
+      (d) => d.id
+    );
     if (dashboardIds.length > 0) {
       await trx('dashboard_clients').whereIn('dashboard_id', dashboardIds).del();
     }
@@ -232,7 +238,9 @@ async function deleteTenant(id) {
     await trx('tenants').where({ id }).del();
   });
 
-  logger.warn(`[admin.service] Deleted tenant "${tenant.name}" (${id}) — telemetry:${summary.telemetry}, rules:${summary.rules}, firmware:${summary.firmware}, dashboards:${summary.dashboards}, devices:${summary.devices}, templates:${summary.templates}, clients:${summary.clients}, users:${summary.users}`);
+  logger.warn(
+    `[admin.service] Deleted tenant "${tenant.name}" (${id}) — telemetry:${summary.telemetry}, rules:${summary.rules}, firmware:${summary.firmware}, dashboards:${summary.dashboards}, devices:${summary.devices}, templates:${summary.templates}, clients:${summary.clients}, users:${summary.users}`
+  );
 
   return { deleted: true, summary };
 }
@@ -259,6 +267,10 @@ async function getSystemHealth() {
     connectionCritical: Number(process.env.CONNECTION_CRITICAL) || 18,
     memoryWarning: Number(process.env.MEMORY_WARNING_MB) || 350,
     memoryCritical: Number(process.env.MEMORY_CRITICAL_MB) || 460,
+    multiRegionInstallersWarning: Number(process.env.MULTI_REGION_INSTALLERS_WARNING) || 5,
+    multiRegionInstallersCritical: Number(process.env.MULTI_REGION_INSTALLERS_CRITICAL) || 15,
+    multiRegionDevicesWarning: Number(process.env.MULTI_REGION_DEVICES_WARNING) || 50,
+    multiRegionDevicesCritical: Number(process.env.MULTI_REGION_DEVICES_CRITICAL) || 200,
   };
 
   // Database metrics
@@ -266,7 +278,9 @@ async function getSystemHealth() {
   const dbSizeBytes = parseInt(dbSizeRows[0].bytes, 10);
   const dbSizeMB = Math.round(dbSizeBytes / (1024 * 1024));
 
-  const { rows: connRows } = await db.raw('SELECT count(*)::int AS active FROM pg_stat_activity WHERE state = \'active\'');
+  const { rows: connRows } = await db.raw(
+    "SELECT count(*)::int AS active FROM pg_stat_activity WHERE state = 'active'"
+  );
   const activeConnections = connRows[0].active;
 
   // Table-level stats
@@ -286,27 +300,91 @@ async function getSystemHealth() {
 
   // Determine alert levels
   const dbPercent = Math.round((dbSizeMB / thresholds.dbSizeLimit) * 100);
-  const dbLevel = dbSizeMB >= thresholds.dbSizeCritical ? 'critical'
-    : dbSizeMB >= thresholds.dbSizeWarning ? 'warning' : 'healthy';
+  const dbLevel =
+    dbSizeMB >= thresholds.dbSizeCritical
+      ? 'critical'
+      : dbSizeMB >= thresholds.dbSizeWarning
+        ? 'warning'
+        : 'healthy';
 
-  const connPercent = Math.round((activeConnections / (Number(process.env.DB_POOL_MAX) || 20)) * 100);
-  const connLevel = activeConnections >= thresholds.connectionCritical ? 'critical'
-    : activeConnections >= thresholds.connectionWarning ? 'warning' : 'healthy';
+  const connPercent = Math.round(
+    (activeConnections / (Number(process.env.DB_POOL_MAX) || 20)) * 100
+  );
+  const connLevel =
+    activeConnections >= thresholds.connectionCritical
+      ? 'critical'
+      : activeConnections >= thresholds.connectionWarning
+        ? 'warning'
+        : 'healthy';
 
   const memPercent = Math.round((heapUsedMB / thresholds.memoryCritical) * 100);
-  const memLevel = heapUsedMB >= thresholds.memoryCritical ? 'critical'
-    : heapUsedMB >= thresholds.memoryWarning ? 'warning' : 'healthy';
+  const memLevel =
+    heapUsedMB >= thresholds.memoryCritical
+      ? 'critical'
+      : heapUsedMB >= thresholds.memoryWarning
+        ? 'warning'
+        : 'healthy';
 
-  // Overall status: worst of the three
+  // Multi-region readiness (based on installer + device counts)
+  const parseCount = (row) => (row && row.count ? parseInt(row.count, 10) : 0);
+  const [tenantsRow, devicesRow] = await Promise.all([
+    db('tenants').count().first(),
+    db('devices').count().first(),
+  ]);
+  const totalInstallers = parseCount(tenantsRow);
+  const totalDevices = parseCount(devicesRow);
+
+  const multiRegionLevel =
+    totalInstallers >= thresholds.multiRegionInstallersCritical || totalDevices >= thresholds.multiRegionDevicesCritical
+      ? 'critical'
+      : totalInstallers >= thresholds.multiRegionInstallersWarning || totalDevices >= thresholds.multiRegionDevicesWarning
+        ? 'warning'
+        : 'healthy';
+
+  // Overall status: worst of all four
   const levels = { critical: 3, warning: 2, healthy: 1 };
-  const overallLevel = [dbLevel, connLevel, memLevel]
-    .reduce((worst, l) => levels[l] > levels[worst] ? l : worst, 'healthy');
+  const overallLevel = [dbLevel, connLevel, memLevel, multiRegionLevel].reduce(
+    (worst, l) => (levels[l] > levels[worst] ? l : worst),
+    'healthy'
+  );
 
   const alerts = [];
-  if (dbLevel === 'critical') alerts.push({ metric: 'database', level: 'critical', message: `DB at ${dbSizeMB}MB (${dbPercent}%) — upgrade Neon now` });
-  else if (dbLevel === 'warning') alerts.push({ metric: 'database', level: 'warning', message: `DB at ${dbSizeMB}MB (${dbPercent}%) — plan upgrade soon` });
-  if (connLevel === 'critical') alerts.push({ metric: 'connections', level: 'critical', message: `${activeConnections} active connections — near pool limit` });
-  if (memLevel === 'critical') alerts.push({ metric: 'backend', level: 'critical', message: `Backend memory at ${heapUsedMB}MB — possible leak` });
+  if (dbLevel === 'critical')
+    alerts.push({
+      metric: 'database',
+      level: 'critical',
+      message: `DB at ${dbSizeMB}MB (${dbPercent}%) — upgrade Neon now`,
+    });
+  else if (dbLevel === 'warning')
+    alerts.push({
+      metric: 'database',
+      level: 'warning',
+      message: `DB at ${dbSizeMB}MB (${dbPercent}%) — plan upgrade soon`,
+    });
+  if (connLevel === 'critical')
+    alerts.push({
+      metric: 'connections',
+      level: 'critical',
+      message: `${activeConnections} active connections — near pool limit`,
+    });
+  if (memLevel === 'critical')
+    alerts.push({
+      metric: 'backend',
+      level: 'critical',
+      message: `Backend memory at ${heapUsedMB}MB — possible leak`,
+    });
+  if (multiRegionLevel === 'critical')
+    alerts.push({
+      metric: 'multi-region',
+      level: 'critical',
+      message: `${totalInstallers} installers, ${totalDevices} devices — deploy multi-region now`,
+    });
+  else if (multiRegionLevel === 'warning')
+    alerts.push({
+      metric: 'multi-region',
+      level: 'warning',
+      message: `${totalInstallers} installers, ${totalDevices} devices — start planning multi-region`,
+    });
 
   return {
     status: overallLevel,
@@ -331,6 +409,15 @@ async function getSystemHealth() {
       node_version: process.version,
       env: process.env.NODE_ENV || 'development',
     },
+    multi_region: {
+      installers: totalInstallers,
+      devices: totalDevices,
+      level: multiRegionLevel,
+      installers_warning: thresholds.multiRegionInstallersWarning,
+      installers_critical: thresholds.multiRegionInstallersCritical,
+      devices_warning: thresholds.multiRegionDevicesWarning,
+      devices_critical: thresholds.multiRegionDevicesCritical,
+    },
     alerts,
   };
 }
@@ -348,4 +435,12 @@ function formatUptime(seconds) {
   return parts.join(' ');
 }
 
-module.exports = { listTenants, createTenant, resetPassword, getDashboard, getTenantDetail, deleteTenant, getSystemHealth };
+module.exports = {
+  listTenants,
+  createTenant,
+  resetPassword,
+  getDashboard,
+  getTenantDetail,
+  deleteTenant,
+  getSystemHealth,
+};
