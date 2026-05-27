@@ -1,0 +1,11 @@
+{
+  "name": "iotech",
+  "private": true,
+  "scripts": {
+    "start": "node backend/src/index.js",
+    "postinstall": "cd backend && npm ci --omit=dev"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
