@@ -11,27 +11,25 @@
 
 /** @param {import('knex').Knex} knex */
 exports.up = async function (knex) {
-  // Check if TimescaleDB is available (without failing the transaction)
+  // Probe TimescaleDB without CREATE EXTENSION (Neon pre-loads it at cluster level).
   const { rows } = await knex.raw(
-    "SELECT count(*)::int AS cnt FROM pg_available_extensions WHERE name = 'timescaledb'"
+    "SELECT count(*)::int AS cnt FROM pg_proc WHERE proname = 'create_hypertable'"
   );
   const hasTimescale = rows[0]?.cnt > 0;
-
-  if (hasTimescale) {
-    await knex.raw('CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE');
-  } else {
+  if (!hasTimescale) {
     console.warn('TimescaleDB not available — telemetry will use a regular table');
   }
 
   await knex.schema.createTable('telemetry', (table) => {
-    // bigserial PK — knex maps .bigIncrements() to bigserial
-    table.bigIncrements('id').primary();
+    table.bigIncrements('id');
     table.uuid('device_id').notNullable().references('id').inTable('devices').onDelete('CASCADE');
     table.uuid('tenant_id').notNullable().references('id').inTable('tenants').onDelete('CASCADE');
     table.jsonb('data').notNullable();
     // timestamptz — partition column for TimescaleDB
     table.timestamp('received_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
 
+    // Composite PK including partition column (required by TimescaleDB)
+    table.primary(['id', 'received_at']);
     table.index(['device_id', 'received_at']);
     table.index(['tenant_id']);
   });

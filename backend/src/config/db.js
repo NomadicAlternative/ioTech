@@ -7,14 +7,17 @@
  * knexfile.js (CLI).
  */
 function createDbConfig() {
+  const connectionString = process.env.DATABASE_URL;
+
   return {
     client: 'pg',
-    connection: {
+    connection: connectionString || {
       host: process.env.DB_HOST || 'localhost',
       port: Number(process.env.DB_PORT) || 5432,
       database: process.env.DB_NAME || 'iotech_dev',
       user: process.env.DB_USER || 'iotech_app',
       password: process.env.DB_PASSWORD || '',
+      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
     },
     pool: {
       min: Number(process.env.DB_POOL_MIN) || 2,
