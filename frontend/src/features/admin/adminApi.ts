@@ -32,9 +32,7 @@ export async function fetchTenants(): Promise<Tenant[]> {
 	return res.data.data;
 }
 
-export async function createTenant(
-	data: CreateTenantPayload,
-): Promise<{
+export async function createTenant(data: CreateTenantPayload): Promise<{
 	tenant: Tenant;
 	credentials: { email: string; password: string };
 }> {

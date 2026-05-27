@@ -227,16 +227,22 @@ export function SystemHealthPanel() {
 				label="Multi-Region Readiness"
 				value={`${health.multi_region.installers} installers, ${health.multi_region.devices} devices`}
 				sublabel={
-					health.multi_region.level === 'healthy'
+					health.multi_region.level === "healthy"
 						? `Single region OK up to ${health.multi_region.installers_warning} installers / ${health.multi_region.devices_warning} devices`
-						: health.multi_region.level === 'warning'
+						: health.multi_region.level === "warning"
 							? `Plan migration to Fly.io + Supabase + HiveMQ multi-region`
 							: `Deploy multi-region now — global latency is hurting UX`
 				}
 				percent={
-					health.multi_region.level === 'critical' ? 90
-					: health.multi_region.level === 'warning' ? 50
-					: Math.round((health.multi_region.installers / health.multi_region.installers_warning) * 50)
+					health.multi_region.level === "critical"
+						? 90
+						: health.multi_region.level === "warning"
+							? 50
+							: Math.round(
+									(health.multi_region.installers /
+										health.multi_region.installers_warning) *
+										50,
+								)
 				}
 				level={health.multi_region.level}
 			/>

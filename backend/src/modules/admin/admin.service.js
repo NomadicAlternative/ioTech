@@ -335,9 +335,11 @@ async function getSystemHealth() {
   const totalDevices = parseCount(devicesRow);
 
   const multiRegionLevel =
-    totalInstallers >= thresholds.multiRegionInstallersCritical || totalDevices >= thresholds.multiRegionDevicesCritical
+    totalInstallers >= thresholds.multiRegionInstallersCritical ||
+    totalDevices >= thresholds.multiRegionDevicesCritical
       ? 'critical'
-      : totalInstallers >= thresholds.multiRegionInstallersWarning || totalDevices >= thresholds.multiRegionDevicesWarning
+      : totalInstallers >= thresholds.multiRegionInstallersWarning ||
+          totalDevices >= thresholds.multiRegionDevicesWarning
         ? 'warning'
         : 'healthy';
 

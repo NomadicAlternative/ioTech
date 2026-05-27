@@ -1,10 +1,9 @@
 {
   "build": {
-    "builder": "railpack",
-    "buildCommand": "cd backend && npm ci --omit=dev"
+    "builder": "nixpacks"
   },
   "deploy": {
-    "startCommand": "cd backend && npm start",
+    "startCommand": "node backend/src/index.js",
     "healthcheckPath": "/health",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
