@@ -38,8 +38,11 @@ function createApp() {
   const app = express();
 
   // ── Global middleware ─────────────────────────────────────────────────────
+  const corsOrigin = process.env.CORS_ORIGIN;
   app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: corsOrigin && corsOrigin !== '*'
+      ? corsOrigin
+      : (origin, callback) => callback(null, origin || '*'),
     credentials: true,
   }));
   app.use(cookieParser());
