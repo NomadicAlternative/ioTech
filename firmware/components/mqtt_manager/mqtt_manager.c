@@ -243,6 +243,17 @@ void mqtt_manager_start(const device_config_t *cfg)
 
     bool use_tls = (strncmp(s_cfg.mqtt_broker_url, "mqtts://", 8) == 0);
 
+    /* Use cloud broker credentials if available; otherwise fall back to device_id/device_token */
+    char mqtt_user[64] = {0};
+    char mqtt_pass[128] = {0};
+    if (s_cfg.mqtt_username[0] != '\0' && s_cfg.mqtt_password[0] != '\0') {
+        strlcpy(mqtt_user, s_cfg.mqtt_username, sizeof(mqtt_user));
+        strlcpy(mqtt_pass, s_cfg.mqtt_password, sizeof(mqtt_pass));
+    } else {
+        strlcpy(mqtt_user, s_cfg.device_id, sizeof(mqtt_user));
+        strlcpy(mqtt_pass, s_cfg.device_token, sizeof(mqtt_pass));
+    }
+
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address.uri   = s_cfg.mqtt_broker_url,
@@ -252,9 +263,9 @@ void mqtt_manager_start(const device_config_t *cfg)
         },
         .credentials = {
             .client_id     = s_cfg.device_id,
-            .username      = s_cfg.device_id,
+            .username      = mqtt_user,
             .authentication = {
-                .password  = s_cfg.device_token,
+                .password  = mqtt_pass,
             },
         },
         .session = {

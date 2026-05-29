@@ -16,6 +16,8 @@ static const char *NVS_NS     = "iotech";        /* NVS namespace */
 #define KEY_TENANT_ID       "tenant_id"
 #define KEY_DEVICE_ID       "device_id"
 #define KEY_MQTT_URL        "mqtt_url"
+#define KEY_MQTT_USER       "mqtt_user"
+#define KEY_MQTT_PASS       "mqtt_pass"
 #define KEY_BACKEND_URL     "backend_url"
 #define KEY_CLAIM_TOKEN     "claim_token"
 #define KEY_HW_ID           "hardware_id"
@@ -92,6 +94,8 @@ esp_err_t nvs_store_device_config(const device_config_t *cfg)
     if (err == ESP_OK) err = nvs_write_str(h, KEY_TENANT_ID,     cfg->tenant_id);
     if (err == ESP_OK) err = nvs_write_str(h, KEY_DEVICE_ID,     cfg->device_id);
     if (err == ESP_OK) err = nvs_write_str(h, KEY_MQTT_URL,      cfg->mqtt_broker_url);
+    if (err == ESP_OK && cfg->mqtt_username[0]) err = nvs_write_str(h, KEY_MQTT_USER, cfg->mqtt_username);
+    if (err == ESP_OK && cfg->mqtt_password[0]) err = nvs_write_str(h, KEY_MQTT_PASS, cfg->mqtt_password);
     if (err == ESP_OK) err = nvs_write_str(h, KEY_BACKEND_URL,   cfg->backend_url);
     if (err == ESP_OK) err = nvs_write_str(h, KEY_HW_ID,         cfg->hardware_id);
 
@@ -122,6 +126,8 @@ esp_err_t nvs_load_device_config(device_config_t *out)
     nvs_read_str(h, KEY_TENANT_ID,     out->tenant_id,       sizeof(out->tenant_id));
     nvs_read_str(h, KEY_DEVICE_ID,     out->device_id,       sizeof(out->device_id));
     nvs_read_str(h, KEY_MQTT_URL,      out->mqtt_broker_url, sizeof(out->mqtt_broker_url));
+    nvs_read_str(h, KEY_MQTT_USER,     out->mqtt_username,   sizeof(out->mqtt_username));
+    nvs_read_str(h, KEY_MQTT_PASS,     out->mqtt_password,   sizeof(out->mqtt_password));
 
     /* Always present after captive portal — needed for HTTP provisioning */
     err = nvs_read_str(h, KEY_BACKEND_URL, out->backend_url, sizeof(out->backend_url));

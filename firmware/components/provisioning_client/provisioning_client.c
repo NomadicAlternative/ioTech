@@ -152,6 +152,12 @@ static prov_result_t do_provision_request(device_config_t *cfg)
         strlcpy(cfg->device_id,       device_id->valuestring,       sizeof(cfg->device_id));
         strlcpy(cfg->mqtt_broker_url, mqtt_broker_url->valuestring, sizeof(cfg->mqtt_broker_url));
 
+        /* Optional: MQTT cloud broker credentials */
+        cJSON *mqtt_user = cJSON_GetObjectItemCaseSensitive(json, "mqtt_username");
+        cJSON *mqtt_pass = cJSON_GetObjectItemCaseSensitive(json, "mqtt_password");
+        if (cJSON_IsString(mqtt_user)) strlcpy(cfg->mqtt_username, mqtt_user->valuestring, sizeof(cfg->mqtt_username));
+        if (cJSON_IsString(mqtt_pass)) strlcpy(cfg->mqtt_password, mqtt_pass->valuestring, sizeof(cfg->mqtt_password));
+
         /* Clear claim_token — it's single-use */
         memset(cfg->claim_token, 0, sizeof(cfg->claim_token));
 

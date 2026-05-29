@@ -27,10 +27,12 @@ typedef struct {
 
 /** Device configuration stored after successful backend provisioning */
 typedef struct {
-    char device_token[128];    /**< Bearer token for MQTT auth */
+    char device_token[128];    /**< Bearer token for MQTT auth (legacy) */
     char tenant_id[64];        /**< Tenant identifier */
     char device_id[64];        /**< Device identifier (UUID) */
     char mqtt_broker_url[128]; /**< Full MQTT broker URL e.g. mqtts://broker.example.com */
+    char mqtt_username[64];    /**< MQTT username (cloud broker credentials) */
+    char mqtt_password[64];    /**< MQTT password (cloud broker credentials) */
     char backend_url[128];     /**< Backend REST API base URL */
     char claim_token[128];     /**< Claim token (cleared after 422 or success) */
     char hardware_id[32];      /**< MAC-derived hardware ID (set at boot) */
