@@ -1,5 +1,8 @@
 // Punto de entrada del backend
-require('dotenv').config();
+// Only load .env in development; production uses platform env vars
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 const http = require('http');
 const createApp = require('./app');

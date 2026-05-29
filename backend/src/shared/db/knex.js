@@ -1,6 +1,8 @@
 'use strict';
 
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 const knex = require('knex');
 const { createDbConfig } = require('../../config/db');
 
