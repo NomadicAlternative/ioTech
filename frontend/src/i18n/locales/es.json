@@ -402,6 +402,19 @@
       ],
       "cta": "Crear cuenta gratis"
     },
+    "value": {
+      "title1": "Conectá dispositivos al instante",
+      "desc1": "Flasheá el firmware por USB y empezá a recibir datos en segundos.",
+      "title2": "Control en tiempo real",
+      "desc2": "Gestioná sensores, relés y actuadores desde cualquier lugar del mundo.",
+      "title3": "Hecho para escalar",
+      "desc3": "Arquitectura multi-tenant lista para miles de dispositivos e instaladores."
+    },
+    "finalCta": {
+      "title": "Empezá a construir tu infraestructura IoT hoy",
+      "subtitle": "Comenzá en menos de 2 minutos. Sin tarjeta de crédito.",
+      "button": "Crear cuenta gratis"
+    },
     "footer": "© 2026 BeepDash Developed by Diego Garcia | Nomadic Alternative"
   },
   "catalog": {
