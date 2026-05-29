@@ -38,6 +38,7 @@ function createApp() {
   const app = express();
 
   // ── Global middleware ─────────────────────────────────────────────────────
+  // CORS: reflects request origin when CORS_ORIGIN is '*' or unset (v2)
   const corsOrigin = process.env.CORS_ORIGIN;
   app.use(
     cors({
