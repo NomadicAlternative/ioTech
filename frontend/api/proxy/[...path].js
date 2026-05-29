@@ -1,13 +1,12 @@
 // Vercel Serverless Function — proxies /api/* → Railway
 // Avoids CORS issues since requests come from same origin (Vercel domain).
-// Must be placed at frontend/api/proxy/[...path].js
 
-export default async function handler(req, res) {
-  const { path } = req.query;
-  const targetPath = Array.isArray(path) ? path.join('/') : path || '';
+const BACKEND_URL = process.env.VITE_API_URL || 'https://iotech-production.up.railway.app';
 
-  const backendUrl = process.env.VITE_API_URL || 'https://iotech-production.up.railway.app';
-  const target = `${backendUrl}/api/${targetPath}`;
+module.exports = async function handler(req, res) {
+  const path = req.query.path || '';
+  const targetPath = Array.isArray(path) ? path.join('/') : path;
+  const target = `${BACKEND_URL}/api/${targetPath}`;
 
   try {
     const fetchRes = await fetch(target, {
@@ -22,7 +21,6 @@ export default async function handler(req, res) {
 
     const data = await fetchRes.json();
 
-    // Forward cookies from backend (refresh token)
     const setCookie = fetchRes.headers.get('set-cookie');
     if (setCookie) {
       res.setHeader('Set-Cookie', setCookie);
@@ -32,4 +30,4 @@ export default async function handler(req, res) {
   } catch (err) {
     res.status(502).json({ error: { code: 'PROXY_ERROR', message: 'Backend unreachable', status: 502 } });
   }
-}
+};
