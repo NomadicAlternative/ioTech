@@ -75,7 +75,7 @@ function createApp() {
   app.use('/api/installers', ...tenantScope, installersRoutes);
   app.use('/api/clients', ...tenantScope, clientsRoutes);
   app.use('/api/telemetry', ...tenantScope, telemetryRoutes);
-  app.use('/api/provisioning', ...tenantScope, provisioningRoutes);
+  app.use('/api/provisioning', provisioningRoutes);
   app.use('/api/firmware', ...tenantScope, firmwareRoutes);
   app.use('/api/devices', ...tenantScope, otaRouter);
   app.use('/api/dashboards', ...tenantScope, dashboardsRoutes);
