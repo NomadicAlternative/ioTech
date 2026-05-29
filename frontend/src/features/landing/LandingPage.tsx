@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
 	Cpu,
@@ -32,56 +32,6 @@ export function LandingPage() {
 	const { t, i18n } = useTranslation();
 	const [langOpen, setLangOpen] = useState(false);
 	const [scrolled, setScrolled] = useState(false);
-	const canvasRef = useRef<HTMLCanvasElement>(null);
-
-	// Canvas particle animation (hero background)
-	useEffect(() => {
-		const canvas = canvasRef.current;
-		if (!canvas) return;
-		const ctx = canvas.getContext("2d");
-		if (!ctx) return;
-		let animId: number;
-		const particles: { x: number; y: number; vx: number; vy: number }[] = [];
-		for (let i = 0; i < 30; i++) {
-			particles.push({
-				x: Math.random() * window.innerWidth,
-				y: Math.random() * 400,
-				vx: (Math.random() - 0.5) * 0.3,
-				vy: (Math.random() - 0.5) * 0.3,
-			});
-		}
-		function draw() {
-			canvas.width = window.innerWidth;
-			canvas.height = 400;
-			for (const pt of particles) {
-				pt.x += pt.vx;
-				pt.y += pt.vy;
-				if (pt.x < 0 || pt.x > canvas.width) pt.vx *= -1;
-				if (pt.y < 0 || pt.y > canvas.height) pt.vy *= -1;
-				ctx.beginPath();
-				ctx.arc(pt.x, pt.y, 0.8, 0, Math.PI * 2);
-				ctx.fillStyle = "rgba(252,163,17,0.2)";
-				ctx.fill();
-			}
-			for (let i = 0; i < particles.length; i++) {
-				for (let j = i + 1; j < particles.length; j++) {
-					const dx = particles[i].x - particles[j].x;
-					const dy = particles[i].y - particles[j].y;
-					const d = Math.sqrt(dx * dx + dy * dy);
-					if (d < 100) {
-						ctx.beginPath();
-						ctx.moveTo(particles[i].x, particles[i].y);
-						ctx.lineTo(particles[j].x, particles[j].y);
-						ctx.strokeStyle = `rgba(252,163,17,${0.05 - d * 0.0005})`;
-						ctx.stroke();
-					}
-				}
-			}
-			animId = requestAnimationFrame(draw);
-		}
-		draw();
-		return () => cancelAnimationFrame(animId);
-	}, []);
 
 	// Scroll-aware navbar
 	useEffect(() => {
