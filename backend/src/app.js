@@ -56,8 +56,8 @@ function createApp() {
   app.use('/firmware/files', express.static(path.join(__dirname, '..', 'uploads', 'firmware')));
 
   // ── Health endpoint ───────────────────────────────────────────────────────
-  app.get('/health', (req, res) => {
-    res.json({ ok: true, timestamp: new Date().toISOString() });
+  app.get('/health', (_req, res) => {
+    res.json({ ok: true, timestamp: new Date().toISOString(), cors_origin: corsOrigin || '(unset)' });
   });
 
   // ── Module routers ────────────────────────────────────────────────────────
