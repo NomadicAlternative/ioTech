@@ -57,7 +57,11 @@ function createApp() {
 
   // ── Health endpoint ───────────────────────────────────────────────────────
   app.get('/health', (_req, res) => {
-    res.json({ ok: true, timestamp: new Date().toISOString(), cors_origin: corsOrigin || '(unset)' });
+    res.json({
+      ok: true,
+      timestamp: new Date().toISOString(),
+      cors_origin: corsOrigin || '(unset)',
+    });
   });
 
   // ── Module routers ────────────────────────────────────────────────────────
