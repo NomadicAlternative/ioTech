@@ -14,7 +14,8 @@
 
 static const char *TAG = "provisioning_client";
 
-/* CA cert for TLS verification */
+/* CA cert for TLS verification — Render uses Google Trust Services */
+/* CA cert bundle for TLS verification (ISRG Root X1 + GTS Root R4) */
 extern const char isrg_root_x1_pem_start[] asm("_binary_isrg_root_x1_pem_start");
 extern const char isrg_root_x1_pem_end[]   asm("_binary_isrg_root_x1_pem_end");
 
@@ -72,7 +73,10 @@ static esp_err_t http_event_handler(esp_http_client_event_t *evt)
 static prov_result_t do_provision_request(device_config_t *cfg)
 {
     char url[256];
-    snprintf(url, sizeof(url), "%s%s", cfg->backend_url, PROV_ENDPOINT);
+    /* Strip trailing slash from backend_url to avoid double-slash (//api) */
+    size_t bu_len = strlen(cfg->backend_url);
+    while (bu_len > 0 && cfg->backend_url[bu_len - 1] == '/') bu_len--;
+    snprintf(url, sizeof(url), "%.*s%s", (int)bu_len, cfg->backend_url, PROV_ENDPOINT);
 
     char body[MAX_BODY_LEN];
     snprintf(body, sizeof(body),

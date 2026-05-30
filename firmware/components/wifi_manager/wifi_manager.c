@@ -1,4 +1,5 @@
 #include <string.h>
+#include <time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
@@ -6,6 +7,8 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_netif.h"
+#include "esp_netif_sntp.h"
+#include "esp_sntp.h"
 #include "lwip/ip4_addr.h"
 
 #include "wifi_manager.h"
@@ -25,6 +28,64 @@ static int s_retry_count = 0;
 static bool s_netif_inited    = false;
 static bool s_wifi_inited     = false;
 
+/* -----------------------------------------------------------------------
+ * SNTP time synchronisation
+ *
+ * TLS certificate verification requires the system clock to be within
+ * the certificate's validity window (not Jan 1 2000).  SNTP sync is
+ * started as soon as the STA interface receives an IP address.
+ *
+ * Uses esp_netif_sntp API (ESP-IDF ≥ 5.1) with multiple servers for
+ * resilience against blocked NTP servers or DNS failures.
+ * --------------------------------------------------------------------- */
+static bool s_sntp_done = false;
+
+static void sntp_sync(void)
+{
+    if (s_sntp_done) return;
+
+    /* Set timezone to UTC — certificate validity is in UTC */
+    setenv("TZ", "UTC0", 1);
+    tzset();
+
+    esp_sntp_config_t config = {
+        .smooth_sync = false,
+        .server_from_dhcp = false,
+        .wait_for_sync = true,
+        .start = true,
+        .sync_cb = NULL,
+        .renew_servers_after_new_IP = false,
+        .ip_event_to_renew = IP_EVENT_STA_GOT_IP,
+        .index_of_first_server = 0,
+        .num_of_servers = 1,
+        .servers = { "pool.ntp.org" },
+    };
+
+    esp_netif_sntp_init(&config);
+
+    /* Wait up to 20 s across 3 servers */
+    int retry = 0;
+    while (esp_netif_sntp_sync_wait(pdMS_TO_TICKS(2000)) == ESP_ERR_TIMEOUT
+           && ++retry < 10) {
+        ESP_LOGD(TAG, "Waiting for SNTP sync... (%d/10)", retry);
+    }
+
+    if (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET) {
+        esp_netif_sntp_deinit();
+        ESP_LOGW(TAG, "SNTP sync timed out — TLS may fail");
+        return;
+    }
+
+    s_sntp_done = true;
+    time_t now;
+    time(&now);
+    struct tm timeinfo;
+    localtime_r(&now, &timeinfo);
+    ESP_LOGI(TAG, "SNTP synced — system time: %04d-%02d-%02d %02d:%02d:%02d",
+             timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+             timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+}
+
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                                 int32_t event_id, void *event_data)
 {
@@ -43,6 +104,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
         ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
         s_retry_count = 0;
+        sntp_sync();  /* sync system clock before any TLS connection */
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
 }

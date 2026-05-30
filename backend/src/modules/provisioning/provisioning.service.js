@@ -40,8 +40,8 @@ async function provision(claimToken, hardwareId) {
     return {
       device_token: device.device_token,
       mqtt_url: getMqttUrl(),
-      mqtt_username: process.env.MQTT_USERNAME || '',
-      mqtt_password: process.env.MQTT_PASSWORD || '',
+      mqtt_username: process.env.MQTT_DEVICE_USERNAME || process.env.MQTT_USERNAME || '',
+      mqtt_password: process.env.MQTT_DEVICE_PASSWORD || process.env.MQTT_PASSWORD || '',
       tenant_id: device.tenant_id,
       device_id: device.id,
     };
@@ -71,8 +71,8 @@ async function provision(claimToken, hardwareId) {
   return {
     device_token: deviceToken,
     mqtt_url: getMqttUrl(),
-    mqtt_username: process.env.MQTT_USERNAME || '',
-    mqtt_password: process.env.MQTT_PASSWORD || '',
+    mqtt_username: process.env.MQTT_DEVICE_USERNAME || process.env.MQTT_USERNAME || '',
+    mqtt_password: process.env.MQTT_DEVICE_PASSWORD || process.env.MQTT_PASSWORD || '',
     tenant_id: device.tenant_id,
     device_id: device.id,
   };

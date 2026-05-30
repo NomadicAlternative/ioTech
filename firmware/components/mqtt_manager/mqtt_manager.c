@@ -24,7 +24,7 @@ extern void user_loop(void);
 
 static const char *TAG = "mqtt_manager";
 
-/* CA cert for broker TLS */
+/* CA cert bundle for broker TLS (ISRG Root X1 + GTS Root R4) */
 extern const char isrg_root_x1_pem_start[] asm("_binary_isrg_root_x1_pem_start");
 extern const char isrg_root_x1_pem_end[]   asm("_binary_isrg_root_x1_pem_end");
 
