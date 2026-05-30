@@ -252,9 +252,10 @@ void mqtt_manager_start(const device_config_t *cfg)
              (unsigned char)s_cfg.mqtt_password[0]);
     ESP_LOGI(TAG, "  broker_url='%s'", s_cfg.mqtt_broker_url);
 
-    /* Use cloud broker credentials if available; otherwise fall back to device_id/device_token */
-    char mqtt_user[64] = {0};
-    char mqtt_pass[128] = {0};
+    /* STATIC: ESP-IDF MQTT client stores pointers, not copies. These must
+       outlive mqtt_manager_start() or the CONNECT packet will use dangling pointers. */
+    static char mqtt_user[64] = {0};
+    static char mqtt_pass[128] = {0};
     if (s_cfg.mqtt_username[0] != '\0' && s_cfg.mqtt_password[0] != '\0') {
         strlcpy(mqtt_user, s_cfg.mqtt_username, sizeof(mqtt_user));
         strlcpy(mqtt_pass, s_cfg.mqtt_password, sizeof(mqtt_pass));
@@ -267,6 +268,9 @@ void mqtt_manager_start(const device_config_t *cfg)
     strlcpy(mqtt_user, "iotech-esp32", sizeof(mqtt_user));
     strlcpy(mqtt_pass, "Artemio1", sizeof(mqtt_pass));
 
+    ESP_LOGI(TAG, "DIAG — AFTER hardcode: user='%s' (len=%d) pass='%s' (len=%d)",
+             mqtt_user, (int)strlen(mqtt_user), mqtt_pass, (int)strlen(mqtt_pass));
+
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address.uri   = s_cfg.mqtt_broker_url,
@@ -276,7 +280,7 @@ void mqtt_manager_start(const device_config_t *cfg)
             },
         },
         .credentials = {
-            .client_id     = s_cfg.device_id,
+            .client_id     = "esp32-test",
             .username      = mqtt_user,
             .authentication = {
                 .password  = mqtt_pass,
@@ -284,7 +288,7 @@ void mqtt_manager_start(const device_config_t *cfg)
         },
         .session = {
             .keepalive            = 60,
-            .disable_clean_session= false,
+            .protocol_ver = MQTT_PROTOCOL_V_3_1_1,
         },
     };
 
