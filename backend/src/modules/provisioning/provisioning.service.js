@@ -16,6 +16,18 @@ function getMqttUrl() {
 }
 
 /**
+ * Returns the MQTT broker URL sent to devices during provisioning.
+ * Allows a separate URL for devices (e.g. port 443 to bypass firewalls)
+ * while the backend keeps using its own MQTT_BROKER_URL.
+ */
+function getDeviceMqttUrl() {
+  if (process.env.MQTT_DEVICE_URL) {
+    return process.env.MQTT_DEVICE_URL;
+  }
+  return getMqttUrl();
+}
+
+/**
  * Exchange a claim_token + hardware_id for a permanent device_token and MQTT config.
  * This endpoint is unauthenticated — the claim_token IS the bootstrap credential.
  *
@@ -39,7 +51,7 @@ async function provision(claimToken, hardwareId) {
     );
     return {
       device_token: device.device_token,
-      mqtt_url: getMqttUrl(),
+      mqtt_url: getDeviceMqttUrl(),
       mqtt_username: process.env.MQTT_USERNAME || '',
       mqtt_password: process.env.MQTT_PASSWORD || '',
       tenant_id: device.tenant_id,
@@ -70,7 +82,7 @@ async function provision(claimToken, hardwareId) {
 
   return {
     device_token: deviceToken,
-    mqtt_url: getMqttUrl(),
+    mqtt_url: getDeviceMqttUrl(),
     mqtt_username: process.env.MQTT_USERNAME || '',
     mqtt_password: process.env.MQTT_PASSWORD || '',
     tenant_id: device.tenant_id,
