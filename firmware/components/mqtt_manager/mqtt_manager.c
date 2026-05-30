@@ -244,14 +244,6 @@ void mqtt_manager_start(const device_config_t *cfg)
 
     bool use_tls = (strncmp(s_cfg.mqtt_broker_url, "mqtts://", 8) == 0);
 
-    /* DIAGNOSTIC: log actual credentials with lengths before connecting */
-    ESP_LOGI(TAG, "DIAG — MQTT creds from NVS:");
-    ESP_LOGI(TAG, "  client_id ='%s' (len=%d)", s_cfg.device_id, (int)strlen(s_cfg.device_id));
-    ESP_LOGI(TAG, "  mqtt_user ='%s' (len=%d)", s_cfg.mqtt_username, (int)strlen(s_cfg.mqtt_username));
-    ESP_LOGI(TAG, "  mqtt_pass len=%d (first char=0x%02x)", (int)strlen(s_cfg.mqtt_password),
-             (unsigned char)s_cfg.mqtt_password[0]);
-    ESP_LOGI(TAG, "  broker_url='%s'", s_cfg.mqtt_broker_url);
-
     /* STATIC: ESP-IDF MQTT client stores pointers, not copies. These must
        outlive mqtt_manager_start() or the CONNECT packet will use dangling pointers. */
     static char mqtt_user[64] = {0};
@@ -264,13 +256,6 @@ void mqtt_manager_start(const device_config_t *cfg)
         strlcpy(mqtt_pass, s_cfg.device_token, sizeof(mqtt_pass));
     }
 
-    /* DEBUG: Hardcode credentials to isolate NVS corruption */
-    strlcpy(mqtt_user, "iotech-esp32", sizeof(mqtt_user));
-    strlcpy(mqtt_pass, "Artemio1", sizeof(mqtt_pass));
-
-    ESP_LOGI(TAG, "DIAG — AFTER hardcode: user='%s' (len=%d) pass='%s' (len=%d)",
-             mqtt_user, (int)strlen(mqtt_user), mqtt_pass, (int)strlen(mqtt_pass));
-
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address.uri   = s_cfg.mqtt_broker_url,
@@ -280,7 +265,7 @@ void mqtt_manager_start(const device_config_t *cfg)
             },
         },
         .credentials = {
-            .client_id     = "esp32-test",
+            .client_id     = s_cfg.device_id,
             .username      = mqtt_user,
             .authentication = {
                 .password  = mqtt_pass,
@@ -288,7 +273,13 @@ void mqtt_manager_start(const device_config_t *cfg)
         },
         .session = {
             .keepalive            = 60,
-            .protocol_ver = MQTT_PROTOCOL_V_3_1_1,
+            .disable_clean_session= true,
+            .last_will = {
+                .topic = lwt_topic,
+                .msg   = "offline",
+                .qos   = 1,
+                .retain= 1,
+            },
         },
     };
 

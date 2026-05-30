@@ -27,7 +27,7 @@ async function provision(claimToken, hardwareId) {
   const device = await devicesModel.findByClaimToken(claimToken);
   if (!device) throw new NotFoundError('claim_token not found');
 
-  if (device.status === 'active') {
+  if (device.status === 'active' || device.status === 'offline') {
     // Idempotent re-provisioning: device already provisioned, return existing token.
     // This handles the case where the ESP32 lost its NVS (reflash) but the backend
     // already completed provisioning. hardware_id must still match if set.
