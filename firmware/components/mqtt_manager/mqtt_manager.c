@@ -13,6 +13,7 @@
 #include "sm_events.h"
 #include "io_driver.h"
 #include "cJSON.h"
+#include "esp_crt_bundle.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -243,6 +244,14 @@ void mqtt_manager_start(const device_config_t *cfg)
 
     bool use_tls = (strncmp(s_cfg.mqtt_broker_url, "mqtts://", 8) == 0);
 
+    /* DIAGNOSTIC: log actual credentials with lengths before connecting */
+    ESP_LOGI(TAG, "DIAG — MQTT creds from NVS:");
+    ESP_LOGI(TAG, "  client_id ='%s' (len=%d)", s_cfg.device_id, (int)strlen(s_cfg.device_id));
+    ESP_LOGI(TAG, "  mqtt_user ='%s' (len=%d)", s_cfg.mqtt_username, (int)strlen(s_cfg.mqtt_username));
+    ESP_LOGI(TAG, "  mqtt_pass len=%d (first char=0x%02x)", (int)strlen(s_cfg.mqtt_password),
+             (unsigned char)s_cfg.mqtt_password[0]);
+    ESP_LOGI(TAG, "  broker_url='%s'", s_cfg.mqtt_broker_url);
+
     /* Use cloud broker credentials if available; otherwise fall back to device_id/device_token */
     char mqtt_user[64] = {0};
     char mqtt_pass[128] = {0};
@@ -254,11 +263,15 @@ void mqtt_manager_start(const device_config_t *cfg)
         strlcpy(mqtt_pass, s_cfg.device_token, sizeof(mqtt_pass));
     }
 
+    /* DEBUG: Hardcode credentials to isolate NVS corruption */
+    strlcpy(mqtt_user, "iotech-esp32", sizeof(mqtt_user));
+    strlcpy(mqtt_pass, "Artemio1", sizeof(mqtt_pass));
+
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address.uri   = s_cfg.mqtt_broker_url,
             .verification  = {
-                .certificate = use_tls ? isrg_root_x1_pem_start : NULL,
+                .crt_bundle_attach = esp_crt_bundle_attach,
                 .skip_cert_common_name_check = true,
             },
         },
@@ -271,13 +284,7 @@ void mqtt_manager_start(const device_config_t *cfg)
         },
         .session = {
             .keepalive            = 60,
-            .disable_clean_session= true,
-            .last_will = {
-                .topic = lwt_topic,
-                .msg   = "offline",
-                .qos   = 1,
-                .retain= 1,
-            },
+            .disable_clean_session= false,
         },
     };
 

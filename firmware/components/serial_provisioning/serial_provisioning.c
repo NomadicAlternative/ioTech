@@ -126,6 +126,8 @@ bool serial_provisioning_receive(void)
     const char *device_token = json_str(root, "device_token");
     const char *tenant_id    = json_str(root, "tenant_id");
     const char *device_id    = json_str(root, "device_id");
+    const char *mqtt_user    = json_str(root, "mqtt_username");  /* optional */
+    const char *mqtt_pass    = json_str(root, "mqtt_password");  /* optional */
 
     if (!ssid || !password || !backend_url || !mqtt_url || !device_token || !tenant_id || !device_id) {
         ESP_LOGW(TAG, "Missing required fields in JSON payload");
@@ -152,6 +154,8 @@ bool serial_provisioning_receive(void)
     strlcpy(dev.device_id,       device_id,    sizeof(dev.device_id));
     strlcpy(dev.backend_url,     backend_url,  sizeof(dev.backend_url));
     strlcpy(dev.mqtt_broker_url, mqtt_url,     sizeof(dev.mqtt_broker_url));
+    if (mqtt_user) strlcpy(dev.mqtt_username, mqtt_user, sizeof(dev.mqtt_username));
+    if (mqtt_pass) strlcpy(dev.mqtt_password, mqtt_pass, sizeof(dev.mqtt_password));
 
     err = nvs_store_device_config(&dev);
     if (err != ESP_OK) {
