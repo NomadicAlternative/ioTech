@@ -259,6 +259,7 @@ void mqtt_manager_start(const device_config_t *cfg)
             .address.uri   = s_cfg.mqtt_broker_url,
             .verification  = {
                 .certificate = use_tls ? isrg_root_x1_pem_start : NULL,
+                .skip_cert_common_name_check = true,
             },
         },
         .credentials = {
