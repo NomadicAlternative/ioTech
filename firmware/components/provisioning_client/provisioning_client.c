@@ -14,7 +14,6 @@
 
 static const char *TAG = "provisioning_client";
 
-/* CA cert for TLS verification — Render uses Google Trust Services */
 /* CA cert bundle for TLS verification (ISRG Root X1 + GTS Root R4) */
 extern const char isrg_root_x1_pem_start[] asm("_binary_isrg_root_x1_pem_start");
 extern const char isrg_root_x1_pem_end[]   asm("_binary_isrg_root_x1_pem_end");
@@ -41,6 +40,9 @@ esp_err_t provisioning_build_topic(const device_config_t *cfg,
     return ESP_OK;
 }
 
+/* -----------------------------------------------------------------------
+ * HTTP event handler — accumulates response body
+ * --------------------------------------------------------------------- */
 static char s_response_buf[1024];
 static int  s_response_len = 0;
 
@@ -54,17 +56,56 @@ static esp_err_t http_event_handler(esp_http_client_event_t *evt)
             s_response_buf[s_response_len] = '\0';
         }
         break;
-    case HTTP_EVENT_ON_CONNECTED:
-    case HTTP_EVENT_HEADERS_SENT:
-    case HTTP_EVENT_ON_HEADER:
-    case HTTP_EVENT_ON_FINISH:
-    case HTTP_EVENT_DISCONNECTED:
-    case HTTP_EVENT_REDIRECT:
-        break;
     default:
         break;
     }
     return ESP_OK;
+}
+
+/* -----------------------------------------------------------------------
+ * Helper: parse provisioning JSON and store in config + NVS.
+ * Shared by HTTP 200 and 409 (idempotent re-provisioning) paths.
+ * --------------------------------------------------------------------- */
+static prov_result_t parse_and_store(const char *body, int body_len, device_config_t *cfg)
+{
+    ESP_LOGI(TAG, "Response body (%d bytes): %s", body_len, body);
+
+    cJSON *json = cJSON_Parse(body);
+    if (!json) {
+        ESP_LOGE(TAG, "Failed to parse provisioning response JSON");
+        return PROV_RESULT_ERROR;
+    }
+
+    cJSON *device_token    = cJSON_GetObjectItemCaseSensitive(json, "device_token");
+    cJSON *tenant_id       = cJSON_GetObjectItemCaseSensitive(json, "tenant_id");
+    cJSON *device_id       = cJSON_GetObjectItemCaseSensitive(json, "device_id");
+    cJSON *mqtt_broker_url = cJSON_GetObjectItemCaseSensitive(json, "mqtt_url");
+
+    if (!cJSON_IsString(device_token) || !cJSON_IsString(tenant_id) ||
+        !cJSON_IsString(device_id)    || !cJSON_IsString(mqtt_broker_url))
+    {
+        ESP_LOGE(TAG, "Missing required fields in provisioning response");
+        cJSON_Delete(json);
+        return PROV_RESULT_ERROR;
+    }
+
+    strlcpy(cfg->device_token,    device_token->valuestring,    sizeof(cfg->device_token));
+    strlcpy(cfg->tenant_id,       tenant_id->valuestring,       sizeof(cfg->tenant_id));
+    strlcpy(cfg->device_id,       device_id->valuestring,       sizeof(cfg->device_id));
+    strlcpy(cfg->mqtt_broker_url, mqtt_broker_url->valuestring, sizeof(cfg->mqtt_broker_url));
+
+    /* Optional: MQTT cloud broker credentials */
+    cJSON *mqtt_user = cJSON_GetObjectItemCaseSensitive(json, "mqtt_username");
+    cJSON *mqtt_pass = cJSON_GetObjectItemCaseSensitive(json, "mqtt_password");
+    if (cJSON_IsString(mqtt_user)) strlcpy(cfg->mqtt_username, mqtt_user->valuestring, sizeof(cfg->mqtt_username));
+    if (cJSON_IsString(mqtt_pass)) strlcpy(cfg->mqtt_password, mqtt_pass->valuestring, sizeof(cfg->mqtt_password));
+
+    /* Clear claim_token — it's single-use */
+    memset(cfg->claim_token, 0, sizeof(cfg->claim_token));
+
+    nvs_store_device_config(cfg);
+    cJSON_Delete(json);
+    return PROV_RESULT_OK;
 }
 
 /* -----------------------------------------------------------------------
@@ -73,7 +114,7 @@ static esp_err_t http_event_handler(esp_http_client_event_t *evt)
 static prov_result_t do_provision_request(device_config_t *cfg)
 {
     char url[256];
-    /* Strip trailing slash from backend_url to avoid double-slash (//api) */
+    /* Strip trailing slash to avoid double-slash */
     size_t bu_len = strlen(cfg->backend_url);
     while (bu_len > 0 && cfg->backend_url[bu_len - 1] == '/') bu_len--;
     snprintf(url, sizeof(url), "%.*s%s", (int)bu_len, cfg->backend_url, PROV_ENDPOINT);
@@ -91,7 +132,6 @@ static prov_result_t do_provision_request(device_config_t *cfg)
     memset(s_response_buf, 0, sizeof(s_response_buf));
     s_response_len = 0;
 
-    /* Use TLS only for https:// URLs; plain TCP for http:// (dev/local) */
     bool use_tls = (strncmp(url, "https://", 8) == 0);
 
     esp_http_client_config_t http_cfg = {
@@ -129,54 +169,24 @@ static prov_result_t do_provision_request(device_config_t *cfg)
     ESP_LOGI(TAG, "POST %s → HTTP %d", url, http_status);
 
     switch (http_status) {
-    case 200: {
-        /* Parse JSON response */
-        ESP_LOGI(TAG, "Response body (%d bytes): %s", response_len, response_buf);
-        cJSON *json = cJSON_Parse(response_buf);
-        if (!json) {
-            ESP_LOGE(TAG, "Failed to parse provisioning response");
-            return PROV_RESULT_ERROR;
-        }
+    case 200:
+        /* First-time provisioning */
+        return parse_and_store(response_buf, response_len, cfg);
 
-        cJSON *device_token    = cJSON_GetObjectItemCaseSensitive(json, "device_token");
-        cJSON *tenant_id       = cJSON_GetObjectItemCaseSensitive(json, "tenant_id");
-        cJSON *device_id       = cJSON_GetObjectItemCaseSensitive(json, "device_id");
-        cJSON *mqtt_broker_url = cJSON_GetObjectItemCaseSensitive(json, "mqtt_url");
-
-        if (!cJSON_IsString(device_token) || !cJSON_IsString(tenant_id) ||
-            !cJSON_IsString(device_id)    || !cJSON_IsString(mqtt_broker_url))
-        {
-            ESP_LOGE(TAG, "Missing required fields in provisioning response");
-            cJSON_Delete(json);
-            return PROV_RESULT_ERROR;
-        }
-
-        strlcpy(cfg->device_token,    device_token->valuestring,    sizeof(cfg->device_token));
-        strlcpy(cfg->tenant_id,       tenant_id->valuestring,       sizeof(cfg->tenant_id));
-        strlcpy(cfg->device_id,       device_id->valuestring,       sizeof(cfg->device_id));
-        strlcpy(cfg->mqtt_broker_url, mqtt_broker_url->valuestring, sizeof(cfg->mqtt_broker_url));
-
-        /* Optional: MQTT cloud broker credentials */
-        cJSON *mqtt_user = cJSON_GetObjectItemCaseSensitive(json, "mqtt_username");
-        cJSON *mqtt_pass = cJSON_GetObjectItemCaseSensitive(json, "mqtt_password");
-        if (cJSON_IsString(mqtt_user)) strlcpy(cfg->mqtt_username, mqtt_user->valuestring, sizeof(cfg->mqtt_username));
-        if (cJSON_IsString(mqtt_pass)) strlcpy(cfg->mqtt_password, mqtt_pass->valuestring, sizeof(cfg->mqtt_password));
-
-        /* Clear claim_token — it's single-use */
-        memset(cfg->claim_token, 0, sizeof(cfg->claim_token));
-
-        nvs_store_device_config(cfg);
-        cJSON_Delete(json);
-        return PROV_RESULT_OK;
-    }
     case 409:
-        ESP_LOGW(TAG, "Device already provisioned (409)");
-        return PROV_RESULT_CONFLICT;
+        /* Device already provisioned — backend returns credentials anyway */
+        ESP_LOGW(TAG, "Device already provisioned (409) — parsing idempotent response");
+        {
+            prov_result_t r = parse_and_store(response_buf, response_len, cfg);
+            return (r == PROV_RESULT_OK) ? PROV_RESULT_OK : PROV_RESULT_ERROR;
+        }
+
     case 422:
         ESP_LOGW(TAG, "Invalid claim token (422) — clearing from NVS");
         memset(cfg->claim_token, 0, sizeof(cfg->claim_token));
         nvs_store_device_config(cfg);
         return PROV_RESULT_INVALID;
+
     default:
         ESP_LOGE(TAG, "Unexpected HTTP status: %d", http_status);
         return PROV_RESULT_ERROR;

@@ -186,6 +186,12 @@ static void state_enter_normal(void)
             prov_result_t result = provisioning_client_register(&cfg);
             if (result == PROV_RESULT_OK) {
                 ESP_LOGI(TAG, "[NORMAL] Provisioning successful — device token stored");
+            } else if (result == PROV_RESULT_INVALID) {
+                /* Bad claim_token — go back to captive portal for new token */
+                ESP_LOGW(TAG, "[NORMAL] Invalid claim token — restarting provisioning");
+                prov_done = false;
+                sm_send_event(SM_EVT_WIFI_FAILED);  /* re-enters provisioning */
+                return;
             } else {
                 ESP_LOGE(TAG, "[NORMAL] Provisioning failed (result=%d)", (int)result);
                 sm_send_event(SM_EVT_ERROR);
