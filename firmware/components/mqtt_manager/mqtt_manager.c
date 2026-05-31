@@ -256,6 +256,10 @@ void mqtt_manager_start(const device_config_t *cfg)
         strlcpy(mqtt_pass, s_cfg.device_token, sizeof(mqtt_pass));
     }
 
+    /* HARDCODE: bypass NVS corruption until serial provisioning is fixed */
+    strlcpy(mqtt_user, "iotech-esp32", sizeof(mqtt_user));
+    strlcpy(mqtt_pass, "Artemio1", sizeof(mqtt_pass));
+
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address.uri   = s_cfg.mqtt_broker_url,
@@ -265,7 +269,7 @@ void mqtt_manager_start(const device_config_t *cfg)
             },
         },
         .credentials = {
-            .client_id     = s_cfg.device_id,
+            .client_id     = "esp32-test-2",
             .username      = mqtt_user,
             .authentication = {
                 .password  = mqtt_pass,
@@ -273,13 +277,7 @@ void mqtt_manager_start(const device_config_t *cfg)
         },
         .session = {
             .keepalive            = 60,
-            .disable_clean_session= true,
-            .last_will = {
-                .topic = lwt_topic,
-                .msg   = "offline",
-                .qos   = 1,
-                .retain= 1,
-            },
+            .protocol_ver = MQTT_PROTOCOL_V_3_1_1,
         },
     };
 
