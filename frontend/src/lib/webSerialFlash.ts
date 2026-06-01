@@ -19,11 +19,10 @@ export async function flashESP32(
 	let transport: Transport | null = null;
 
 	try {
-		// 1. Open serial port via transport
-		onProgress({ step: "connect", line: "🔗 Opening serial port..." });
+		// 1. Create transport (don't connect — ESPLoader handles it)
+		onProgress({ step: "connect", line: "🔗 Creating transport..." });
 		transport = new Transport(port);
-		await transport.connect(115200);
-		onProgress({ step: "connect", line: "✅ Serial port opened" });
+		onProgress({ step: "connect", line: "✅ Transport ready" });
 
 		// 2. Create ESPLoader
 		const loader = new ESPLoader({
@@ -71,7 +70,11 @@ export async function flashESP32(
 		const message = err instanceof Error ? err.message : String(err);
 		onProgress({ step: "error", line: `❌ ${message}` });
 		if (transport) {
-			try { await transport.disconnect(); } catch { /* ignore */ }
+			try {
+				await transport.disconnect();
+			} catch {
+				/* ignore */
+			}
 		}
 		return false;
 	}
