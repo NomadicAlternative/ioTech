@@ -111,10 +111,14 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 			);
 			const { deviceId, data, receivedAt } = event;
 			const ts = receivedAt ? new Date(receivedAt).getTime() : Date.now();
+			console.debug("[Socket] data check", typeof data, Object.keys(data || {}).length, "keys");
 			if (data && typeof data === "object") {
 				for (const [key, value] of Object.entries(data)) {
+					console.debug("[Socket] calling setTelemetry", deviceId, key, value);
 					setTelemetry(deviceId, key, value, ts);
 				}
+			} else {
+				console.warn("[Socket] data is NOT an object, skipping");
 			}
 		});
 
