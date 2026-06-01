@@ -24,7 +24,10 @@ Node.prototype.removeChild = function <T extends Node>(child: T): T {
 };
 
 const _origInsertBefore = Node.prototype.insertBefore;
-Node.prototype.insertBefore = function <T extends Node>(newNode: T, refNode: Node | null): T {
+Node.prototype.insertBefore = function <T extends Node>(
+	newNode: T,
+	refNode: Node | null,
+): T {
 	try {
 		return _origInsertBefore.call(this, newNode, refNode) as T;
 	} catch (e: unknown) {

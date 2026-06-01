@@ -339,10 +339,12 @@ function ruleBasedConfig(input, boardId) {
     );
   }
 
-  // Build relay channels using actual board pins
+  // Build relay channels using actual board pins — only if user mentioned relays
   const channels = [];
-  const maxRelay = Math.max(board.pins.relays.length, ...relayOn, ...relayOff, 1);
-  for (let i = 1; i <= Math.min(maxRelay, board.pins.relays.length); i++) {
+  const userMentionedRelays = relayOn.length > 0 || relayOff.length > 0;
+  if (userMentionedRelays) {
+    const maxRelay = Math.max(board.pins.relays.length, ...relayOn, ...relayOff, 1);
+    for (let i = 1; i <= Math.min(maxRelay, board.pins.relays.length); i++) {
     const relayPin = board.pins.relays[i - 1];
     if (relayPin && relayPin.gpio !== 0xff) {
       channels.push({
@@ -365,6 +367,7 @@ function ruleBasedConfig(input, boardId) {
   }
   if (channels.length > 0) {
     drivers.push({ model: 'RELAY', channels });
+  }
   }
 
   // Build actions
