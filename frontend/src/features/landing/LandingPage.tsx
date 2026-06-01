@@ -166,10 +166,6 @@ export function LandingPage() {
 					/>
 					<div className="absolute inset-0 bg-gradient-to-b from-[var(--prussian-blue)]/20 via-transparent to-[var(--prussian-blue)]" />
 				</div>
-				<canvas
-					ref={canvasRef}
-					className="absolute inset-0 w-full h-[400px] opacity-30 pointer-events-none z-10"
-				/>
 				<div className="max-w-4xl mx-auto text-center relative z-20">
 					<div className="inline-flex items-center gap-2 text-xs font-medium text-[var(--brand-green)] bg-teal-500/10 border border-teal-500/20 px-4 py-2 rounded-full mb-8 md:mb-10">
 						<Zap className="h-3 w-3" />
