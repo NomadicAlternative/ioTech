@@ -19,7 +19,14 @@ import {
 	ArrowRight,
 } from "lucide-react";
 
-type Phase = "idle" | "connecting" | "building" | "flashing" | "reset" | "done" | "error";
+type Phase =
+	| "idle"
+	| "connecting"
+	| "building"
+	| "flashing"
+	| "reset"
+	| "done"
+	| "error";
 
 interface Props {
 	deviceId: string;
@@ -77,15 +84,19 @@ export function FlashDeviceWizard({
 
 		setPhase("building");
 
-		const success = await flashESP32(port, "/firmware/flash/esp32dev.bin", ({ step, line }) => {
-			setLogs((prev) => [...prev, line]);
-			if (step === "flash") setPhase("flashing");
-			if (step === "done") setPhase("reset");
-			if (step === "error") {
-				setPhase("error");
-				setError(line);
-			}
-		});
+		const success = await flashESP32(
+			port,
+			"https://iotech-iml4.onrender.com/firmware/flash/esp32dev.bin",
+			({ step, line }) => {
+				setLogs((prev) => [...prev, line]);
+				if (step === "flash") setPhase("flashing");
+				if (step === "done") setPhase("reset");
+				if (step === "error") {
+					setPhase("error");
+					setError(line);
+				}
+			},
+		);
 
 		if (!success && phase !== "error") {
 			setPhase("error");
@@ -140,21 +151,28 @@ export function FlashDeviceWizard({
 							</div>
 						)}
 
-				{/* Connecting — port selector dialog is open */}
-				{phase === "connecting" && (
-					<div className="text-center space-y-4 py-12">
-						<Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
-						<h3 className="text-lg font-semibold">Select the ESP32 serial port</h3>
-						<p className="text-sm text-muted-foreground">
-							The browser will show a dialog — select the port that matches your ESP32
-							(usually <code className="bg-muted px-1 rounded">/dev/cu.usbserial-*</code> on Mac,
-							<code className="bg-muted px-1 rounded">COM*</code> on Windows)
-						</p>
-					</div>
-				)}
+						{/* Connecting — port selector dialog is open */}
+						{phase === "connecting" && (
+							<div className="text-center space-y-4 py-12">
+								<Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
+								<h3 className="text-lg font-semibold">
+									Select the ESP32 serial port
+								</h3>
+								<p className="text-sm text-muted-foreground">
+									The browser will show a dialog — select the port that matches
+									your ESP32 (usually{" "}
+									<code className="bg-muted px-1 rounded">
+										/dev/cu.usbserial-*
+									</code>{" "}
+									on Mac,
+									<code className="bg-muted px-1 rounded">COM*</code> on
+									Windows)
+								</p>
+							</div>
+						)}
 
-				{/* Building / Flashing */}
-				{(phase === "building" || phase === "flashing") && (
+						{/* Building / Flashing */}
+						{(phase === "building" || phase === "flashing") && (
 							<div className="space-y-3">
 								<div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
 									<Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
