@@ -23,6 +23,19 @@ Node.prototype.removeChild = function <T extends Node>(child: T): T {
 	}
 };
 
+const _origInsertBefore = Node.prototype.insertBefore;
+Node.prototype.insertBefore = function <T extends Node>(newNode: T, refNode: Node | null): T {
+	try {
+		return _origInsertBefore.call(this, newNode, refNode) as T;
+	} catch (e: unknown) {
+		if (e instanceof DOMException && e.name === "NotFoundError") {
+			// Extension-injected ref node — silently append instead of crashing
+			return this.appendChild(newNode) as T;
+		}
+		throw e;
+	}
+};
+
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
 		<App />
