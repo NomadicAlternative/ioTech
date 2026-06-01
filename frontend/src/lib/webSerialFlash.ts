@@ -11,36 +11,33 @@ export interface FlashProgress {
 
 type OnProgress = (event: FlashProgress) => void;
 
-/**
- * Flash an ESP32 via Web Serial API.
- * @param firmwareUrl — URL to the firmware .bin file (e.g., /firmware/flash/esp32dev.bin)
- * @param onProgress — callback for progress updates
- * @returns true on success
- */
 export async function flashESP32(
 	firmwareUrl: string,
 	onProgress: OnProgress,
 ): Promise<boolean> {
-	try {
-		// 1. Request serial port
-		onProgress({ step: "connect", line: "🔌 Select the ESP32 serial port..." });
-		let port: SerialPort;
-		try {
-				port = await navigator.serial.requestPort();
-		} catch (err) {
-				// User cancelled port selection — silently abort, not an error
-				if (err instanceof DOMException && err.name === "AbortError") {
-						onProgress({ step: "cancelled", line: "" });
-						return false;
-				}
-				throw err;
-		}
-		await port.open({ baudRate: 115200 });
+	let transport: Transport | null = null;
 
+	try {
+		// 1. Request serial port (browser dialog)
+		onProgress({ step: "connect", line: "🔌 Select the ESP32 serial port in the browser dialog..." });
+		let device: SerialPort;
+		try {
+			device = await navigator.serial.requestPort();
+		} catch (err) {
+			if (err instanceof DOMException && err.name === "AbortError") {
+				onProgress({ step: "cancelled", line: "" });
+				return false;
+			}
+			throw err;
+		}
+
+		// 2. Create transport + connect
+		onProgress({ step: "connect", line: "🔗 Opening serial port..." });
+		transport = new Transport(device);
+		await transport.connect(115200);
 		onProgress({ step: "connect", line: "✅ Serial port opened" });
 
-		// 2. Create transport + loader
-		const transport = new Transport(port);
+		// 3. Create loader
 		const loader = new ESPLoader({
 			transport,
 			baudrate: 115200,
@@ -51,12 +48,12 @@ export async function flashESP32(
 			},
 		});
 
-		// 3. Connect to ESP32
-		onProgress({ step: "connect", line: "🔍 Connecting to ESP32..." });
+		// 4. Connect to ESP32 (detect chip, run stub)
+		onProgress({ step: "connect", line: "🔍 Detecting ESP32..." });
 		const chip = await loader.main();
 		onProgress({ step: "connect", line: `✅ Connected: ${chip}` });
 
-		// 4. Download firmware
+		// 5. Download firmware
 		onProgress({ step: "download", line: "📥 Downloading firmware..." });
 		const response = await fetch(firmwareUrl);
 		if (!response.ok) {
@@ -68,27 +65,26 @@ export async function flashESP32(
 			line: `✅ Firmware downloaded (${(firmwareArray.length / 1024).toFixed(1)} KB)`,
 		});
 
-		// 5. Flash
-		onProgress({ step: "flash", line: "⚡ Flashing..." });
+		// 6. Flash
+		onProgress({ step: "flash", line: "⚡ Erasing + writing flash..." });
 		await loader.writeFlash({
 			fileArray: [{ data: firmwareArray, address: 0x10000 }],
-			flashSize: "4MB",
+			flashSize: "2MB",
 			flashMode: "dio",
 			flashFreq: "40m",
 			eraseAll: false,
 			compress: true,
 		});
 
-		onProgress({
-			step: "done",
-			line: "✅ Flash complete! ESP32 is rebooting...",
-		});
-
-		await port.close();
+		onProgress({ step: "done", line: "✅ Flash complete!" });
+		await transport.disconnect();
 		return true;
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
 		onProgress({ step: "error", line: `❌ ${message}` });
+		if (transport) {
+			try { await transport.disconnect(); } catch { /* ignore */ }
+		}
 		return false;
 	}
 }
