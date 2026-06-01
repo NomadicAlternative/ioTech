@@ -10,17 +10,8 @@ export function GaugeWidget({ widgetId: _widgetId, config }: WidgetProps) {
 		config.deviceId ?? "",
 		config.datastreamKey ?? "",
 	);
-	console.debug(
-		"[Gauge] render",
-		config.deviceId,
-		config.datastreamKey,
-		"→",
-		entry?.value,
-	);
 	const value =
 		typeof entry?.value === "number" ? entry.value : Number(entry?.value ?? 0);
-
-	console.warn("[Gauge] value after compute:", value, "entry:", entry);
 
 	const min = Number(config.settings.min ?? 0);
 	const max = Number(config.settings.max ?? 100);

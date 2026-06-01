@@ -1,11 +1,11 @@
-import { create } from 'zustand'
+import { create } from "zustand";
 
 /**
  * A single telemetry reading — the latest value received for a device:stream key.
  */
 interface TelemetryEntry {
-  value: unknown
-  ts: number
+	value: unknown;
+	ts: number;
 }
 
 /**
@@ -13,19 +13,24 @@ interface TelemetryEntry {
  * Using a flat key gives O(1) lookup per widget subscription (AD-DASH-006).
  */
 interface TelemetryState {
-  data: Record<string, TelemetryEntry>
+	data: Record<string, TelemetryEntry>;
 }
 
 interface TelemetryActions {
-  /** Write or overwrite the latest reading for a device/stream pair. */
-  setTelemetry: (deviceId: string, datastreamKey: string, value: unknown, ts: number) => void
-  /** Read a single entry by composite key — use `useTelemetryValue` for reactive subscriptions. */
-  getTelemetry: (key: string) => TelemetryEntry | undefined
-  /** Clear all telemetry — called on logout. */
-  clearAll: () => void
+	/** Write or overwrite the latest reading for a device/stream pair. */
+	setTelemetry: (
+		deviceId: string,
+		datastreamKey: string,
+		value: unknown,
+		ts: number,
+	) => void;
+	/** Read a single entry by composite key — use `useTelemetryValue` for reactive subscriptions. */
+	getTelemetry: (key: string) => TelemetryEntry | undefined;
+	/** Clear all telemetry — called on logout. */
+	clearAll: () => void;
 }
 
-type TelemetryStore = TelemetryState & TelemetryActions
+type TelemetryStore = TelemetryState & TelemetryActions;
 
 /**
  * Zustand store for real-time telemetry data.
@@ -35,31 +40,30 @@ type TelemetryStore = TelemetryState & TelemetryActions
  * const entry = useTelemetryValue('device-id', 'temp')
  */
 export const useTelemetryStore = create<TelemetryStore>((set, get) => ({
-  data: {},
+	data: {},
 
-  setTelemetry: (deviceId, datastreamKey, value, ts) => {
-    const key = `${deviceId}:${datastreamKey}`
-    console.debug('[TelemetryStore] set', key, '→', value)
-    set((state) => ({
-      data: {
-        ...state.data,
-        [key]: { value, ts },
-      },
-    }))
-  },
+	setTelemetry: (deviceId, datastreamKey, value, ts) => {
+		const key = `${deviceId}:${datastreamKey}`;
+		set((state) => ({
+			data: {
+				...state.data,
+				[key]: { value, ts },
+			},
+		}));
+	},
 
-  getTelemetry: (key) => get().data[key],
+	getTelemetry: (key) => get().data[key],
 
-  clearAll: () => set({ data: {} }),
-}))
+	clearAll: () => set({ data: {} }),
+}));
 
 /**
  * Selector hook — only re-renders when the specific key changes.
  */
 export function useTelemetryValue(
-  deviceId: string,
-  datastreamKey: string
+	deviceId: string,
+	datastreamKey: string,
 ): TelemetryEntry | undefined {
-  const key = `${deviceId}:${datastreamKey}`
-  return useTelemetryStore((state) => state.data[key])
+	const key = `${deviceId}:${datastreamKey}`;
+	return useTelemetryStore((state) => state.data[key]);
 }

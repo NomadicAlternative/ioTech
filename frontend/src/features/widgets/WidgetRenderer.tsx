@@ -1,9 +1,10 @@
-import { Settings } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { getWidgetDef } from './registry'
-import { useWidgetConfigStore } from '@/stores/widgetConfigStore'
-import type { WidgetLayoutEntry } from './types'
+import { Settings } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { getWidgetDef } from "./registry";
+import { useWidgetConfigStore } from "@/stores/widgetConfigStore";
+import { useTelemetryValue } from "@/stores/telemetryStore";
+import type { WidgetLayoutEntry } from "./types";
 
 interface WidgetRendererProps {
   entry: WidgetLayoutEntry
@@ -20,8 +21,15 @@ interface WidgetRendererProps {
  * - The widget's `config.name` is used as the card header label (REQ-DASH-012).
  */
 export function WidgetRenderer({ entry, isEditing }: WidgetRendererProps) {
-  const openConfig = useWidgetConfigStore((s) => s.openConfig)
-  const def = getWidgetDef(entry.widgetType)
+  const openConfig = useWidgetConfigStore((s) => s.openConfig);
+  const def = getWidgetDef(entry.widgetType);
+
+  // Subscribe to telemetry for this widget to force react-grid-layout to propagate DOM updates.
+  // react-grid-layout memoizes children internally and can block re-renders when only the
+  // deeply-nested widget component triggers an update via Zustand. By subscribing to the
+  // widget's telemetry key here, WidgetRenderer (the grid child) re-renders when data changes,
+  // ensuring react-grid-layout sees the new JSX.
+  useTelemetryValue(entry.config.deviceId ?? "", entry.config.datastreamKey ?? "");
 
   return (
     <Card className="h-full w-full flex flex-col overflow-hidden">

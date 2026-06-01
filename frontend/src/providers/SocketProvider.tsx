@@ -104,21 +104,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 		// Backend emits 'telemetry:new' with { deviceId, data: { temperature: 25.1, ... }, receivedAt }
 		// The store expects per-stream calls — explode the data object into individual setTelemetry() calls.
 		newSocket.on("telemetry:new", (event: BackendTelemetryPayload) => {
-			console.debug(
-				"[Socket] telemetry:new received",
-				event.deviceId,
-				event.data,
-			);
 			const { deviceId, data, receivedAt } = event;
 			const ts = receivedAt ? new Date(receivedAt).getTime() : Date.now();
-			console.debug("[Socket] data check", typeof data, Object.keys(data || {}).length, "keys");
 			if (data && typeof data === "object") {
 				for (const [key, value] of Object.entries(data)) {
-					console.debug("[Socket] calling setTelemetry", deviceId, key, value);
 					setTelemetry(deviceId, key, value, ts);
 				}
-			} else {
-				console.warn("[Socket] data is NOT an object, skipping");
 			}
 		});
 
