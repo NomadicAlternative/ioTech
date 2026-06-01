@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label'
 
 export function NumberDisplayWidget({ widgetId: _widgetId, config }: WidgetProps) {
   const entry = useTelemetryValue(config.deviceId ?? '', config.datastreamKey ?? '')
+  console.debug('[NumberDisplay] render', config.deviceId, config.datastreamKey, entry?.value)
   const raw = typeof entry?.value === 'number' ? entry.value : Number(entry?.value ?? 0)
 
   const decimals = Number(config.settings.decimals ?? 2)

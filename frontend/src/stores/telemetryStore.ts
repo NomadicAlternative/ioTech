@@ -39,6 +39,7 @@ export const useTelemetryStore = create<TelemetryStore>((set, get) => ({
 
   setTelemetry: (deviceId, datastreamKey, value, ts) => {
     const key = `${deviceId}:${datastreamKey}`
+    console.debug('[TelemetryStore] set', key, '→', value)
     set((state) => ({
       data: {
         ...state.data,
