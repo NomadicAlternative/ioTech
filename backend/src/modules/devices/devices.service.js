@@ -231,13 +231,21 @@ async function getProvisioningCredentials(tenantId, deviceId) {
   const localIp = getLocalIp();
   const port = process.env.PORT || 3000;
 
+  // Use env vars for production, fall back to local IP for development
+  const backendUrl = process.env.BACKEND_URL || `http://${localIp}:${port}`;
+  const mqttUrl = process.env.MQTT_BROKER_URL || `mqtt://${localIp}:1883`;
+  const mqttUser = process.env.MQTT_DEVICE_USERNAME || process.env.MQTT_USERNAME || '';
+  const mqttPass = process.env.MQTT_DEVICE_PASSWORD || process.env.MQTT_PASSWORD || '';
+
   return {
     device_token: device.device_token,
     claim_token: device.claim_token || undefined,
     tenant_id: device.tenant_id,
     device_id: device.id,
-    backend_url: `http://${localIp}:${port}`,
-    mqtt_url: `mqtt://${localIp}:1883`,
+    backend_url: backendUrl,
+    mqtt_url: mqttUrl,
+    mqtt_username: mqttUser || undefined,
+    mqtt_password: mqttPass || undefined,
     drivers: (device.metadata && device.metadata.drivers) || undefined,
   };
 }

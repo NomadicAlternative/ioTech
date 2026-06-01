@@ -100,6 +100,8 @@ export function ProvisioningModal({ deviceId, deviceName, open, onClose }: Props
       claim_token: creds.claim_token,
       tenant_id: creds.tenant_id,
       device_id: creds.device_id,
+      mqtt_username: creds.mqtt_username,
+      mqtt_password: creds.mqtt_password,
       drivers: creds.drivers,
     }) + '\n'
 

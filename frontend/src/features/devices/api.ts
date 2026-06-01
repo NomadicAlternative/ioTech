@@ -72,6 +72,8 @@ export interface ProvisioningCredentials {
   device_id: string
   backend_url: string
   mqtt_url: string
+  mqtt_username?: string
+  mqtt_password?: string
   drivers?: { model: string; gpio?: number; channels?: { num: number; gpio: number; name: string }[] }[]
 }
 
