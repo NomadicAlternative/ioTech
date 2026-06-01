@@ -108,7 +108,9 @@ async function regenerateClaimToken(tenantId, deviceId) {
   const newClaimToken = uuidv4();
   const updated = await devicesModel.update(deviceId, { claim_token: newClaimToken });
 
-  logger.info(`[devices.service] Regenerated claim_token for device ${deviceId} (tenant ${tenantId})`);
+  logger.info(
+    `[devices.service] Regenerated claim_token for device ${deviceId} (tenant ${tenantId})`
+  );
   return updated;
 }
 
@@ -124,7 +126,12 @@ async function update(tenantId, id, data) {
   await getById(tenantId, id);
 
   // Strip read-only fields from update payload
-  const { tenant_id: _tenantId, device_token: _deviceToken, created_at: _createdAt, ...safeData } = data;
+  const {
+    tenant_id: _tenantId,
+    device_token: _deviceToken,
+    created_at: _createdAt,
+    ...safeData
+  } = data;
 
   const updated = await devicesModel.update(id, safeData);
   if (!updated) throw new NotFoundError(`Device not found after update: ${id}`);
@@ -189,7 +196,18 @@ async function claimDevice(tenantId, claimToken) {
   return updated;
 }
 
-module.exports = { list, getById, create, update, remove, authenticate, claimDevice, sendCommand, getProvisioningCredentials, regenerateClaimToken };
+module.exports = {
+  list,
+  getById,
+  create,
+  update,
+  remove,
+  authenticate,
+  claimDevice,
+  sendCommand,
+  getProvisioningCredentials,
+  regenerateClaimToken,
+};
 
 /**
  * Send a command to a device via MQTT.
@@ -208,7 +226,9 @@ async function sendCommand(tenantId, deviceId, command) {
   if (mqttClient) {
     const payload = { type: 'relay', relay: command.relay, state: command.state };
     mqttClient.publish(topic, JSON.stringify(payload), { qos: 1 });
-    logger.info(`[devices.service] Published command to ${topic}: relay=${command.relay} state=${command.state}`);
+    logger.info(
+      `[devices.service] Published command to ${topic}: relay=${command.relay} state=${command.state}`
+    );
   } else {
     logger.warn(`[devices.service] MQTT client not available — command for ${deviceId} not sent`);
   }

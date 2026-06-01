@@ -345,29 +345,29 @@ function ruleBasedConfig(input, boardId) {
   if (userMentionedRelays) {
     const maxRelay = Math.max(board.pins.relays.length, ...relayOn, ...relayOff, 1);
     for (let i = 1; i <= Math.min(maxRelay, board.pins.relays.length); i++) {
-    const relayPin = board.pins.relays[i - 1];
-    if (relayPin && relayPin.gpio !== 0xff) {
-      channels.push({
-        num: i,
-        gpio: relayPin.gpio,
-        name: relayPin.name || `${lang === 'es' ? 'Relé' : 'Relay'} ${i}`,
-      });
-      datastreams.push({
-        key: `relay${i}`,
-        name: relayPin.name || `${lang === 'es' ? 'Relé' : 'Relay'} ${i}`,
-        type: 'string',
-        unit: null,
-        direction: 'output',
-        driver_name: 'RELAY',
-        gpio: relayPin.gpio,
-        i2c_addr: null,
-        config: { channel: i },
-      });
+      const relayPin = board.pins.relays[i - 1];
+      if (relayPin && relayPin.gpio !== 0xff) {
+        channels.push({
+          num: i,
+          gpio: relayPin.gpio,
+          name: relayPin.name || `${lang === 'es' ? 'Relé' : 'Relay'} ${i}`,
+        });
+        datastreams.push({
+          key: `relay${i}`,
+          name: relayPin.name || `${lang === 'es' ? 'Relé' : 'Relay'} ${i}`,
+          type: 'string',
+          unit: null,
+          direction: 'output',
+          driver_name: 'RELAY',
+          gpio: relayPin.gpio,
+          i2c_addr: null,
+          config: { channel: i },
+        });
+      }
     }
-  }
-  if (channels.length > 0) {
-    drivers.push({ model: 'RELAY', channels });
-  }
+    if (channels.length > 0) {
+      drivers.push({ model: 'RELAY', channels });
+    }
   }
 
   // Build actions
