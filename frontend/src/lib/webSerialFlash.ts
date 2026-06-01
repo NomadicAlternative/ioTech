@@ -56,9 +56,9 @@ export async function flashESP32(
 		onProgress({ step: "flash", line: "⚡ Erasing + writing flash..." });
 		await loader.writeFlash({
 			fileArray: [{ data: firmwareArray, address: 0x10000 }],
-			flashSize: "2MB",
-			flashMode: "dio",
-			flashFreq: "40m",
+			flashSize: "keep",
+			flashMode: "keep",
+			flashFreq: "keep",
 			eraseAll: false,
 			compress: true,
 		});
