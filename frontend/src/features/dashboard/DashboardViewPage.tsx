@@ -1,137 +1,161 @@
-import { useEffect, useLayoutEffect, useState, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { Edit, ArrowLeft } from 'lucide-react'
-import { Responsive as ResponsiveGridLayout } from 'react-grid-layout'
-import type { Layout } from 'react-grid-layout'
-import { Button } from '@/components/ui/button'
-import { useDashboardStore } from './dashboardStore'
-import { useAuthStore } from '@/features/auth/authStore'
-import { WidgetRenderer } from '@/features/widgets/WidgetRenderer'
-import 'react-grid-layout/css/styles.css'
-import 'react-resizable/css/styles.css'
+import { useEffect, useLayoutEffect, useState, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Edit, ArrowLeft } from "lucide-react";
+import { Responsive as ResponsiveGridLayout } from "react-grid-layout";
+import type { Layout } from "react-grid-layout";
+import { Button } from "@/components/ui/button";
+import { useDashboardStore } from "./dashboardStore";
+import { useAuthStore } from "@/features/auth/authStore";
+import { WidgetRenderer } from "@/features/widgets/WidgetRenderer";
+import { useTelemetryVersion } from "@/stores/telemetryStore";
+import "react-grid-layout/css/styles.css";
+import "react-resizable/css/styles.css";
 
 export function DashboardViewPage() {
-  const { t } = useTranslation()
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const { currentDashboard, layout, fetchDashboard, clearCurrent } = useDashboardStore()
-  const user = useAuthStore((s) => s.user)
+	const { t } = useTranslation();
+	const { id } = useParams<{ id: string }>();
+	const navigate = useNavigate();
+	const { currentDashboard, layout, fetchDashboard, clearCurrent } =
+		useDashboardStore();
+	const user = useAuthStore((s) => s.user);
 
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [canvasWidth, setCanvasWidth] = useState(1200)
-  const canvasRef = useRef<HTMLDivElement>(null)
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+	const [canvasWidth, setCanvasWidth] = useState(1200);
+	const canvasRef = useRef<HTMLDivElement>(null);
 
-  const isInstaller = user?.role === 'installer' || user?.role === 'admin'
+	const isInstaller = user?.role === "installer" || user?.role === "admin";
 
-  useEffect(() => {
-    if (!id) return
-    fetchDashboard(id)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
-    return () => clearCurrent()
-  }, [id, fetchDashboard, clearCurrent])
+	// Subscribe to telemetry version to force re-render of react-grid-layout when data changes.
+	// Without this, react-grid-layout memoizes its children and blocks DOM updates from
+	// deeply-nested widget components that re-render via Zustand.
+	useTelemetryVersion();
 
-  useLayoutEffect(() => {
-    const el = canvasRef.current
-    if (!el) return
-    const ro = new ResizeObserver(([entry]) => {
-      setCanvasWidth(entry.contentRect.width)
-    })
-    ro.observe(el)
-    setCanvasWidth(el.getBoundingClientRect().width)
-    return () => ro.disconnect()
-  }, [])
+	useEffect(() => {
+		if (!id) return;
+		fetchDashboard(id)
+			.catch((err) => setError(err.message))
+			.finally(() => setLoading(false));
+		return () => clearCurrent();
+	}, [id, fetchDashboard, clearCurrent]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
-        {t('dashboard.view.loading')}
-      </div>
-    )
-  }
+	useLayoutEffect(() => {
+		const el = canvasRef.current;
+		if (!el) return;
+		const ro = new ResizeObserver(([entry]) => {
+			setCanvasWidth(entry.contentRect.width);
+		});
+		ro.observe(el);
+		setCanvasWidth(el.getBoundingClientRect().width);
+		return () => ro.disconnect();
+	}, []);
 
-  if (error) {
-    return (
-      <div className="space-y-4">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
-          <ArrowLeft className="h-4 w-4" /> {t('common.back')}
-        </Button>
-        <div className="rounded-md bg-destructive/10 text-destructive px-4 py-3 text-sm">{error}</div>
-      </div>
-    )
-  }
+	if (loading) {
+		return (
+			<div className="flex items-center justify-center h-64 text-muted-foreground">
+				{t("dashboard.view.loading")}
+			</div>
+		);
+	}
 
-  // Convert layout entries to react-grid-layout format
-  const gridLayout: Layout = layout.map((e) => ({
-    i: e.i,
-    x: e.x,
-    y: e.y,
-    w: e.w,
-    h: e.h,
-    static: true,
-  }))
+	if (error) {
+		return (
+			<div className="space-y-4">
+				<Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
+					<ArrowLeft className="h-4 w-4" /> {t("common.back")}
+				</Button>
+				<div className="rounded-md bg-destructive/10 text-destructive px-4 py-3 text-sm">
+					{error}
+				</div>
+			</div>
+		);
+	}
 
-  // Mobile layout: stack vertically in single column
-  let mobileY = 0
-  const xsLayout: Layout = layout.map((e) => {
-    const item = { i: e.i, x: 0, y: mobileY, w: 1, h: e.h, static: true }
-    mobileY += e.h
-    return item
-  })
+	// Convert layout entries to react-grid-layout format
+	const gridLayout: Layout = layout.map((e) => ({
+		i: e.i,
+		x: e.x,
+		y: e.y,
+		w: e.w,
+		h: e.h,
+		static: true,
+	}));
 
-  return (
-    <div className="space-y-4" ref={canvasRef}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/app/dashboards')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold">{currentDashboard?.name ?? t('dashboard.view.fallbackTitle')}</h1>
-            {currentDashboard?.description && (
-              <p className="text-sm text-muted-foreground">{currentDashboard.description}</p>
-            )}
-          </div>
-        </div>
-        {isInstaller && (
-          <Button onClick={() => navigate(`/app/dashboards/${id}/edit`)} className="gap-2">
-            <Edit className="h-4 w-4" /> {t('dashboard.view.editButton')}
-          </Button>
-        )}
-      </div>
+	// Mobile layout: stack vertically in single column
+	const xsLayout: Layout = layout.reduce<Layout>((acc, e, _i) => {
+		const y = acc.reduce((sum, item) => sum + item.h, 0);
+		return [...acc, { i: e.i, x: 0, y, w: 1, h: e.h, static: true }];
+	}, []);
 
-      {/* Grid */}
-      {layout.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center gap-2">
-          <p className="text-muted-foreground">{t('dashboard.view.empty')}</p>
-          {isInstaller && (
-            <Button variant="outline" onClick={() => navigate(`/app/dashboards/${id}/edit`)}>
-              <Edit className="h-4 w-4 mr-2" /> {t('dashboard.view.addWidgets')}
-            </Button>
-          )}
-        </div>
-      ) : (
-          <ResponsiveGridLayout
-            className="layout"
-            layouts={{ lg: gridLayout, md: gridLayout, sm: gridLayout, xs: xsLayout }}
-            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }}
-            cols={{ lg: 12, md: 10, sm: 6, xs: 1 }}
-            rowHeight={80}
-            margin={[12, 12]}
-            width={canvasWidth || 1200}
-            isDraggable={false}
-            isResizable={false}
-          >
-            {layout.map((entry) => (
-              <div key={entry.i}>
-                <WidgetRenderer entry={entry} isEditing={false} />
-              </div>
-            ))}
-          </ResponsiveGridLayout>
-      )}
-    </div>
-  )
+	return (
+		<div className="space-y-4" ref={canvasRef}>
+			{/* Header */}
+			<div className="flex items-center justify-between">
+				<div className="flex items-center gap-2">
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={() => navigate("/app/dashboards")}
+					>
+						<ArrowLeft className="h-4 w-4" />
+					</Button>
+					<div>
+						<h1 className="text-xl font-bold">
+							{currentDashboard?.name ?? t("dashboard.view.fallbackTitle")}
+						</h1>
+						{currentDashboard?.description && (
+							<p className="text-sm text-muted-foreground">
+								{currentDashboard.description}
+							</p>
+						)}
+					</div>
+				</div>
+				{isInstaller && (
+					<Button
+						onClick={() => navigate(`/app/dashboards/${id}/edit`)}
+						className="gap-2"
+					>
+						<Edit className="h-4 w-4" /> {t("dashboard.view.editButton")}
+					</Button>
+				)}
+			</div>
+
+			{/* Grid */}
+			{layout.length === 0 ? (
+				<div className="flex flex-col items-center justify-center py-24 text-center gap-2">
+					<p className="text-muted-foreground">{t("dashboard.view.empty")}</p>
+					{isInstaller && (
+						<Button
+							variant="outline"
+							onClick={() => navigate(`/app/dashboards/${id}/edit`)}
+						>
+							<Edit className="h-4 w-4 mr-2" /> {t("dashboard.view.addWidgets")}
+						</Button>
+					)}
+				</div>
+			) : (
+				<ResponsiveGridLayout
+					className="layout"
+					layouts={{
+						lg: gridLayout,
+						md: gridLayout,
+						sm: gridLayout,
+						xs: xsLayout,
+					}}
+					breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }}
+					cols={{ lg: 12, md: 10, sm: 6, xs: 1 }}
+					rowHeight={80}
+					margin={[12, 12]}
+					width={canvasWidth || 1200}
+				>
+					{layout.map((entry) => (
+						<div key={entry.i}>
+							<WidgetRenderer entry={entry} isEditing={false} />
+						</div>
+					))}
+				</ResponsiveGridLayout>
+			)}
+		</div>
+	);
 }

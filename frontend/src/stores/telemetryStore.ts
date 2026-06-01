@@ -14,6 +14,8 @@ interface TelemetryEntry {
  */
 interface TelemetryState {
 	data: Record<string, TelemetryEntry>;
+	/** Monotonic version — increments on every setTelemetry(). Subscribe to this to re-render on any telemetry change. */
+	version: number;
 }
 
 interface TelemetryActions {
@@ -41,6 +43,7 @@ type TelemetryStore = TelemetryState & TelemetryActions;
  */
 export const useTelemetryStore = create<TelemetryStore>((set, get) => ({
 	data: {},
+	version: 0,
 
 	setTelemetry: (deviceId, datastreamKey, value, ts) => {
 		const key = `${deviceId}:${datastreamKey}`;
@@ -49,12 +52,13 @@ export const useTelemetryStore = create<TelemetryStore>((set, get) => ({
 				...state.data,
 				[key]: { value, ts },
 			},
+			version: state.version + 1,
 		}));
 	},
 
 	getTelemetry: (key) => get().data[key],
 
-	clearAll: () => set({ data: {} }),
+	clearAll: () => set({ data: {}, version: 0 }),
 }));
 
 /**
@@ -66,4 +70,12 @@ export function useTelemetryValue(
 ): TelemetryEntry | undefined {
 	const key = `${deviceId}:${datastreamKey}`;
 	return useTelemetryStore((state) => state.data[key]);
+}
+
+/**
+ * Subscribe to the monotonic version counter. Re-renders on any telemetry change.
+ * Use in parent components that need to force react-grid-layout re-renders.
+ */
+export function useTelemetryVersion(): number {
+	return useTelemetryStore((state) => state.version);
 }
