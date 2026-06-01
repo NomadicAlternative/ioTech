@@ -19,7 +19,7 @@ import {
 	ArrowRight,
 } from "lucide-react";
 
-type Phase = "idle" | "building" | "flashing" | "reset" | "done" | "error";
+type Phase = "idle" | "connecting" | "building" | "flashing" | "reset" | "done" | "error";
 
 interface Props {
 	deviceId: string;
@@ -61,28 +61,33 @@ export function FlashDeviceWizard({
 	}
 
 	async function startFlash() {
-		setPhase("building");
+		setPhase("connecting");
 		setLogs([]);
 		setError(null);
 
-		const success = await flashESP32(
-			"/firmware/flash/esp32dev.bin",
-			({ step, line }) => {
-				if (step === "cancelled") {
-					setPhase("idle");
-					return;
-				}
-				setLogs((prev) => [...prev, line]);
-				if (step === "flash") setPhase("flashing");
-				if (step === "done") setPhase("reset");
-				if (step === "error") {
-					setPhase("error");
-					setError(line);
-				}
-			},
-		);
+		// Ask user to select serial port FIRST, before showing terminal
+		let port: SerialPort;
+		try {
+			port = await navigator.serial.requestPort();
+		} catch {
+			// User cancelled
+			setPhase("idle");
+			return;
+		}
 
-		if (!success && phase !== "error" && phase !== "idle") {
+		setPhase("building");
+
+		const success = await flashESP32(port, "/firmware/flash/esp32dev.bin", ({ step, line }) => {
+			setLogs((prev) => [...prev, line]);
+			if (step === "flash") setPhase("flashing");
+			if (step === "done") setPhase("reset");
+			if (step === "error") {
+				setPhase("error");
+				setError(line);
+			}
+		});
+
+		if (!success && phase !== "error") {
 			setPhase("error");
 			setError("Flash failed");
 		}
@@ -119,7 +124,10 @@ export function FlashDeviceWizard({
 									</p>
 									<div className="mt-4 space-y-2 text-left max-w-md mx-auto text-sm text-muted-foreground">
 										<p>1. 🔌 Conectá el ESP32 a la computadora vía USB</p>
-										<p>2. ⚡ Click en Start Flash → seleccioná el puerto del ESP32</p>
+										<p>
+											2. ⚡ Click en Start Flash → seleccioná el puerto del
+											ESP32
+										</p>
 										<p>3. ⏳ El firmware se descarga y se flashea (~30s)</p>
 										<p>4. 🔄 Apretá EN/RESET cuando aparezca el aviso</p>
 										<p>5. 📡 Configurá el WiFi del cliente y provisioná</p>
@@ -132,8 +140,21 @@ export function FlashDeviceWizard({
 							</div>
 						)}
 
-						{/* Building / Flashing */}
-						{(phase === "building" || phase === "flashing") && (
+				{/* Connecting — port selector dialog is open */}
+				{phase === "connecting" && (
+					<div className="text-center space-y-4 py-12">
+						<Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
+						<h3 className="text-lg font-semibold">Select the ESP32 serial port</h3>
+						<p className="text-sm text-muted-foreground">
+							The browser will show a dialog — select the port that matches your ESP32
+							(usually <code className="bg-muted px-1 rounded">/dev/cu.usbserial-*</code> on Mac,
+							<code className="bg-muted px-1 rounded">COM*</code> on Windows)
+						</p>
+					</div>
+				)}
+
+				{/* Building / Flashing */}
+				{(phase === "building" || phase === "flashing") && (
 							<div className="space-y-3">
 								<div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
 									<Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
@@ -157,7 +178,9 @@ export function FlashDeviceWizard({
 									className="bg-black/90 text-green-400 rounded-lg p-3 h-48 overflow-y-auto font-mono text-xs whitespace-pre-wrap"
 								>
 									{logs.length === 0 && (
-										<span className="text-green-600">Waiting for serial port...</span>
+										<span className="text-green-600">
+											Waiting for serial port...
+										</span>
 									)}
 									{logs.map((line, i) => (
 										<div key={i}>{line}</div>
@@ -177,14 +200,16 @@ export function FlashDeviceWizard({
 										</h3>
 									</div>
 									<p className="text-sm text-muted-foreground">
-										El ESP32 necesita reiniciarse para arrancar con el nuevo firmware.
-										Presioná el botón EN (o RESET) en la placa.
+										El ESP32 necesita reiniciarse para arrancar con el nuevo
+										firmware. Presioná el botón EN (o RESET) en la placa.
 									</p>
 								</div>
 
 								<div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
 									<CheckCircle2 className="w-6 h-6 text-green-500 mx-auto mb-2" />
-									<p className="font-semibold text-green-600">✅ Flash complete!</p>
+									<p className="font-semibold text-green-600">
+										✅ Flash complete!
+									</p>
 									<div className="mt-2 text-xs text-muted-foreground space-y-1">
 										<p>✔ Bootloader escrito</p>
 										<p>✔ Firmware escrito</p>
@@ -213,10 +238,16 @@ export function FlashDeviceWizard({
 									🎉 Device Ready!
 								</h3>
 								<p className="text-sm text-muted-foreground">
-									El ESP32 está flasheado y provisionado. Debería aparecer online
-									en el dashboard en unos segundos.
+									El ESP32 está flasheado y provisionado. Debería aparecer
+									online en el dashboard en unos segundos.
 								</p>
-								<Button variant="outline" onClick={() => { reset(); onClose(); }}>
+								<Button
+									variant="outline"
+									onClick={() => {
+										reset();
+										onClose();
+									}}
+								>
 									Cerrar
 								</Button>
 							</div>
@@ -226,9 +257,7 @@ export function FlashDeviceWizard({
 						{phase === "error" && (
 							<div className="text-center space-y-6 py-8">
 								<AlertTriangle className="w-16 h-16 text-red-500 mx-auto" />
-								<h3 className="text-xl font-bold text-red-600">
-									Flash failed
-								</h3>
+								<h3 className="text-xl font-bold text-red-600">Flash failed</h3>
 								{error && (
 									<p className="text-sm text-muted-foreground bg-red-500/5 p-3 rounded">
 										{error}
