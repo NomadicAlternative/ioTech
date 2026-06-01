@@ -7,6 +7,7 @@ import { useEffect } from 'react'
 
 export function GaugeWidget({ widgetId: _widgetId, config }: WidgetProps) {
   const entry = useTelemetryValue(config.deviceId ?? '', config.datastreamKey ?? '')
+  console.debug('[Gauge] render', config.deviceId, config.datastreamKey, '→', entry?.value)
   const value = typeof entry?.value === 'number' ? entry.value : Number(entry?.value ?? 0)
 
   const min = Number(config.settings.min ?? 0)
