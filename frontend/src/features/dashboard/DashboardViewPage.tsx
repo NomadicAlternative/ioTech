@@ -30,7 +30,7 @@ export function DashboardViewPage() {
 	// Subscribe to telemetry version to force re-render of react-grid-layout when data changes.
 	// Without this, react-grid-layout memoizes its children and blocks DOM updates from
 	// deeply-nested widget components that re-render via Zustand.
-	useTelemetryVersion();
+	const telemetryVersion = useTelemetryVersion();
 
 	useEffect(() => {
 		if (!id) return;
@@ -136,6 +136,7 @@ export function DashboardViewPage() {
 				</div>
 			) : (
 				<ResponsiveGridLayout
+					key={`grid-v${telemetryVersion}`}
 					className="layout"
 					layouts={{
 						lg: gridLayout,
