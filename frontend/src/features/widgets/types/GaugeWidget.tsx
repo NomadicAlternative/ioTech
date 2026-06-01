@@ -20,6 +20,8 @@ export function GaugeWidget({ widgetId: _widgetId, config }: WidgetProps) {
 	const value =
 		typeof entry?.value === "number" ? entry.value : Number(entry?.value ?? 0);
 
+	console.warn("[Gauge] value after compute:", value, "entry:", entry);
+
 	const min = Number(config.settings.min ?? 0);
 	const max = Number(config.settings.max ?? 100);
 	const unit = String(config.settings.unit ?? "");
@@ -65,7 +67,7 @@ export function GaugeWidget({ widgetId: _widgetId, config }: WidgetProps) {
 				)}
 			</svg>
 			<div className="text-3xl font-bold tabular-nums -mt-6">
-				{(() => { const t = value.toFixed(1); console.warn('[Gauge] DOM text:', t, 'value:', value); return t; })()}
+				{value.toFixed(1)}
 				{unit && (
 					<span className="text-base font-normal ml-1 text-muted-foreground">
 						{unit}
