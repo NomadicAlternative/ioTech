@@ -52,8 +52,9 @@ function createApp() {
   app.use(cookieParser());
   app.use(express.json());
 
-  // ── Static firmware files (public, for ESP32 OTA downloads) ──────────────
+  // ── Static firmware files (public, for ESP32 OTA downloads + Web Serial flash) ──
   app.use('/firmware/files', express.static(path.join(__dirname, '..', 'uploads', 'firmware')));
+  app.use('/firmware/flash', express.static(path.join(__dirname, '..', 'public', 'firmware')));
 
   // ── Health endpoint ───────────────────────────────────────────────────────
   app.get('/health', (_req, res) => {

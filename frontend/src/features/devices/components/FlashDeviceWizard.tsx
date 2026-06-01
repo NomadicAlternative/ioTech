@@ -4,8 +4,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { useAuthStore } from '@/features/auth/authStore'
 import { ProvisioningModal } from './ProvisioningModal'
+import { flashESP32 } from '@/lib/webSerialFlash'
 import {
   CheckCircle2, AlertTriangle, Loader2,
   Cpu, Zap, RotateCcw,
@@ -26,7 +26,6 @@ interface Props {
 
 export function FlashDeviceWizard({ deviceId, deviceName, open, onClose }: Props) {
   const { t } = useTranslation()
-  const token = useAuthStore((s) => s.accessToken)
   const [phase, setPhase] = useState<Phase>('idle')
   const [logs, setLogs] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -52,89 +51,26 @@ export function FlashDeviceWizard({ deviceId, deviceName, open, onClose }: Props
     onClose()
   }
 
-  // ── Start flash ────────────────────────────────────────────────────────
+  // ── Start flash via Web Serial ────────────────────────────────────────
 
   async function startFlash() {
     setPhase('building')
     setLogs([])
     setError(null)
 
-    try {
-      const res = await fetch(`/api/devices/${deviceId}/flash`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'text/event-stream',
-        },
-      })
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: { message: 'Flash request failed' } }))
-        throw new Error(err.error?.message || `HTTP ${res.status}`)
+    const success = await flashESP32('/firmware/flash/esp32dev.bin', ({ step, line }) => {
+      setLogs((prev) => [...prev, line])
+      if (step === 'flash') setPhase('flashing')
+      if (step === 'done') setPhase('done')
+      if (step === 'error') {
+        setPhase('error')
+        setError(line)
       }
+    })
 
-      const reader = res.body?.getReader()
-      if (!reader) throw new Error('No response stream')
-
-      const decoder = new TextDecoder()
-      let buffer = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-
-        // Parse complete SSE events from buffer
-        while (buffer.includes('\n\n')) {
-          const idx = buffer.indexOf('\n\n')
-          const eventBlock = buffer.slice(0, idx)
-          buffer = buffer.slice(idx + 2)
-
-          let eventType = 'message'
-          let eventData = ''
-
-          for (const line of eventBlock.split('\n')) {
-            if (line.startsWith('event: ')) {
-              eventType = line.slice(7).trim()
-            } else if (line.startsWith('data: ')) {
-              eventData = line.slice(6)
-            }
-          }
-
-          if (!eventData) continue
-
-          try {
-            const data = JSON.parse(eventData)
-
-            if (eventType === 'progress') {
-              if (data.line) {
-                setLogs((prev) => [...prev, data.line])
-              }
-              if (data.step === 'flash') {
-                setPhase('flashing')
-              }
-            } else if (eventType === 'done') {
-              setPhase('done')
-              setLogs((prev) => [...prev, '✅ Flash complete! Device is ready.'])
-            } else if (eventType === 'error') {
-              throw new Error(data.message || 'Flash failed')
-            }
-          } catch (parseErr) {
-            if (parseErr instanceof Error && parseErr.message !== 'Unexpected end of JSON input') {
-              throw parseErr
-            }
-          }
-        }
-      }
-
-      // If we got here without explicit done event, check if flash completed
-      if (phase !== 'done' && phase !== 'error') {
-        setPhase('done')
-      }
-    } catch (err) {
+    if (!success && phase !== 'error') {
       setPhase('error')
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      setError('Flash failed')
     }
   }
 
@@ -160,7 +96,7 @@ export function FlashDeviceWizard({ deviceId, deviceName, open, onClose }: Props
                   <h3 className="text-xl font-bold">{t('flash.ready', 'Ready to Flash')}</h3>
                   <div className="mt-4 space-y-2 text-left max-w-md mx-auto text-sm text-muted-foreground">
                     <p>1. 🔌 {t('flash.instruction1', 'Connect the ESP32 via USB')}</p>
-                    <p>2. ⚡ {t('flash.instruction2', 'Click Start Flash — the wizard compiles and uploads firmware')}</p>
+                    <p>2. ⚡ {t('flash.instruction2', 'Click Start Flash — downloads and flashes firmware via USB')}</p>
                     <p>3. 🔄 {t('flash.instruction3', 'Press EN/RESET on the ESP32 when prompted')}</p>
                     <p>4. 📡 {t('flash.instruction4', 'Enter WiFi credentials so the device can connect')}</p>
                   </div>
