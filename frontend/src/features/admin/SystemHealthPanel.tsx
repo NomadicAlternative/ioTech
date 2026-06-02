@@ -72,6 +72,7 @@ function MetricRow({
 	sublabel,
 	percent,
 	level,
+	help,
 }: {
 	icon: React.ComponentType<{ className?: string }>;
 	label: string;
@@ -79,6 +80,7 @@ function MetricRow({
 	sublabel?: string;
 	percent: number;
 	level: "healthy" | "warning" | "critical";
+	help?: string;
 }) {
 	return (
 		<div className="space-y-2">
@@ -86,6 +88,14 @@ function MetricRow({
 				<div className="flex items-center gap-2">
 					<Icon className="w-4 h-4 text-muted-foreground" />
 					<span className="text-sm font-medium">{label}</span>
+					{help && (
+						<span
+							className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-muted text-[10px] text-muted-foreground cursor-help"
+							title={help}
+						>
+							?
+						</span>
+					)}
 				</div>
 				<div className="flex items-center gap-2">
 					<span className="text-sm tabular-nums font-mono">{value}</span>
@@ -203,6 +213,7 @@ export function SystemHealthPanel() {
 					sublabel={`${health.database.percent}% used · ${health.database.largest_tables[0]?.table_name || "—"} is largest table`}
 					percent={health.database.percent}
 					level={health.database.level}
+					help="Tamaño total de la base de datos en Neon (PostgreSQL). La telemetría, dispositivos y dashboards ocupan espacio. Neon escala automático."
 				/>
 
 				<MetricRow
@@ -211,6 +222,7 @@ export function SystemHealthPanel() {
 					value={`${health.database.active_connections} / ${health.database.connection_limit}`}
 					percent={health.database.connection_percent}
 					level={health.database.connection_level}
+					help="Conexiones activas entre el backend y PostgreSQL. Cada dashboard abierto usa 1 conexión del pool. Si se agotan, las requests hacen cola."
 				/>
 
 				<MetricRow
@@ -220,6 +232,7 @@ export function SystemHealthPanel() {
 					sublabel={`Uptime: ${health.backend.uptime_human} · Node ${health.backend.node_version} · ${health.backend.env}`}
 					percent={health.backend.heap_percent}
 					level={health.backend.heap_level}
+					help="RAM usada por el proceso Node.js del backend. Crece con más dashboards abiertos (cada WebSocket ~1-2 MB). Si sube sin parar, puede haber memory leak."
 				/>
 
 				<MetricRow
@@ -229,6 +242,7 @@ export function SystemHealthPanel() {
 					sublabel={`${health.cpu.cores} cores · 1m avg: ${health.cpu.load_avg_1m}`}
 					percent={health.cpu.percent}
 					level={health.cpu.level}
+					help="Uso de CPU del VPS (promedio 1 min). Procesar telemetría y WebSockets consume CPU. A 50% activar PM2 cluster mode. A 80% upgrade de VPS."
 				/>
 
 				<MetricRow
@@ -238,6 +252,7 @@ export function SystemHealthPanel() {
 					sublabel={`Warning at ${health.mqtt.warning_threshold}+ · Critical at ${health.mqtt.warning_threshold * 3}`}
 					percent={health.mqtt.percent}
 					level={health.mqtt.level}
+					help="Dispositivos ESP32 activos (publicaron telemetría en los últimos 2 min). Cada uno consume ~50-100 KB de RAM en Mosquitto. Límite real ~5,000."
 				/>
 
 				<MetricRow
@@ -247,6 +262,7 @@ export function SystemHealthPanel() {
 					sublabel={`Warning at ${health.websocket.warning_threshold}+`}
 					percent={health.websocket.percent}
 					level={health.websocket.level}
+					help="Navegadores con un dashboard abierto ahora mismo (conexiones Socket.io). Cada uno consume ~1-2 MB de RAM. Límite real ~2,000."
 				/>
 			</div>
 
@@ -273,6 +289,7 @@ export function SystemHealthPanel() {
 								)
 				}
 				level={health.multi_region.level}
+				help="El VPS está en Europa. Si tenés clientes en América, los datos cruzan el Atlántico (150-300ms). Con 25+ clientes conviene un 2° VPS en US East ($6/mes) para servir América con <50ms."
 			/>
 
 			{/* Largest tables */}
