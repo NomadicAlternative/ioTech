@@ -256,10 +256,10 @@ export function SystemHealthPanel() {
 				value={`${health.multi_region.installers} installers, ${health.multi_region.devices} devices`}
 				sublabel={
 					health.multi_region.level === "healthy"
-						? `Single region OK up to ${health.multi_region.installers_warning} installers / ${health.multi_region.devices_warning} devices`
+						? `VPS único en Europa · OK hasta ${health.multi_region.installers_warning} clientes / ${health.multi_region.devices_warning} dispositivos `
 						: health.multi_region.level === "warning"
-							? `Plan migration to Fly.io + Supabase + HiveMQ multi-region`
-							: `Deploy multi-region now — global latency is hurting UX`
+							? `Clientes en América empiezan a notar latencia · Comprar 2° VPS en US East (~$6/mes) para servirlos más cerca`
+							: `Latencia global afecta la experiencia · Desplegar VPS en US East YA para que dispositivos y dashboards en América tengan <50ms`
 				}
 				percent={
 					health.multi_region.level === "critical"

@@ -107,7 +107,14 @@ function initMqtt(deps) {
         // Only log JSON parse errors for real telemetry topics.
         const isStatusTopic = topic.includes('/status');
         if (!isStatusTopic) {
-          console.error('MQTT: invalid JSON payload from topic', topic, 'payload=', payloadStr, 'error=', parsed.error && parsed.error.message ? parsed.error.message : parsed.error);
+          console.error(
+            'MQTT: invalid JSON payload from topic',
+            topic,
+            'payload=',
+            payloadStr,
+            'error=',
+            parsed.error && parsed.error.message ? parsed.error.message : parsed.error
+          );
         }
       }
 
@@ -118,9 +125,14 @@ function initMqtt(deps) {
         if (tenantDevice.event === 'status') {
           // Accept plain string ("online") or JSON ({ status: "online" })
           const statusPayload = parsed.ok ? parsed.value : { status: payloadStr };
-          handleHeartbeat(tenantDevice.tenantId, tenantDevice.deviceId, statusPayload).catch((err) => {
-            console.error('[MQTT] heartbeat handler error:', err && err.message ? err.message : err);
-          });
+          handleHeartbeat(tenantDevice.tenantId, tenantDevice.deviceId, statusPayload).catch(
+            (err) => {
+              console.error(
+                '[MQTT] heartbeat handler error:',
+                err && err.message ? err.message : err
+              );
+            }
+          );
           // Emit real-time status update to dashboard via WebSocket
           const socketSvc = getSocketService();
           if (socketSvc) {
@@ -130,9 +142,14 @@ function initMqtt(deps) {
         } else if (tenantDevice.event === 'telemetry') {
           // Handle telemetry from org-scoped topic
           if (parsed.ok && telemetryService) {
-            telemetryService.ingest(tenantDevice.tenantId, tenantDevice.deviceId, parsed.value).catch((err) => {
-              console.error('[MQTT] telemetry ingest error:', err && err.message ? err.message : err);
-            });
+            telemetryService
+              .ingest(tenantDevice.tenantId, tenantDevice.deviceId, parsed.value)
+              .catch((err) => {
+                console.error(
+                  '[MQTT] telemetry ingest error:',
+                  err && err.message ? err.message : err
+                );
+              });
             const socketSvc = getSocketService();
             if (socketSvc) {
               socketSvc.emitTelemetry(tenantDevice.tenantId, tenantDevice.deviceId, parsed.value);
@@ -146,7 +163,7 @@ function initMqtt(deps) {
       const structured = {
         deviceId: deviceId,
         data: data,
-        receivedAt: new Date().toISOString()
+        receivedAt: new Date().toISOString(),
       };
 
       // Log original and structured form for clarity
@@ -161,13 +178,7 @@ function initMqtt(deps) {
           .then((row) => {
             // Emit real-time telemetry event after successful persistence
             if (socketService && row) {
-              socketService.emitTelemetry(
-                row.tenant_id,
-                deviceId,
-                data,
-                row.received_at,
-                row.id
-              );
+              socketService.emitTelemetry(row.tenant_id, deviceId, data, row.received_at, row.id);
             }
           })
           .catch((err) => {
