@@ -259,18 +259,28 @@ async function deleteTenant(id) {
  *   MEMORY_CRITICAL_MB  (default: 460) — > yields "critical"
  */
 async function getSystemHealth() {
+  const os = require('os');
+  const { execSync } = require('child_process');
+  const { getSocketService } = require('../../socket/socketServer');
+
   const thresholds = {
-    dbSizeWarning: Number(process.env.DB_SIZE_WARNING_MB) || 300,
-    dbSizeCritical: Number(process.env.DB_SIZE_CRITICAL_MB) || 425,
-    dbSizeLimit: Number(process.env.DB_SIZE_LIMIT_MB) || 500,
-    connectionWarning: Number(process.env.CONNECTION_WARNING) || 14,
-    connectionCritical: Number(process.env.CONNECTION_CRITICAL) || 18,
-    memoryWarning: Number(process.env.MEMORY_WARNING_MB) || 350,
-    memoryCritical: Number(process.env.MEMORY_CRITICAL_MB) || 460,
-    multiRegionInstallersWarning: Number(process.env.MULTI_REGION_INSTALLERS_WARNING) || 5,
-    multiRegionInstallersCritical: Number(process.env.MULTI_REGION_INSTALLERS_CRITICAL) || 15,
-    multiRegionDevicesWarning: Number(process.env.MULTI_REGION_DEVICES_WARNING) || 50,
-    multiRegionDevicesCritical: Number(process.env.MULTI_REGION_DEVICES_CRITICAL) || 200,
+    dbSizeWarning: Number(process.env.DB_SIZE_WARNING_MB) || 10000,
+    dbSizeCritical: Number(process.env.DB_SIZE_CRITICAL_MB) || 50000,
+    dbSizeLimit: Number(process.env.DB_SIZE_LIMIT_MB) || 100000,
+    connectionWarning: Number(process.env.CONNECTION_WARNING) || 50,
+    connectionCritical: Number(process.env.CONNECTION_CRITICAL) || 90,
+    memoryWarning: Number(process.env.MEMORY_WARNING_MB) || 4000,
+    memoryCritical: Number(process.env.MEMORY_CRITICAL_MB) || 7200,
+    cpuWarning: Number(process.env.CPU_WARNING_PCT) || 30,
+    cpuCritical: Number(process.env.CPU_CRITICAL_PCT) || 70,
+    mqttConnectionsWarning: Number(process.env.MQTT_CONNECTIONS_WARNING) || 100,
+    mqttConnectionsCritical: Number(process.env.MQTT_CONNECTIONS_CRITICAL) || 500,
+    wsClientsWarning: Number(process.env.WS_CLIENTS_WARNING) || 25,
+    wsClientsCritical: Number(process.env.WS_CLIENTS_CRITICAL) || 100,
+    multiRegionInstallersWarning: Number(process.env.MULTI_REGION_INSTALLERS_WARNING) || 10,
+    multiRegionInstallersCritical: Number(process.env.MULTI_REGION_INSTALLERS_CRITICAL) || 50,
+    multiRegionDevicesWarning: Number(process.env.MULTI_REGION_DEVICES_WARNING) || 100,
+    multiRegionDevicesCritical: Number(process.env.MULTI_REGION_DEVICES_CRITICAL) || 500,
   };
 
   // Database metrics
@@ -325,6 +335,54 @@ async function getSystemHealth() {
         ? 'warning'
         : 'healthy';
 
+  // ── CPU metrics ───────────────────────────────────────────────────────────
+  const cpuLoad = os.loadavg()[0]; // 1-min load average
+  const cpuCores = os.cpus().length;
+  const cpuPercent = Math.round((cpuLoad / cpuCores) * 100);
+  const cpuLevel =
+    cpuPercent >= thresholds.cpuCritical
+      ? 'critical'
+      : cpuPercent >= thresholds.cpuWarning
+        ? 'warning'
+        : 'healthy';
+
+  // ── MQTT connections ──────────────────────────────────────────────────────
+  let mqttConnections = 0;
+  try {
+    const result = execSync(
+      'ss -tn state established \'( sport = :1883 or sport = :8883 )\' | tail -n +2 | wc -l',
+      { timeout: 3000, encoding: 'utf8' }
+    );
+    mqttConnections = parseInt(result.trim(), 10) || 0;
+  } catch {
+    // ss not available — fall back to counting from Mosquitto client if possible
+  }
+  const mqttPercent = Math.round((mqttConnections / thresholds.mqttConnectionsCritical) * 100);
+  const mqttLevel =
+    mqttConnections >= thresholds.mqttConnectionsCritical
+      ? 'critical'
+      : mqttConnections >= thresholds.mqttConnectionsWarning
+        ? 'warning'
+        : 'healthy';
+
+  // ── WebSocket clients ─────────────────────────────────────────────────────
+  let wsClients = 0;
+  try {
+    const socketSvc = getSocketService();
+    if (socketSvc) {
+      wsClients = socketSvc.getConnectedClients();
+    }
+  } catch {
+    // socket service not initialized
+  }
+  const wsPercent = Math.round((wsClients / thresholds.wsClientsCritical) * 100);
+  const wsLevel =
+    wsClients >= thresholds.wsClientsCritical
+      ? 'critical'
+      : wsClients >= thresholds.wsClientsWarning
+        ? 'warning'
+        : 'healthy';
+
   // Multi-region readiness (based on installer + device counts)
   const parseCount = (row) => (row && row.count ? parseInt(row.count, 10) : 0);
   const [tenantsRow, devicesRow] = await Promise.all([
@@ -345,10 +403,15 @@ async function getSystemHealth() {
 
   // Overall status: worst of all four
   const levels = { critical: 3, warning: 2, healthy: 1 };
-  const overallLevel = [dbLevel, connLevel, memLevel, multiRegionLevel].reduce(
-    (worst, l) => (levels[l] > levels[worst] ? l : worst),
-    'healthy'
-  );
+  const overallLevel = [
+    dbLevel,
+    connLevel,
+    memLevel,
+    cpuLevel,
+    mqttLevel,
+    wsLevel,
+    multiRegionLevel,
+  ].reduce((worst, l) => (levels[l] > levels[worst] ? l : worst), 'healthy');
 
   const alerts = [];
   if (dbLevel === 'critical')
@@ -374,6 +437,36 @@ async function getSystemHealth() {
       metric: 'backend',
       level: 'critical',
       message: `Backend memory at ${heapUsedMB}MB — possible leak`,
+    });
+  if (cpuLevel === 'critical')
+    alerts.push({
+      metric: 'cpu',
+      level: 'critical',
+      message: `CPU at ${cpuPercent}% — enable PM2 cluster mode or upgrade VPS`,
+    });
+  else if (cpuLevel === 'warning')
+    alerts.push({
+      metric: 'cpu',
+      level: 'warning',
+      message: `CPU at ${cpuPercent}% — monitor closely, consider PM2 cluster mode`,
+    });
+  if (mqttLevel === 'critical')
+    alerts.push({
+      metric: 'mqtt',
+      level: 'critical',
+      message: `${mqttConnections} MQTT devices connected — near capacity, upgrade to KVM 4`,
+    });
+  else if (mqttLevel === 'warning')
+    alerts.push({
+      metric: 'mqtt',
+      level: 'warning',
+      message: `${mqttConnections} MQTT devices — monitor RAM, plan KVM 4 upgrade`,
+    });
+  if (wsLevel === 'critical')
+    alerts.push({
+      metric: 'websocket',
+      level: 'critical',
+      message: `${wsClients} dashboard clients — near WebSocket limit`,
     });
   if (multiRegionLevel === 'critical')
     alerts.push({
@@ -410,6 +503,24 @@ async function getSystemHealth() {
       uptime_human: formatUptime(uptimeSeconds),
       node_version: process.version,
       env: process.env.NODE_ENV || 'development',
+    },
+    cpu: {
+      load_avg_1m: parseFloat(cpuLoad.toFixed(2)),
+      cores: cpuCores,
+      percent: cpuPercent,
+      level: cpuLevel,
+    },
+    mqtt: {
+      active_connections: mqttConnections,
+      connection_limit: thresholds.mqttConnectionsCritical,
+      percent: mqttPercent,
+      level: mqttLevel,
+    },
+    websocket: {
+      connected_clients: wsClients,
+      client_limit: thresholds.wsClientsCritical,
+      percent: wsPercent,
+      level: wsLevel,
     },
     multi_region: {
       installers: totalInstallers,

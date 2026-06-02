@@ -88,6 +88,14 @@ function initSocket(httpServer) {
     emitDeviceStatus(tenantId, deviceId, status) {
       io.to(`tenant:${tenantId}`).emit('device:status', { deviceId, status });
     },
+
+    /**
+     * Returns the count of currently connected Socket.io clients.
+     * Used by the system-health endpoint for dashboard capacity monitoring.
+     */
+    getConnectedClients() {
+      return io.engine?.clientsCount || 0;
+    },
   };
 }
 
@@ -95,7 +103,7 @@ function initSocket(httpServer) {
  * Returns the socket service singleton.
  * Returns null if initSocket has not been called yet.
  *
- * @returns {{ emitTelemetry: Function } | null}
+ * @returns {{ emitTelemetry: Function, getConnectedClients: Function } | null}
  */
 function getSocketService() {
   return socketService;
