@@ -7,7 +7,10 @@ const { NotFoundError, ConflictError, UnprocessableEntityError } = require('../.
 const { getLocalIp } = require('../../shared/network');
 
 function getMqttUrl() {
-  // Use MQTT_BROKER_URL env var if set (cloud deployment); otherwise fall back to local
+  // Use MQTT_DEVICE_URL for external device connections (TLS), fall back to MQTT_BROKER_URL
+  if (process.env.MQTT_DEVICE_URL) {
+    return process.env.MQTT_DEVICE_URL;
+  }
   if (process.env.MQTT_BROKER_URL) {
     return process.env.MQTT_BROKER_URL;
   }

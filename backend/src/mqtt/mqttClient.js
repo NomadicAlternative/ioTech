@@ -91,7 +91,9 @@ function initMqtt(deps) {
       const payloadStr = message ? message.toString() : '';
       const deviceId = extractDeviceId(topic);
 
-      if (!deviceId) {
+      // Org-scoped topics don't match the legacy pattern — that's expected.
+      // Only warn for truly unexpected formats.
+      if (!deviceId && !extractTenantDevice(topic)) {
         console.warn('MQTT: received message on unexpected topic format:', topic);
       }
 
@@ -101,8 +103,12 @@ function initMqtt(deps) {
       if (parsed.ok) {
         data = parsed.value;
       } else {
-        // Log error but don't throw — requirement 4
-        console.error('MQTT: invalid JSON payload from topic', topic, 'payload=', payloadStr, 'error=', parsed.error && parsed.error.message ? parsed.error.message : parsed.error);
+        // Plain text status messages ("online"/"offline") are expected from ESP32 firmware.
+        // Only log JSON parse errors for real telemetry topics.
+        const isStatusTopic = topic.includes('/status');
+        if (!isStatusTopic) {
+          console.error('MQTT: invalid JSON payload from topic', topic, 'payload=', payloadStr, 'error=', parsed.error && parsed.error.message ? parsed.error.message : parsed.error);
+        }
       }
 
       // ── Route to appropriate handler ─────────────────────────────────────
