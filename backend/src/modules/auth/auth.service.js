@@ -8,11 +8,7 @@ const authModel = require('./auth.model');
 const db = require('../../shared/db/knex');
 const { sendPasswordReset } = require('../../shared/email');
 const { validateEmail, validatePassword } = require('../../shared/validators');
-const {
-  ValidationError,
-  UnauthorizedError,
-  ConflictError,
-} = require('../../shared/errors');
+const { ValidationError, UnauthorizedError, ConflictError } = require('../../shared/errors');
 const logger = require('../../shared/logger');
 
 const SALT_ROUNDS = 12;
@@ -74,7 +70,8 @@ async function register(data) {
 
   if (!tenantId) throw new ValidationError('tenantId is required');
   if (!validateEmail(email)) throw new ValidationError('Invalid email address');
-  if (!validatePassword(password)) throw new ValidationError('Password must be at least 8 characters');
+  if (!validatePassword(password))
+    throw new ValidationError('Password must be at least 8 characters');
 
   // Check for duplicate email within the same tenant
   const existing = await authModel.findUserByEmail(tenantId, email);
@@ -197,7 +194,8 @@ async function installerRegister(data) {
   const { name, email, password, contact_email: contactEmail, metadata } = data;
 
   if (!validateEmail(email)) throw new ValidationError('Invalid email address');
-  if (!validatePassword(password)) throw new ValidationError('Password must be at least 8 characters');
+  if (!validatePassword(password))
+    throw new ValidationError('Password must be at least 8 characters');
 
   // Check for duplicate email across all users (email must be globally unique)
   const existingUser = await authModel.findUserByEmailOnly(email);
@@ -320,4 +318,12 @@ async function forgotPassword(email) {
   logger.info(`[auth.service] Password reset for user ${email} (${user.id})`);
 }
 
-module.exports = { register, login, refreshToken, logout, installerRegister, changePassword, forgotPassword };
+module.exports = {
+  register,
+  login,
+  refreshToken,
+  logout,
+  installerRegister,
+  changePassword,
+  forgotPassword,
+};
