@@ -18,7 +18,7 @@ jobs:
       - name: Build frontend
         run: |
           cd frontend
-          npm ci
+          npm install
           npx vite build
         env:
           VITE_API_URL: https://beepdash.com
