@@ -235,7 +235,7 @@ export function SystemHealthPanel() {
 					icon={Cpu}
 					label="MQTT Devices"
 					value={`${health.mqtt.active_connections}`}
-					sublabel={`Warning at ${health.mqtt.warning_threshold}+ · Critical at ${health.mqtt.warning_threshold * 5}`}
+					sublabel={`Warning at ${health.mqtt.warning_threshold}+ · Critical at ${health.mqtt.warning_threshold * 3}`}
 					percent={health.mqtt.percent}
 					level={health.mqtt.level}
 				/>
