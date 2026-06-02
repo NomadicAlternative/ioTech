@@ -37,6 +37,49 @@ interface AuthActions {
 type AuthStore = AuthState & AuthActions
 
 /**
+ * Decode the JWT `exp` claim to get the Unix timestamp when the token expires.
+ * Returns 0 if decoding fails (defensive).
+ */
+function getTokenExp(token: string): number {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return (payload.exp || 0) * 1000 // convert to ms
+  } catch {
+    return 0
+  }
+}
+
+/**
+ * Start a proactive refresh timer. Called after login and after each successful refresh.
+ * Refreshes 3 minutes before the access token expires (12 min for a 15-min token).
+ * Stores the timer ID on window so it can be cleared on logout.
+ */
+function scheduleProactiveRefresh() {
+  const token = useAuthStore.getState().accessToken
+  if (!token) return
+
+  const expMs = getTokenExp(token)
+  if (!expMs) return
+
+  const refreshAt = expMs - 3 * 60 * 1000 // 3 min before expiry
+  const delay = Math.max(0, refreshAt - Date.now())
+
+  // Clear any existing timer
+  if ((window as unknown as Record<string, ReturnType<typeof setTimeout>>).__refreshTimer) {
+    clearTimeout((window as unknown as Record<string, ReturnType<typeof setTimeout>>).__refreshTimer)
+  }
+
+  (window as unknown as Record<string, ReturnType<typeof setTimeout>>).__refreshTimer = setTimeout(async () => {
+    try {
+      await useAuthStore.getState().refreshToken()
+      scheduleProactiveRefresh() // schedule the next one
+    } catch {
+      // refresh failed — the Axios interceptor will handle the redirect to login
+    }
+  }, delay)
+}
+
+/**
  * Decode the JWT payload section without verifying the signature.
  * Signature verification is the backend's responsibility.
  */
@@ -79,9 +122,13 @@ export const useAuthStore = create<AuthStore>((set) => ({
     const user = decodeJwtPayload(accessToken)
     const isSuperAdmin = user.role === 'super_admin'
     set({ accessToken, user, isAuthenticated: true, isSuperAdmin })
+    scheduleProactiveRefresh()
   },
 
   logout: async () => {
+    // Clear proactive refresh timer
+    const win = window as unknown as Record<string, ReturnType<typeof setTimeout>>
+    if (win.__refreshTimer) { clearTimeout(win.__refreshTimer); delete win.__refreshTimer }
     try {
       await api.post('/api/auth/logout')
     } catch {
@@ -97,6 +144,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
     const user = decodeJwtPayload(accessToken)
     const isSuperAdmin = user.role === 'super_admin'
     set({ accessToken, user, isAuthenticated: true, isSuperAdmin })
+    scheduleProactiveRefresh()
   },
 
   setUser: (user: AuthUser) => set({ user }),
