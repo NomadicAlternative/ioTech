@@ -120,6 +120,27 @@ export interface BackendHealth {
 	env: string;
 }
 
+export interface CpuHealth {
+	load_avg_1m: number;
+	cores: number;
+	percent: number;
+	level: "healthy" | "warning" | "critical";
+}
+
+export interface MqttHealth {
+	active_connections: number;
+	connection_limit: number;
+	percent: number;
+	level: "healthy" | "warning" | "critical";
+}
+
+export interface WebSocketHealth {
+	connected_clients: number;
+	client_limit: number;
+	percent: number;
+	level: "healthy" | "warning" | "critical";
+}
+
 export interface HealthAlert {
 	metric: string;
 	level: "warning" | "critical";
@@ -131,6 +152,9 @@ export interface SystemHealth {
 	sampled_at: string;
 	database: DatabaseHealth;
 	backend: BackendHealth;
+	cpu: CpuHealth;
+	mqtt: MqttHealth;
+	websocket: WebSocketHealth;
 	multi_region: MultiRegionHealth;
 	alerts: HealthAlert[];
 }

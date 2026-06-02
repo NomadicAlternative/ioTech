@@ -7,6 +7,7 @@ import {
 	CheckCircle,
 	XCircle,
 	Globe,
+	Cpu,
 } from "lucide-react";
 import { fetchSystemHealth, type SystemHealth } from "./adminApi";
 import { UpgradeGuide } from "./UpgradeGuide";
@@ -219,6 +220,33 @@ export function SystemHealthPanel() {
 					sublabel={`Uptime: ${health.backend.uptime_human} · Node ${health.backend.node_version} · ${health.backend.env}`}
 					percent={health.backend.heap_percent}
 					level={health.backend.heap_level}
+				/>
+
+				<MetricRow
+					icon={Activity}
+					label="CPU Load"
+					value={`${health.cpu.percent}%`}
+					sublabel={`${health.cpu.cores} cores · 1m avg: ${health.cpu.load_avg_1m}`}
+					percent={health.cpu.percent}
+					level={health.cpu.level}
+				/>
+
+				<MetricRow
+					icon={Cpu}
+					label="MQTT Devices"
+					value={`${health.mqtt.active_connections} / ${health.mqtt.connection_limit}`}
+					sublabel={`Active ESP32 connections to Mosquitto`}
+					percent={health.mqtt.percent}
+					level={health.mqtt.level}
+				/>
+
+				<MetricRow
+					icon={Globe}
+					label="WebSocket Clients"
+					value={`${health.websocket.connected_clients} / ${health.websocket.client_limit}`}
+					sublabel={`Active dashboard browser connections`}
+					percent={health.websocket.percent}
+					level={health.websocket.level}
 				/>
 			</div>
 
