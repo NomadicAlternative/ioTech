@@ -260,7 +260,6 @@ async function deleteTenant(id) {
  */
 async function getSystemHealth() {
   const os = require('os');
-  const { execSync } = require('child_process');
   const { getSocketService } = require('../../socket/socketServer');
 
   const thresholds = {
@@ -347,15 +346,16 @@ async function getSystemHealth() {
         : 'healthy';
 
   // ── MQTT connections ──────────────────────────────────────────────────────
+  // Count recently active devices (last_seen within 2 minutes).
+  // This is more reliable than ss/netstat across Docker networks.
   let mqttConnections = 0;
   try {
-    const result = execSync(
-      'ss -tn state established \'( sport = :1883 or sport = :8883 )\' | tail -n +2 | wc -l',
-      { timeout: 3000, encoding: 'utf8' }
+    const { rows: mqttRows } = await db.raw(
+      "SELECT count(*)::int AS active FROM devices WHERE last_seen > NOW() - INTERVAL '2 minutes'"
     );
-    mqttConnections = parseInt(result.trim(), 10) || 0;
+    mqttConnections = mqttRows[0]?.active || 0;
   } catch {
-    // ss not available — fall back to counting from Mosquitto client if possible
+    mqttConnections = 0;
   }
   const mqttPercent = Math.round((mqttConnections / thresholds.mqttConnectionsCritical) * 100);
   const mqttLevel =
