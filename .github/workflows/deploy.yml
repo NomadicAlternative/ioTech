@@ -5,25 +5,7 @@ on:
     branches: [main]
 
 jobs:
-  deploy-backend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy backend to VPS
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: iotech
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            cd /home/iotech/app
-            git pull origin main
-            cd /home/iotech
-            docker compose up -d --build backend
-            docker compose restart backend
-
-  deploy-frontend:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,23 +23,28 @@ jobs:
         env:
           VITE_API_URL: https://beepdash.com
 
-      - name: Deploy frontend to VPS
-        uses: easingthemes/ssh-deploy@v5
-        with:
-          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.VPS_HOST }}
-          REMOTE_USER: iotech
-          TARGET: /home/iotech/frontend-deploy
-          SOURCE: frontend/dist/
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Activate frontend
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: iotech
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
+      - name: Deploy frontend
+        run: |
+          scp -r frontend/dist/* iotech@${{ secrets.VPS_HOST }}:/home/iotech/frontend-deploy/
+          ssh iotech@${{ secrets.VPS_HOST }} '
             sudo rm -rf /var/www/iotech/*
             sudo cp -r /home/iotech/frontend-deploy/* /var/www/iotech/
             sudo chmod -R 755 /var/www/iotech
             sudo systemctl reload nginx
+          '
+
+      - name: Deploy backend
+        run: |
+          ssh iotech@${{ secrets.VPS_HOST }} '
+            cd /home/iotech/app
+            git pull origin main
+            cd /home/iotech
+            docker compose up -d --build backend
+          '
