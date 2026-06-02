@@ -90,7 +90,7 @@ function MetricRow({
 					<span className="text-sm font-medium">{label}</span>
 					{help && (
 						<span
-							className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-muted text-[10px] text-muted-foreground cursor-help"
+							className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-muted-foreground/30 text-[11px] text-muted-foreground cursor-help font-medium"
 							title={help}
 						>
 							?
