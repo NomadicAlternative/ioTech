@@ -234,8 +234,8 @@ export function SystemHealthPanel() {
 				<MetricRow
 					icon={Cpu}
 					label="MQTT Devices"
-					value={`${health.mqtt.active_connections} / ${health.mqtt.connection_limit}`}
-					sublabel={`Active ESP32 connections to Mosquitto`}
+					value={`${health.mqtt.active_connections}`}
+					sublabel={`Warning at ${health.mqtt.warning_threshold}+ · Critical at ${health.mqtt.warning_threshold * 5}`}
 					percent={health.mqtt.percent}
 					level={health.mqtt.level}
 				/>
@@ -243,8 +243,8 @@ export function SystemHealthPanel() {
 				<MetricRow
 					icon={Globe}
 					label="WebSocket Clients"
-					value={`${health.websocket.connected_clients} / ${health.websocket.client_limit}`}
-					sublabel={`Active dashboard browser connections`}
+					value={`${health.websocket.connected_clients}`}
+					sublabel={`Warning at ${health.websocket.warning_threshold}+`}
 					percent={health.websocket.percent}
 					level={health.websocket.level}
 				/>

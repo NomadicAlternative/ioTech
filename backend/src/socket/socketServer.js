@@ -55,7 +55,10 @@ function initSocket(httpServer) {
           .first();
 
         if (!device) {
-          socket.emit('error', { code: 'DEVICE_NOT_FOUND', message: 'Device not found or not owned by tenant' });
+          socket.emit('error', {
+            code: 'DEVICE_NOT_FOUND',
+            message: 'Device not found or not owned by tenant',
+          });
           return;
         }
 

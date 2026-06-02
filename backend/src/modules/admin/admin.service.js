@@ -512,13 +512,13 @@ async function getSystemHealth() {
     },
     mqtt: {
       active_connections: mqttConnections,
-      connection_limit: thresholds.mqttConnectionsCritical,
+      warning_threshold: thresholds.mqttConnectionsWarning,
       percent: mqttPercent,
       level: mqttLevel,
     },
     websocket: {
       connected_clients: wsClients,
-      client_limit: thresholds.wsClientsCritical,
+      warning_threshold: thresholds.wsClientsWarning,
       percent: wsPercent,
       level: wsLevel,
     },

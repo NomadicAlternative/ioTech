@@ -129,14 +129,14 @@ export interface CpuHealth {
 
 export interface MqttHealth {
 	active_connections: number;
-	connection_limit: number;
+	warning_threshold: number;
 	percent: number;
 	level: "healthy" | "warning" | "critical";
 }
 
 export interface WebSocketHealth {
 	connected_clients: number;
-	client_limit: number;
+	warning_threshold: number;
 	percent: number;
 	level: "healthy" | "warning" | "critical";
 }
