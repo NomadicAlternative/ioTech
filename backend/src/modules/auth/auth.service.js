@@ -21,6 +21,21 @@ const REFRESH_TOKEN_EXPIRES = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 const REFRESH_TOKEN_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
 
 /**
+ * Resolve the effective role, elevating to super_admin if the email is in SUPER_ADMIN_EMAILS.
+ * This keeps a single source of truth for email-based super-admin access.
+ */
+function resolveEffectiveRole(dbRole, email) {
+  const adminEmails = (process.env.SUPER_ADMIN_EMAILS || '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  if (adminEmails.includes((email || '').toLowerCase())) {
+    return 'super_admin';
+  }
+  return dbRole;
+}
+
+/**
  * Sign a short-lived access JWT.
  * @param {{ userId: string, tenantId: string, email: string, role: string }} payload
  * @returns {string}
@@ -100,7 +115,7 @@ async function login(tenantId, email, password) {
     userId: user.id,
     tenantId: user.tenant_id,
     email: user.email,
-    role: user.role,
+    role: resolveEffectiveRole(user.role, user.email),
   });
 
   const rawRefreshToken = signRefreshToken({ userId: user.id });
@@ -154,7 +169,7 @@ async function refreshToken(token) {
     userId: user.id,
     tenantId: user.tenant_id,
     email: user.email,
-    role: user.role,
+    role: resolveEffectiveRole(user.role, user.email),
   });
 
   return { accessToken };
@@ -226,7 +241,7 @@ async function installerRegister(data) {
     userId,
     tenantId,
     email,
-    role: 'admin',
+    role: resolveEffectiveRole('admin', email),
   });
 
   const rawRefreshToken = signRefreshToken({ userId });
