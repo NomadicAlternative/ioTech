@@ -65,6 +65,22 @@ static drv_err_t sh1106_init(const driver_config_t *cfg)
     i2c_param_config(I2C_NUM_0, &i2c_cfg);
     i2c_driver_install(I2C_NUM_0, i2c_cfg.mode, 0, 0, 0);
 
+    /* I2C scan — find all devices on the bus */
+    ESP_LOGI(TAG, "I2C scan on SDA=%d SCL=%d...",
+             cfg ? cfg->i2c_sda : 21, cfg ? cfg->i2c_scl : 22);
+    for (uint8_t addr = 1; addr < 127; addr++) {
+        i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+        i2c_master_start(cmd);
+        i2c_master_write_byte(cmd, (addr << 1) | I2C_MASTER_WRITE, true);
+        i2c_master_stop(cmd);
+        esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, pdMS_TO_TICKS(50));
+        i2c_cmd_link_delete(cmd);
+        if (ret == ESP_OK) {
+            ESP_LOGI(TAG, "  Found device at 0x%02X", addr);
+        }
+    }
+    ESP_LOGI(TAG, "I2C scan complete. Target SH1106 at 0x%02X", s_addr);
+
     /* SH1106 init sequence */
     sh1106_cmd(0xAE);   /* display off                         */
     sh1106_cmd(0x00);   /* set low column = 0                  */
