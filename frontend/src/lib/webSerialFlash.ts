@@ -40,9 +40,10 @@ export async function flashESP32(
 		const chip = await loader.main();
 		onProgress({ step: "connect", line: `✅ Connected: ${chip}` });
 
-		// 4. Download firmware
+		// 4. Download firmware (with cache busting)
 		onProgress({ step: "download", line: "📥 Downloading firmware..." });
-		const response = await fetch(firmwareUrl);
+		const urlWithCacheBust = `${firmwareUrl}?t=${Date.now()}`;
+		const response = await fetch(urlWithCacheBust, { cache: 'no-store' });
 		if (!response.ok) {
 			throw new Error(`Failed to download firmware: HTTP ${response.status}`);
 		}
