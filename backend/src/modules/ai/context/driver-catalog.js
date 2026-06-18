@@ -287,6 +287,31 @@ const DRIVERS = {
     },
   },
 
+  SH1106: {
+    model: 'SH1106',
+    category: 'display',
+    description: {
+      es: 'Pantalla OLED 1.3" 128x64 píxeles monocromo. Conexión I2C. Controlador SH1106.',
+      en: '1.3" 128x64 pixel monochrome OLED display. I2C connection. SH1106 controller.',
+    },
+    protocol: 'I2C',
+    pins_needed: [{ name: 'i2c_addr', label: { es: 'Dirección I2C', en: 'I2C address' } }],
+    default_i2c_addr: '0x3C',
+    datastreams: [],
+    commands: [
+      { action: 'sh1106_text', params: { text: 'string to display' } },
+      { action: 'sh1106_clear', params: {} },
+    ],
+    wiring: {
+      es: 'VCC → 3.3V | SDA → GPIO{i2c_sda} | SCL → GPIO{i2c_scl} | GND → GND',
+      en: 'VCC → 3.3V | SDA → GPIO{i2c_sda} | SCL → GPIO{i2c_scl} | GND → GND',
+    },
+    notes: {
+      es: 'Display 1.3". Dirección I2C por defecto: 0x3C. Algunos módulos usan 0x3D.',
+      en: '1.3" display. Default I2C address: 0x3C. Some modules use 0x3D.',
+    },
+  },
+
   LCD1602: {
     model: 'LCD1602',
     category: 'display',
