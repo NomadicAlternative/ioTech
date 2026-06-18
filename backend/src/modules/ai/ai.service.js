@@ -433,22 +433,47 @@ function ruleBasedConfig(input, boardId) {
   }
   channels.forEach((r) => lines.push(`ESP32 GPIO${r.gpio} → ${r.name}`));
 
+  // Add display wiring if present
+  const hasOLED = drivers.some((d) => d.model === 'SH1106' || d.model === 'SSD1306');
+  const hasLCD = drivers.some((d) => d.model === 'LCD1602_I2C');
+  if (hasOLED) {
+    const oled = drivers.find((d) => d.model === 'SH1106' || d.model === 'SSD1306');
+    lines.push(
+      `ESP32 GPIO${board.pins.i2c_sda} (SDA) → ${oled.model} SDA`,
+      `ESP32 GPIO${board.pins.i2c_scl} (SCL) → ${oled.model} SCL`,
+      `ESP32 3.3V → ${oled.model} VCC`,
+      `ESP32 GND → ${oled.model} GND`
+    );
+  }
+  if (hasLCD) {
+    lines.push(
+      `ESP32 GPIO${board.pins.i2c_sda} (SDA) → LCD1602 SDA`,
+      `ESP32 GPIO${board.pins.i2c_scl} (SCL) → LCD1602 SCL`,
+      `ESP32 5V → LCD1602 VCC`,
+      `ESP32 GND → LCD1602 GND`
+    );
+  }
+
+  const displayTag = hasOLED ? ' + OLED' : hasLCD ? ' + LCD' : '';
+
   const tplName =
     lang === 'es'
       ? channels.length > 0
-        ? `Control con ${sensorModel} ${channels.length}CH`
-        : `Sensor ${sensorModel}`
+        ? `Control con ${sensorModel} ${channels.length}CH${displayTag}`
+        : `Sensor ${sensorModel}${displayTag}`
       : channels.length > 0
-        ? `${sensorModel} Control ${channels.length}CH`
-        : `${sensorModel} Sensor`;
+        ? `${sensorModel} Control ${channels.length}CH${displayTag}`
+        : `${sensorModel} Sensor${displayTag}`;
+
+  const extraDesc = hasOLED ? ' + OLED' : hasLCD ? ' + LCD' : '';
 
   return {
     template: {
       name: tplName,
       description:
         lang === 'es'
-          ? `Template generado: ${sensorModel} + ${channels.length} relays`
-          : `Generated template: ${sensorModel} + ${channels.length} relays`,
+          ? `Template generado: ${sensorModel} + ${channels.length} relays${extraDesc}`
+          : `Generated template: ${sensorModel} + ${channels.length} relays${extraDesc}`,
     },
     drivers,
     datastreams,
