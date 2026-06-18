@@ -219,12 +219,9 @@ static void state_enter_normal(void)
                          drv_err_str(drv_err));
             }
 
-            /* Fallback: if NVS had no driver config (first boot after flash),
-             * load board defaults so DHT22 + RELAY work immediately */
-            if (io_driver_active_count() == 0) {
-                ESP_LOGI(TAG, "[NORMAL] No drivers from NVS — loading defaults");
-                io_driver_load_all_defaults();
-            }
+            /* Always load board defaults as complement to NVS config.
+             * io_driver_load() is idempotent — already-active drivers are skipped. */
+            io_driver_load_all_defaults();
         } else {
             ESP_LOGE(TAG, "[NORMAL] Cannot load device config for MQTT");
             sm_send_event(SM_EVT_ERROR);
