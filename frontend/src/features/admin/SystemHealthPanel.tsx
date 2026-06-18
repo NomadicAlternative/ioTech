@@ -88,21 +88,21 @@ function MetricRow({
 				<div className="flex items-center gap-2">
 					<Icon className="w-4 h-4 text-muted-foreground" />
 					<span className="text-sm font-medium">{label}</span>
-				{help && (
-					<span
-						className="relative inline-flex items-center justify-center w-4 h-4 rounded-full border border-muted-foreground/30 text-[11px] text-muted-foreground cursor-pointer font-medium group"
-						onClick={(e) => {
-							e.stopPropagation();
-							const tip = e.currentTarget.querySelector('.help-tip');
-							if (tip) tip.classList.toggle('hidden');
-						}}
-					>
-						?
-						<span className="help-tip hidden absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-56 p-2 rounded-md bg-foreground text-background text-xs leading-relaxed shadow-lg z-50">
-							{help}
+					{help && (
+						<span
+							className="relative inline-flex items-center justify-center w-4 h-4 rounded-full border border-muted-foreground/30 text-[11px] text-muted-foreground cursor-pointer font-medium group"
+							onClick={(e) => {
+								e.stopPropagation();
+								const tip = e.currentTarget.querySelector(".help-tip");
+								if (tip) tip.classList.toggle("hidden");
+							}}
+						>
+							?
+							<span className="help-tip hidden absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-56 p-2 rounded-md bg-foreground text-background text-xs leading-relaxed shadow-lg z-50">
+								{help}
+							</span>
 						</span>
-					</span>
-				)}
+					)}
 				</div>
 				<div className="flex items-center gap-2">
 					<span className="text-sm tabular-nums font-mono">{value}</span>
