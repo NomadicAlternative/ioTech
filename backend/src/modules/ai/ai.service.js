@@ -339,6 +339,17 @@ function ruleBasedConfig(input, boardId) {
     );
   }
 
+  // Detect OLED display (SH1106 or SSD1306)
+  const isOLED = lower.includes('sh1106') || lower.includes('ssd1306') || lower.includes('oled');
+  const isLCD = lower.includes('lcd1602') || lower.includes('lcd');
+  if (isOLED) {
+    const oledModel = lower.includes('sh1106') ? 'SH1106' : 'SSD1306';
+    drivers.push({ model: oledModel, i2c_addr: '0x3C' });
+  }
+  if (isLCD) {
+    drivers.push({ model: 'LCD1602_I2C', i2c_addr: '0x27' });
+  }
+
   // Build relay channels using actual board pins — only if user mentioned relays
   const channels = [];
   const userMentionedRelays = relayOn.length > 0 || relayOff.length > 0;
