@@ -253,7 +253,7 @@ async function getProvisioningCredentials(tenantId, deviceId) {
 
   // Use env vars for production, fall back to local IP for development
   const backendUrl = process.env.BACKEND_URL || `http://${localIp}:${port}`;
-  const mqttUrl = process.env.MQTT_BROKER_URL || `mqtt://${localIp}:1883`;
+  const mqttUrl = process.env.MQTT_DEVICE_URL || process.env.MQTT_BROKER_URL || `mqtt://${localIp}:1883`;
   const mqttUser = process.env.MQTT_DEVICE_USERNAME || process.env.MQTT_USERNAME || '';
   const mqttPass = process.env.MQTT_DEVICE_PASSWORD || process.env.MQTT_PASSWORD || '';
 
