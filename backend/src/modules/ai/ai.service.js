@@ -502,6 +502,42 @@ async function configure(prompt, boardId) {
   const llmResult = await callLLM(prompt, boardId);
   const raw = llmResult && llmResult.template ? llmResult : ruleBasedConfig(prompt, boardId);
 
+  // Post-process: merge displays mentioned by user but missed by LLM
+  const lowerPrompt = prompt.toLowerCase();
+  const hasOLED = lowerPrompt.includes('sh1106') || lowerPrompt.includes('ssd1306') || lowerPrompt.includes('oled');
+  const hasLCD = lowerPrompt.includes('lcd1602') || lowerPrompt.includes('lcd');
+  const alreadyHasOLED = raw.drivers?.some((d) => d.model === 'SH1106' || d.model === 'SSD1306');
+  const alreadyHasLCD = raw.drivers?.some((d) => d.model === 'LCD1602_I2C');
+  if (hasOLED && !alreadyHasOLED) {
+    const oledModel = lowerPrompt.includes('sh1106') ? 'SH1106' : 'SSD1306';
+    raw.drivers.push({ model: oledModel, i2c_addr: '0x3C' });
+    // Append to diagram
+    const board = (boardId && require('./context/board-context').getBoard(boardId)) || getDefaultBoard();
+    raw.diagrama = (raw.diagrama || '') +
+      `\\nESP32 GPIO${board.pins.i2c_sda} (SDA) → ${oledModel} SDA` +
+      `\\nESP32 GPIO${board.pins.i2c_scl} (SCL) → ${oledModel} SCL` +
+      `\\nESP32 3.3V → ${oledModel} VCC` +
+      `\\nESP32 GND → ${oledModel} GND`;
+    // Append to template name
+    if (raw.template) {
+      raw.template.name = (raw.template.name || '') + ' + OLED';
+      raw.template.description = (raw.template.description || '') + ' + OLED';
+    }
+  }
+  if (hasLCD && !alreadyHasLCD) {
+    raw.drivers.push({ model: 'LCD1602_I2C', i2c_addr: '0x27' });
+    const board = (boardId && require('./context/board-context').getBoard(boardId)) || getDefaultBoard();
+    raw.diagrama = (raw.diagrama || '') +
+      `\\nESP32 GPIO${board.pins.i2c_sda} (SDA) → LCD1602 SDA` +
+      `\\nESP32 GPIO${board.pins.i2c_scl} (SCL) → LCD1602 SCL` +
+      `\\nESP32 5V → LCD1602 VCC` +
+      `\\nESP32 GND → LCD1602 GND`;
+    if (raw.template) {
+      raw.template.name = (raw.template.name || '') + ' + LCD';
+      raw.template.description = (raw.template.description || '') + ' + LCD';
+    }
+  }
+
   // If the LLM didn't return code (or we fell back to rules), generate it from config
   if (!raw.code && raw.drivers && raw.drivers.length > 0) {
     const board =
