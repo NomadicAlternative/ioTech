@@ -55,6 +55,8 @@ function createApp() {
   // ── Static firmware files (public, for ESP32 OTA downloads + Web Serial flash) ──
   app.use('/firmware/files', express.static(path.join(__dirname, '..', 'uploads', 'firmware')));
   app.use('/firmware/flash', express.static(path.join(__dirname, '..', 'public', 'firmware')));
+  // Duplicate under /api/ so the files are accessible through Nginx /api/ proxy
+  app.use('/api/firmware/flash', express.static(path.join(__dirname, '..', 'public', 'firmware')));
 
   // ── Health endpoint ───────────────────────────────────────────────────────
   app.get('/health', (_req, res) => {

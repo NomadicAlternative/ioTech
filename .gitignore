@@ -37,6 +37,11 @@ Thumbs.db
 *.crt
 
 # ======================
+# Firmware binaries — allow ESP32 firmware for Web Serial flash
+# ======================
+!backend/public/firmware/*.bin
+
+# ======================
 # Misc
 # ======================
 npm-debug.log*

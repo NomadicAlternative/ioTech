@@ -86,7 +86,7 @@ export function FlashDeviceWizard({
 
 		const success = await flashESP32(
 			port,
-			"https://iotech-iml4.onrender.com/firmware/flash/esp32dev.bin",
+			`${import.meta.env.VITE_API_URL || "https://beepdash.com"}/api/firmware/flash/esp32dev.bin`,
 			({ step, line }) => {
 				setLogs((prev) => [...prev, line]);
 				if (step === "flash") setPhase("flashing");
