@@ -86,7 +86,7 @@ drv_err_t io_driver_load_all_from_nvs(void)
  * Defaults are conservative — only drivers expected on every ioTech board:
  *   DHT22  (GPIO 32)
  *   RELAY  (7 channels: 23,22,21,19,18,5,17)
- *   LCD1602_I2C  (I2C 0x27, SDA=21, SCL=22)
+ *   SH1106 OLED 1.3"  (I2C 0x3C, SDA=21, SCL=22)
  */
 drv_err_t io_driver_load_all_defaults(void)
 {
@@ -118,19 +118,19 @@ drv_err_t io_driver_load_all_defaults(void)
         ESP_LOGW(TAG, "Default RELAY load failed: %s", drv_err_str(relay_err));
     }
 
-    /* ── LCD1602_I2C I2C 0x27 ──────────────────────────────────────── */
-    driver_config_t lcd_cfg = {
+    /* ── SH1106 OLED 1.3" I2C 0x3C ────────────────────────────────── */
+    driver_config_t oled_cfg = {
         .gpio     = DRV_GPIO_NONE,
         .gpio2    = DRV_GPIO_NONE,
-        .i2c_addr = 0x27,
+        .i2c_addr = 0x3C,
         .i2c_sda  = 21,
         .i2c_scl  = 22,
         .channels = 0,
         .custom   = NULL,
     };
-    drv_err_t lcd_err = io_driver_load("LCD1602_I2C", &lcd_cfg);
-    if (lcd_err != DRV_OK) {
-        ESP_LOGW(TAG, "Default LCD1602_I2C load failed: %s", drv_err_str(lcd_err));
+    drv_err_t oled_err = io_driver_load("SH1106", &oled_cfg);
+    if (oled_err != DRV_OK) {
+        ESP_LOGW(TAG, "Default SH1106 load failed: %s", drv_err_str(oled_err));
     }
 
     ESP_LOGI(TAG, "Default drivers loaded: %u active", io_driver_active_count());
