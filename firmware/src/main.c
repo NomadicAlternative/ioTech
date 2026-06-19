@@ -71,10 +71,11 @@ void app_main(void)
      * Additional drivers are added to the build when needed (then delivered via OTA). */
     extern const driver_t *g_drv_dht22;
     extern const driver_t *g_drv_relay;
-    extern const driver_t *g_drv_lcd1602_i2c;
+    extern const driver_t *g_drv_sh1106;
+
     io_driver_register(g_drv_dht22);
     io_driver_register(g_drv_relay);
-    io_driver_register(g_drv_lcd1602_i2c);
+    io_driver_register(g_drv_sh1106);
 #endif
 
     /* Initialize relay GPIOs — shim delegates to io_driver */
